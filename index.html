@@ -543,111 +543,301 @@
   .mini-btn:hover{background:rgba(255,255,255,.14)}
   .mini-btn svg{width:16px;height:16px;fill:currentColor}
 
-  /* ===== AGE GATE ===== */
-  #ageGate{
-    position:fixed;inset:0;z-index:100;
-    background:#08080b;
-    overflow-y:auto;
-    -webkit-overflow-scrolling:touch;
-    padding:48px 28px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    opacity:1;
-    transition:opacity .55s ease;
-    overscroll-behavior:contain;
-  }
-  #ageGate.hide{opacity:0;pointer-events:none}
-
-  #ageGateInner{
-    width:100%;
-    max-width:460px;
-    display:flex;
-    flex-direction:column;
-  }
-
-  .ageEyebrow{
+  /* ===== INFO BUTTON ===== */
+  #infoBtn{
+    position:fixed;
+    bottom:22px;
+    right:22px;
+    z-index:25;
+    background:none;
+    border:none;
+    padding:10px 12px;
+    color:rgba(255,255,255,.32);
     font-family:'Cormorant Garamond', Georgia, serif;
     font-weight:500;
-    font-size:11px;
-    letter-spacing:.36em;
+    font-size:12px;
+    letter-spacing:.32em;
     text-transform:uppercase;
-    color:#4a4658;
-    margin-bottom:18px;
+    cursor:pointer;
+    transition:color .3s ease, text-shadow .3s ease;
+    -webkit-tap-highlight-color:transparent;
+    text-shadow:0 0 10px rgba(0,0,0,.9);
+  }
+  #infoBtn:hover{
+    color:#fff;
+    text-shadow:0 0 14px rgba(255,255,255,.5);
+  }
+  @media (max-width:640px){
+    #miniPlayer.show ~ #infoBtn{
+      bottom:96px;
+      right:14px;
+    }
+    #infoBtn{
+      font-size:11px;
+      letter-spacing:.28em;
+    }
   }
 
-  .ageNum{
+  /* ===== INFO PANEL ===== */
+  #infoPanel{
+    position:fixed;
+    inset:0;
+    z-index:80;
+    display:grid;
+    place-items:center;
+    background:radial-gradient(ellipse at 50% 40%, rgba(20,18,24,.95) 0%, rgba(0,0,0,.99) 70%);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .4s ease;
+    padding:24px;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+  #infoPanel.show{opacity:1;pointer-events:auto}
+  .infoCard{
+    position:relative;
+    width:min(480px, 100%);
+    padding:44px 34px 38px;
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:4px;
+    background:rgba(7,6,9,.7);
+    text-align:left;
+    margin:auto;
+  }
+  .infoClose{
+    position:absolute;
+    top:10px;right:12px;
+    width:36px;height:36px;
+    border:none;
+    background:none;
+    color:rgba(255,255,255,.4);
+    font-size:26px;
+    line-height:1;
+    cursor:pointer;
+    transition:color .3s ease;
+    font-family:Arial,sans-serif;
+    display:grid;place-items:center;
+  }
+  .infoClose:hover{color:#fff}
+  .infoHeading{
     font-family:'Cinzel', Georgia, serif;
-    font-weight:400;
-    font-size:clamp(110px, 26vw, 180px);
-    line-height:.82;
-    color:#f3eff8;
-    letter-spacing:-.04em;
-    display:flex;
-    align-items:flex-start;
-    margin-bottom:32px;
-    user-select:none;
-  }
-  .ageNum span{
-    font-size:.32em;
-    margin-left:.08em;
-    margin-top:.14em;
     font-weight:500;
-  }
-
-  .ageRule{
-    width:100%;
-    height:1px;
-    background:rgba(255,255,255,.1);
-    margin-bottom:24px;
-  }
-
-  .ageTitle{
-    font-family:'Cinzel', Georgia, serif;
-    font-weight:500;
-    font-size:clamp(15px, 3.4vw, 18px);
-    letter-spacing:.42em;
-    text-indent:.42em;
+    font-size:16px;
+    letter-spacing:.14em;
     color:#eae6f2;
-    margin-bottom:22px;
+    margin-bottom:26px;
+    line-height:1.45;
+    text-transform:uppercase;
   }
-
-  .ageBody{
+  .info-line{
     font-family:'Cormorant Garamond', Georgia, serif;
     font-weight:500;
     font-size:15px;
     line-height:1.7;
-    color:#a8a2b5;
-    display:flex;
-    flex-direction:column;
-    gap:14px;
-    margin-bottom:32px;
+    color:#b8b2c5;
+    margin-bottom:2px;
+    word-break:break-word;
   }
-  .ageBody p{margin:0}
+  .info-gap{height:14px}
+  .info-link{
+    color:#fff;
+    text-decoration:underline;
+    text-decoration-thickness:1px;
+    text-underline-offset:3px;
+    text-decoration-color:rgba(255,255,255,.55);
+    cursor:pointer;
+    transition:text-decoration-color .25s ease, text-shadow .25s ease;
+    margin:0 3px;
+    word-break:break-all;
+  }
+  .info-link:hover{
+    text-decoration-color:#fff;
+    text-shadow:0 0 14px rgba(255,255,255,.5);
+  }
 
-  .ageEnter{
-    align-self:flex-start;
-    padding:15px 38px;
+  /* ===== EXTERNAL WARNING ===== */
+  #externalWarning{
+    position:fixed;
+    inset:0;
+    z-index:90;
+    display:grid;
+    place-items:center;
+    background:rgba(0,0,0,.94);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .35s ease;
+    padding:24px;
+  }
+  #externalWarning.show{opacity:1;pointer-events:auto}
+  .extCard{
+    width:min(420px, 100%);
+    padding:38px 30px 30px;
+    text-align:center;
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:4px;
+    background:rgba(8,6,10,.85);
+  }
+  .extTitle{
+    font-family:'Cinzel', Georgia, serif;
+    font-weight:500;
+    font-size:13px;
+    letter-spacing:.28em;
+    color:#eae6f2;
+    margin-bottom:20px;
+    text-transform:uppercase;
+  }
+  .extText{
+    font-family:'Cormorant Garamond', Georgia, serif;
+    font-weight:500;
+    font-size:15px;
+    line-height:1.65;
+    color:#b8b2c5;
+    margin-bottom:14px;
+  }
+  .extUrl{
+    font-family:'Cormorant Garamond', Georgia, serif;
+    font-weight:500;
+    font-size:12px;
+    color:#8a8496;
+    word-break:break-all;
+    margin-bottom:28px;
+    padding:11px 14px;
+    background:rgba(255,255,255,.03);
+    border-radius:3px;
+    letter-spacing:.02em;
+  }
+  .extGo{
+    padding:15px 54px;
     background:transparent;
-    border:1px solid rgba(255,255,255,.28);
+    border:1px solid rgba(255,255,255,.35);
     color:#eae6f2;
     font-family:'Cinzel', Georgia, serif;
     font-size:12px;
-    letter-spacing:.42em;
-    text-indent:.42em;
+    letter-spacing:.4em;
+    text-indent:.4em;
     text-transform:uppercase;
     cursor:pointer;
-    border-radius:0;
-    transition:color .25s ease, border-color .25s ease, background .25s ease, transform .2s ease;
+    transition:all .3s ease;
+    border-radius:2px;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .extGo:hover{
+    border-color:#fff;
+    color:#fff;
+    box-shadow:0 0 34px rgba(255,255,255,.22);
+    letter-spacing:.46em;
+  }
+  .extCancel{
+    margin-top:18px;
+    font-family:'Cormorant Garamond', Georgia, serif;
+    font-weight:500;
+    font-size:11px;
+    letter-spacing:.24em;
+    text-transform:uppercase;
+    color:rgba(255,255,255,.28);
+    cursor:pointer;
+    transition:color .25s ease;
+  }
+  .extCancel:hover{color:rgba(255,255,255,.65)}
+
+  /* ===== AGE GATE ===== */
+  #ageGate{
+    position:fixed;inset:0;z-index:100;
+    background:#000;
+    opacity:1;
+    transition:opacity .55s ease;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    padding:40px 22px;
+    overscroll-behavior:contain;
+  }
+  #ageGate.hide{opacity:0;pointer-events:none}
+  .ageInner{
+    min-height:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    gap:0;
+    max-width:480px;
+    margin:0 auto;
+    padding:30px 0;
+  }
+  .ageBrand{
+    font-family:'Cinzel', Georgia, serif;
+    font-weight:500;
+    font-size:12px;
+    letter-spacing:.55em;
+    text-indent:.55em;
+    text-transform:uppercase;
+    color:#7c7688;
+    margin-bottom:28px;
+  }
+  .ageBig{
+    font-family:'Cinzel', Georgia, serif;
+    font-weight:500;
+    font-size:clamp(96px, 24vw, 170px);
+    line-height:.85;
+    color:#fff;
+    letter-spacing:.02em;
+    margin-bottom:38px;
+    text-shadow:0 0 80px rgba(255,255,255,.22);
+  }
+  .ageBody{
+    font-family:'Cormorant Garamond', Georgia, serif;
+    font-weight:500;
+    font-size:clamp(15px, 3.7vw, 17px);
+    line-height:1.65;
+    color:#b8b2c5;
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+    margin-bottom:38px;
+    max-width:400px;
+  }
+  .ageBody p{
+    text-align:center;
+  }
+  .ageBody strong{
+    color:#eae6f2;
+    font-weight:600;
+  }
+  .ageEnter{
+    padding:16px 68px;
+    background:transparent;
+    border:1px solid rgba(255,255,255,.4);
+    color:#eae6f2;
+    font-family:'Cinzel', Georgia, serif;
+    font-weight:500;
+    font-size:13px;
+    letter-spacing:.5em;
+    text-indent:.5em;
+    text-transform:uppercase;
+    cursor:pointer;
+    transition:color .3s ease, border-color .3s ease, box-shadow .3s ease, letter-spacing .3s ease;
+    border-radius:2px;
     -webkit-tap-highlight-color:transparent;
   }
   .ageEnter:hover{
-    color:#08080b;
-    background:#f3eff8;
-    border-color:#f3eff8;
+    color:#fff;
+    border-color:#fff;
+    box-shadow:0 0 50px rgba(255,255,255,.24);
+    letter-spacing:.58em;
   }
   .ageEnter:active{
-    transform:scale(.98);
+    box-shadow:0 0 30px rgba(255,255,255,.35), inset 0 0 26px rgba(255,255,255,.1);
+  }
+  .ageNote{
+    margin-top:20px;
+    font-family:'Cormorant Garamond', Georgia, serif;
+    font-weight:500;
+    font-size:11px;
+    letter-spacing:.24em;
+    text-transform:uppercase;
+    color:#4e4a5e;
+    line-height:1.7;
+    max-width:340px;
   }
 
   @media (max-width:768px){
@@ -689,12 +879,18 @@
     .mini-cover{width:40px;height:40px}
     .mini-title{font-size:13px}
     .ghostLabel{font-size:10px;letter-spacing:.16em}
-
-    #ageGate{padding:32px 24px}
-    .ageBody{font-size:14px;gap:12px}
-    .ageNum{margin-bottom:26px}
-    .ageRule{margin-bottom:20px}
-    .ageEnter{padding:13px 30px;font-size:11px;letter-spacing:.38em;text-indent:.38em}
+    #ageGate{padding:32px 20px}
+    .ageBrand{font-size:11px;letter-spacing:.45em;text-indent:.45em;margin-bottom:22px}
+    .ageBig{margin-bottom:30px}
+    .ageBody{font-size:14.5px;gap:13px;margin-bottom:32px}
+    .ageEnter{padding:15px 52px;font-size:12px;letter-spacing:.44em;text-indent:.44em}
+    .ageEnter:hover{letter-spacing:.48em}
+    .ageNote{font-size:10px;letter-spacing:.2em}
+    .infoCard{padding:38px 24px 30px}
+    .info-heading{font-size:14px;margin-bottom:22px}
+    .info-line{font-size:14px}
+    .extCard{padding:32px 24px 26px}
+    .extGo{padding:14px 44px;font-size:11px}
   }
 </style>
 </head>
@@ -731,6 +927,8 @@
   </button>
 </div>
 
+<button id="infoBtn" aria-label="Информация">инфо</button>
+
 <div id="playerOverlay">
   <div class="playerCard" id="playerCard">
     <div class="cover" id="cover"></div>
@@ -765,17 +963,34 @@
   </div>
 </div>
 
-<div id="ageGate" role="dialog" aria-modal="true" aria-labelledby="ageTitleEl">
-  <div id="ageGateInner">
-    <div class="ageEyebrow">возрастное ограничение</div>
-    <div class="ageNum" aria-hidden="true">18<span>+</span></div>
-    <div class="ageRule"></div>
-    <h1 class="ageTitle" id="ageTitleEl">Страшилки</h1>
+<div id="infoPanel">
+  <div class="infoCard">
+    <button class="infoClose" id="infoClose" aria-label="Закрыть">×</button>
+    <div id="infoContent"></div>
+  </div>
+</div>
+
+<div id="externalWarning">
+  <div class="extCard">
+    <div class="extTitle">Внешняя ссылка</div>
+    <div class="extText">Вы покидаете сайт Страшилки и переходите на другой сайт.</div>
+    <div class="extUrl" id="extUrl"></div>
+    <button class="extGo" id="extGoBtn">Перейти</button>
+    <div class="extCancel" id="extCancelBtn">отмена</div>
+  </div>
+</div>
+
+<div id="ageGate" role="dialog" aria-modal="true">
+  <div class="ageInner">
+    <div class="ageBrand">Страшилки</div>
+    <div class="ageBig">18+</div>
     <div class="ageBody">
-      <p>Подкаст для взрослых. Содержит нецензурную лексику, описания насилия и других неприятных вещей. Не рекомендован людям с повышенной чувствительностью.</p>
-      <p>Все истории — вымысел и художественная литература.</p>
+      <p>Подкаст только для взрослых. В выпусках возможна нецензурная лексика, описание насилия, смерти, психических расстройств и других тяжёлых тем.</p>
+      <p>Не рекомендовано людям с повышенной чувствительностью.</p>
+      <p>Все истории вымышлены. Это художественная литература, не имеющая отношения к реальным людям, событиям или местам.</p>
     </div>
     <button class="ageEnter" id="ageEnterBtn">Войти</button>
+    <div class="ageNote">нажимая войти, вы подтверждаете, что вам есть 18 лет</div>
   </div>
 </div>
 
@@ -954,6 +1169,10 @@ const miniTitle = document.getElementById('miniTitle');
 const miniFill = document.getElementById('miniFill');
 const miniPlayBtn = document.getElementById('miniPlayBtn');
 const miniPlayIcon = document.getElementById('miniPlayIcon');
+const infoPanel = document.getElementById('infoPanel');
+const infoContent = document.getElementById('infoContent');
+const externalWarning = document.getElementById('externalWarning');
+const extUrl = document.getElementById('extUrl');
 
 let ageGateActive = true;
 
@@ -1030,14 +1249,107 @@ function showToast(text, duration){
 }
 
 /* ================= AGE GATE ================= */
-const ageGateEl = document.getElementById('ageGate');
 document.getElementById('ageEnterBtn').addEventListener('click', () => {
-  ageGateEl.classList.add('hide');
+  const g = document.getElementById('ageGate');
+  g.classList.add('hide');
   setTimeout(() => {
-    ageGateEl.remove();
+    g.remove();
     ageGateActive = false;
     showToast('прокрутите небо, коснитесь звезды', 6000);
   }, 600);
+});
+
+/* ================= INFO ================= */
+const DEFAULT_INFO =
+  'Страшные истории и легенды\n' +
+  'Ссылка на телеграм: https://t.me/strashil_ki\n' +
+  '\n' +
+  'Группа вк: https://vk.com/club222323809\n' +
+  '\n' +
+  'Теперь мы есть и на Литрес!\n' +
+  'https://www.litres.ru/podcast/leo-dummer/strashilki-71234161';
+
+let podcastInfoText = DEFAULT_INFO;
+let pendingExternalUrl = '';
+
+function renderInfoPanel(){
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const lines = podcastInfoText.split('\n');
+  let html = '';
+  let firstNonEmpty = true;
+  lines.forEach(line => {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      html += '<div class="info-gap"></div>';
+      return;
+    }
+    const withLinks = trimmed.replace(urlRegex, (url) => {
+      return '<a class="info-link" data-url="' + url + '" href="javascript:void(0)">' + url + '</a>';
+    });
+    if (firstNonEmpty) {
+      html += '<div class="infoHeading">' + withLinks + '</div>';
+      firstNonEmpty = false;
+    } else {
+      html += '<div class="info-line">' + withLinks + '</div>';
+    }
+  });
+  infoContent.innerHTML = html;
+
+  infoContent.querySelectorAll('.info-link').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const url = link.getAttribute('data-url');
+      if (url) openExternalWarning(url);
+    });
+  });
+}
+
+async function loadPodcastInfo(){
+  try {
+    const res = await fetch('Podcast_Info.txt', { cache: 'no-store' });
+    if (res.ok) {
+      const txt = await res.text();
+      if (txt && txt.trim()) podcastInfoText = txt;
+    }
+  } catch (e) {}
+  renderInfoPanel();
+}
+
+function openInfoPanel(){
+  infoPanel.classList.add('show');
+}
+function closeInfoPanel(){
+  infoPanel.classList.remove('show');
+}
+
+document.getElementById('infoBtn').addEventListener('click', () => {
+  openInfoPanel();
+});
+document.getElementById('infoClose').addEventListener('click', closeInfoPanel);
+infoPanel.addEventListener('click', (e) => {
+  if (e.target === infoPanel) closeInfoPanel();
+});
+
+/* ================= EXTERNAL WARNING ================= */
+function openExternalWarning(url){
+  pendingExternalUrl = url;
+  extUrl.textContent = url;
+  externalWarning.classList.add('show');
+}
+function closeExternalWarning(){
+  externalWarning.classList.remove('show');
+  pendingExternalUrl = '';
+}
+
+document.getElementById('extGoBtn').addEventListener('click', () => {
+  if (pendingExternalUrl) {
+    window.open(pendingExternalUrl, '_blank', 'noopener,noreferrer');
+  }
+  closeExternalWarning();
+});
+document.getElementById('extCancelBtn').addEventListener('click', closeExternalWarning);
+externalWarning.addEventListener('click', (e) => {
+  if (e.target === externalWarning) closeExternalWarning();
 });
 
 /* ================= BACKGROUND ================= */
@@ -1581,7 +1893,7 @@ function removeGhostLabel(){
 }
 
 function startDrag(index, starEl, e){
-  if (transitioning || dragState || ageGateActive) return;
+  if (transitioning || dragState) return;
   e.preventDefault();
   const rect = starEl.getBoundingClientRect();
   const cx = rect.left + rect.width / 2;
@@ -1823,10 +2135,14 @@ miniPlayBtn.addEventListener('click', (e) => {
 /* ================= KEYBOARD / SCROLL ================= */
 document.addEventListener('keydown', (e) => {
   if (ageGateActive) return;
-  if (overlay.classList.contains('show')) {
-    if (e.key === 'Escape') closeOverlay();
-    return;
+  if (e.key === 'Escape') {
+    if (externalWarning.classList.contains('show')) { closeExternalWarning(); return; }
+    if (infoPanel.classList.contains('show')) { closeInfoPanel(); return; }
+    if (overlay.classList.contains('show')) { closeOverlay(); return; }
   }
+  if (overlay.classList.contains('show') ||
+      infoPanel.classList.contains('show') ||
+      externalWarning.classList.contains('show')) return;
   if (dragState) return;
   if (e.key === 'ArrowDown' || e.key === 'PageDown') {
     e.preventDefault();
@@ -1850,7 +2166,11 @@ let wheelAccum = 0;
 let wheelTimer = null;
 
 window.addEventListener('wheel', (e) => {
-  if (ageGateActive || overlay.classList.contains('show') || dragState) return;
+  if (ageGateActive ||
+      overlay.classList.contains('show') ||
+      infoPanel.classList.contains('show') ||
+      externalWarning.classList.contains('show') ||
+      dragState) return;
   wheelAccum += e.deltaY;
   clearTimeout(wheelTimer);
   wheelTimer = setTimeout(() => {
@@ -1865,7 +2185,11 @@ window.addEventListener('wheel', (e) => {
 let touchY = 0;
 let touchActive = false;
 window.addEventListener('touchstart', (e) => {
-  if (ageGateActive || overlay.classList.contains('show') || dragState) return;
+  if (ageGateActive ||
+      overlay.classList.contains('show') ||
+      infoPanel.classList.contains('show') ||
+      externalWarning.classList.contains('show') ||
+      dragState) return;
   touchY = e.touches[0].clientY;
   touchActive = true;
 }, { passive: true });
@@ -1894,6 +2218,7 @@ updateActiveStars();
 updateIcons();
 updateRepeatIcon();
 updateShuffleIcon();
+loadPodcastInfo();
 requestAnimationFrame(loop);
 </script>
 </body>
