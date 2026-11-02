@@ -128,6 +128,24 @@
     animation-delay:0s !important;
   }
 
+  .star.unplayed::before{
+    content:'';
+    position:absolute;top:50%;left:50%;
+    width:44px;height:44px;
+    border-radius:50%;
+    border:1px solid rgba(255,255,255,.55);
+    transform:translate(-50%,-50%);
+    animation:unplayedPulse 2.4s ease-in-out infinite;
+    pointer-events:none;
+  }
+  .star.unplayed .star-core{
+    box-shadow:0 0 16px 5px rgba(255,255,255,1), 0 0 48px 16px rgba(255,255,255,.5);
+  }
+  @keyframes unplayedPulse{
+    0%,100%{opacity:.12;transform:translate(-50%,-50%) scale(.9)}
+    50%{opacity:.85;transform:translate(-50%,-50%) scale(1.35)}
+  }
+
   .star.searched .star-core{
     background:#fff !important;
     box-shadow:0 0 26px 12px #fff, 0 0 90px 32px rgba(255,255,255,.7) !important;
@@ -160,17 +178,13 @@
 
   #topBar{
     position:fixed;
-    top:24px;
-    right:20px;
+    top:24px;right:20px;
     z-index:26;
-    display:flex;
-    align-items:center;
-    gap:2px;
+    display:flex;align-items:center;gap:2px;
   }
   #topBar button{
     background:none;border:none;
-    padding:6px;
-    width:34px;height:34px;
+    padding:6px;width:34px;height:34px;
     display:grid;place-items:center;
     color:rgba(255,255,255,.92);
     cursor:pointer;
@@ -178,24 +192,16 @@
     -webkit-tap-highlight-color:transparent;
     text-shadow:0 0 10px rgba(0,0,0,.9);
   }
-  #topBar button:hover{
-    color:#fff;
-    filter:drop-shadow(0 0 8px rgba(255,255,255,.65));
-  }
+  #topBar button:hover{color:#fff;filter:drop-shadow(0 0 8px rgba(255,255,255,.65))}
   #topBar button.muted{opacity:.55}
-  #topBar button svg{
-    width:20px;height:20px;display:block;
-  }
+  #topBar button svg{width:20px;height:20px;display:block}
   .pageNav{
-    display:flex;
-    gap:8px;
-    align-items:baseline;
+    display:flex;gap:8px;align-items:baseline;
     font-family:'Cinzel', Georgia, serif;
     font-size:14px;letter-spacing:.32em;
     font-weight:500;color:#fff;
     font-variant-numeric:tabular-nums;
-    margin-left:6px;
-    pointer-events:none;
+    margin-left:6px;pointer-events:none;
     text-shadow:0 0 10px rgba(0,0,0,.95), 0 0 22px rgba(255,255,255,.22);
   }
   .pageNav i{font-style:normal;opacity:.55;color:#fff}
@@ -461,8 +467,7 @@
     font-weight:500;font-size:14px;color:#e2ddee;
     letter-spacing:.03em;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-    width:100%;
-    position:relative;
+    width:100%;position:relative;
   }
   .mini-bar{
     height:2px;background:rgba(255,255,255,.1);
@@ -485,30 +490,22 @@
   .mini-btn svg{width:16px;height:16px;fill:currentColor}
 
   #searchBox{
-    position:fixed;
-    top:68px;
-    right:20px;
+    position:fixed;top:68px;right:20px;
     width:min(320px, calc(100% - 40px));
     z-index:27;
     opacity:0;transform:translateY(-10px);
     pointer-events:none;
     transition:opacity .3s ease, transform .3s ease;
   }
-  #searchBox.show{
-    opacity:1;transform:translateY(0);
-    pointer-events:auto;
-  }
+  #searchBox.show{opacity:1;transform:translateY(0);pointer-events:auto}
   #searchInput{
-    width:100%;
-    padding:12px 18px;
+    width:100%;padding:12px 18px;
     background:rgba(8,6,10,.95);
     border:1px solid rgba(255,255,255,.15);
     border-radius:3px;
     color:#eae6f2;
     font-family:'Cormorant Garamond', Georgia, serif;
-    font-weight:500;
-    font-size:15px;
-    letter-spacing:.03em;
+    font-weight:500;font-size:15px;letter-spacing:.03em;
     outline:none;
     transition:border-color .25s ease, box-shadow .25s ease;
     box-shadow:0 10px 30px rgba(0,0,0,.85);
@@ -518,43 +515,31 @@
     border-color:rgba(255,255,255,.55);
     box-shadow:0 10px 30px rgba(0,0,0,.85), 0 0 24px rgba(255,255,255,.12);
   }
-  #searchInput::placeholder{
-    color:rgba(255,255,255,.28);
-    letter-spacing:.04em;
-  }
+  #searchInput::placeholder{color:rgba(255,255,255,.28);letter-spacing:.04em}
   #searchSuggestions{
     margin-top:6px;
     background:rgba(8,6,10,.97);
     border:1px solid rgba(255,255,255,.12);
     border-radius:3px;
     box-shadow:0 10px 30px rgba(0,0,0,.9);
-    max-height:260px;
-    overflow-y:auto;
-    display:none;
+    max-height:260px;overflow-y:auto;display:none;
     -webkit-overflow-scrolling:touch;
   }
   #searchSuggestions.show{display:block}
   .suggestion{
     padding:11px 16px;
     font-family:'Cormorant Garamond', Georgia, serif;
-    font-weight:500;
-    font-size:14px;
-    letter-spacing:.02em;
-    color:#b8b2c5;
-    cursor:pointer;
+    font-weight:500;font-size:14px;letter-spacing:.02em;
+    color:#b8b2c5;cursor:pointer;
     border-bottom:1px solid rgba(255,255,255,.05);
     transition:background .18s ease, color .18s ease;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
   .suggestion:last-child{border-bottom:none}
   .suggestion:hover{background:rgba(255,255,255,.06);color:#fff}
   .suggestion.no-results{
-    cursor:default;
-    font-style:italic;
-    color:rgba(255,255,255,.3);
-    text-align:center;
+    cursor:default;font-style:italic;
+    color:rgba(255,255,255,.3);text-align:center;
   }
   .suggestion.no-results:hover{background:none;color:rgba(255,255,255,.3)}
 
@@ -575,8 +560,7 @@
     border:1px solid rgba(255,255,255,.08);
     border-radius:4px;
     background:rgba(7,6,9,.7);
-    text-align:left;
-    margin:auto;
+    text-align:left;margin:auto;
   }
   .infoClose{
     position:absolute;top:10px;right:12px;
@@ -650,8 +634,7 @@
     font-family:'Cormorant Garamond', Georgia, serif;
     font-weight:500;font-size:12px;
     color:#8a8496;word-break:break-all;
-    margin-bottom:28px;
-    padding:11px 14px;
+    margin-bottom:28px;padding:11px 14px;
     background:rgba(255,255,255,.03);
     border-radius:3px;letter-spacing:.02em;
   }
@@ -689,17 +672,14 @@
     transition:opacity .55s ease;
     overflow-y:auto;
     -webkit-overflow-scrolling:touch;
-    padding:20px 20px;
+    padding:20px;
     overscroll-behavior:contain;
   }
   #ageGate.hide{opacity:0;pointer-events:none}
   .ageInner{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    text-align:center;
-    max-width:540px;
-    margin:0 auto;
+    display:flex;flex-direction:column;
+    align-items:center;text-align:center;
+    max-width:540px;margin:0 auto;
     min-height:100%;
     justify-content:center;
     padding:8px 0;
@@ -715,23 +695,18 @@
   }
   .ageTagline{
     font-family:'Cormorant Garamond', Georgia, serif;
-    font-weight:500;
-    font-style:italic;
+    font-weight:500;font-style:italic;
     font-size:clamp(15px, 3.8vw, 18px);
-    letter-spacing:.04em;
-    color:#b8b2c5;
-    line-height:1.5;
-    margin-bottom:18px;
+    letter-spacing:.04em;color:#b8b2c5;
+    line-height:1.5;margin-bottom:18px;
     max-width:400px;
   }
   .ageBig{
     font-family:'Cinzel', Georgia, serif;
     font-weight:500;
     font-size:clamp(52px, 11vw, 72px);
-    line-height:.9;
-    color:#fff;
-    letter-spacing:.02em;
-    margin-bottom:24px;
+    line-height:.9;color:#fff;
+    letter-spacing:.02em;margin-bottom:24px;
     text-shadow:0 0 60px rgba(255,255,255,.2);
     user-select:none;
   }
@@ -739,16 +714,11 @@
     font-family:'Cormorant Garamond', Georgia, serif;
     font-weight:500;
     font-size:clamp(13px, 3.3vw, 14.5px);
-    line-height:1.6;
-    color:#b8b2c5;
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-    margin-bottom:26px;
-    text-align:justify;
-    text-align-last:center;
-    hyphens:auto;
-    max-width:460px;
+    line-height:1.6;color:#b8b2c5;
+    display:flex;flex-direction:column;
+    gap:10px;margin-bottom:26px;
+    text-align:justify;text-align-last:center;
+    hyphens:auto;max-width:460px;
   }
   .ageBody p{text-align:justify;text-align-last:center}
   .ageBody strong{color:#eae6f2;font-weight:600}
@@ -1040,6 +1010,30 @@ let starEls = [];
 let currentPage = 0;
 let loadingSpinner = false;
 
+let playedSet = new Set();
+function loadPlayedState(){
+  try {
+    const s = localStorage.getItem('playedEpisodes');
+    if (s) {
+      const arr = JSON.parse(s);
+      if (Array.isArray(arr)) playedSet = new Set(arr);
+    }
+  } catch (e) {}
+}
+function savePlayedState(){
+  try {
+    localStorage.setItem('playedEpisodes', JSON.stringify([...playedSet]));
+  } catch (e) {}
+}
+function markPlayed(folderKey){
+  if (!folderKey) return;
+  if (playedSet.has(folderKey)) return;
+  playedSet.add(folderKey);
+  savePlayedState();
+  const idx = EPISODES.findIndex(e => e.folderKey === folderKey);
+  if (idx >= 0 && starEls[idx]) starEls[idx].classList.remove('unplayed');
+}
+
 let W = 0, H = 0;
 function resize(){
   W = canvas.width = Math.floor(innerWidth * dpr);
@@ -1183,9 +1177,7 @@ muteBtn.addEventListener('click', toggleMute);
 
 function showToast(text, duration){
   if (!text) return;
-  while (toastContainer.children.length >= 3) {
-    toastContainer.firstChild.remove();
-  }
+  while (toastContainer.children.length >= 3) toastContainer.firstChild.remove();
   const el = document.createElement('div');
   el.className = 'toast';
   el.textContent = text;
@@ -1238,9 +1230,7 @@ document.getElementById('ageEnterBtn').addEventListener('click', () => {
   setTimeout(() => {
     g.remove();
     ageGateActive = false;
-    if (EPISODES.length > 0) {
-      showToast('прокрутите небо, коснитесь звезды', 6000);
-    }
+    if (EPISODES.length > 0) showToast('прокрутите небо, коснитесь звезды', 6000);
   }, 600);
 });
 
@@ -1267,12 +1257,8 @@ function renderInfoPanel(){
     const withLinks = trimmed.replace(urlRegex, (url) =>
       '<a class="info-link" data-url="' + url + '" href="javascript:void(0)">' + url + '</a>'
     );
-    if (firstNonEmpty) {
-      html += '<div class="infoHeading">' + withLinks + '</div>';
-      firstNonEmpty = false;
-    } else {
-      html += '<div class="info-line">' + withLinks + '</div>';
-    }
+    if (firstNonEmpty) { html += '<div class="infoHeading">' + withLinks + '</div>'; firstNonEmpty = false; }
+    else { html += '<div class="info-line">' + withLinks + '</div>'; }
   });
   infoContent.innerHTML = html;
   infoContent.querySelectorAll('.info-link').forEach(link => {
@@ -1319,9 +1305,7 @@ document.getElementById('extGoBtn').addEventListener('click', () => {
   closeExternalWarning();
 });
 document.getElementById('extCancelBtn').addEventListener('click', closeExternalWarning);
-externalWarning.addEventListener('click', (e) => {
-  if (e.target === externalWarning) closeExternalWarning();
-});
+externalWarning.addEventListener('click', (e) => { if (e.target === externalWarning) closeExternalWarning(); });
 
 function openSearch(){
   searchBox.classList.add('show');
@@ -1351,7 +1335,6 @@ function normalize(str){
     .replace(/\s+/g, ' ')
     .trim();
 }
-
 function levenshtein(a, b){
   const m = a.length, n = b.length;
   if (!m) return n;
@@ -1367,7 +1350,6 @@ function levenshtein(a, b){
   }
   return d[m][n];
 }
-
 function titleScore(q, title){
   if (q === title) return 1;
   if (title.includes(q)) return 0.7 + 0.3 * (q.length / title.length);
@@ -1376,7 +1358,6 @@ function titleScore(q, title){
   const maxLen = Math.max(q.length, title.length);
   return Math.max(0, 1 - dist / maxLen);
 }
-
 function tokenScore(q, title){
   const qT = q.split(' ').filter(Boolean);
   const tT = title.split(' ').filter(Boolean);
@@ -1393,7 +1374,6 @@ function tokenScore(q, title){
   });
   return matched / qT.length;
 }
-
 function findBestMatch(rawQuery){
   const q = normalize(rawQuery);
   if (!q || q.length < 2) return -1;
@@ -1405,7 +1385,6 @@ function findBestMatch(rawQuery){
   });
   return bestScore >= 0.55 ? best : -1;
 }
-
 function getSuggestions(rawQuery){
   const q = normalize(rawQuery);
   if (!q || q.length < 1) return [];
@@ -1418,14 +1397,9 @@ function getSuggestions(rawQuery){
   out.sort((a, b) => b.score - a.score);
   return out.slice(0, 6);
 }
-
 function renderSuggestions(rawQuery){
   const q = String(rawQuery || '').trim();
-  if (!q) {
-    searchSuggestions.classList.remove('show');
-    searchSuggestions.innerHTML = '';
-    return;
-  }
+  if (!q) { searchSuggestions.classList.remove('show'); searchSuggestions.innerHTML = ''; return; }
   const list = getSuggestions(q);
   if (!list.length) {
     searchSuggestions.innerHTML = '<div class="suggestion no-results">ничего не найдено</div>';
@@ -1439,13 +1413,11 @@ function renderSuggestions(rawQuery){
 }
 
 searchInput.addEventListener('input', () => renderSuggestions(searchInput.value));
-
 searchInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') { e.preventDefault(); performSearch(searchInput.value); }
   else if (e.key === 'Escape') { e.preventDefault(); closeSearch(); }
   else if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','PageUp','PageDown'].includes(e.key)) e.stopPropagation();
 });
-
 searchSuggestions.addEventListener('click', (e) => {
   const el = e.target.closest('.suggestion');
   if (!el || el.classList.contains('no-results')) return;
@@ -1454,7 +1426,6 @@ searchSuggestions.addEventListener('click', (e) => {
   searchInput.value = EPISODES[idx].title;
   performSearch(EPISODES[idx].title);
 });
-
 document.addEventListener('pointerdown', (e) => {
   if (!searchOpen) return;
   if (searchBox.contains(e.target) || searchBtn.contains(e.target)) return;
@@ -1462,13 +1433,11 @@ document.addEventListener('pointerdown', (e) => {
 });
 
 function removeMapArrow(){ if (currentArrow) { currentArrow.remove(); currentArrow = null; } }
-
 function clearSearchedState(){
   clearTimeout(searchArrowTimer);
   removeMapArrow();
   starEls.forEach(el => el.classList.remove('searched'));
 }
-
 function showMapArrow(starEl){
   removeMapArrow();
   if (!starEl) return;
@@ -1537,7 +1506,6 @@ function showMapArrow(starEl){
     }
   }, 4600);
 }
-
 function performSearch(rawQuery){
   const q = String(rawQuery || '').trim();
   if (q.length < 2) { showToast('введите название', 1800); return; }
@@ -1571,7 +1539,6 @@ for (let i = 0; i < sphereCount; i++) {
     color: deep ? [100, 6, 18] : [190, 190, 200]
   });
 }
-
 function drawBg(t){
   ctx.fillStyle = '#000';
   ctx.fillRect(0, 0, W, H);
@@ -1629,9 +1596,7 @@ function getExclusionZones(){
   }
   return zones;
 }
-
 function inZone(x, y, z){ return x >= z.x1 && x <= z.x2 && y >= z.y1 && y <= z.y2; }
-
 function generatePositions(count){
   const zones = getExclusionZones();
   const positions = [];
@@ -1667,42 +1632,26 @@ function generatePositions(count){
   return positions;
 }
 
-function probeAudio(url){
-  return new Promise((resolve) => {
-    const audio = new Audio();
-    let done = false;
-    const finish = (ok) => {
-      if (done) return;
-      done = true;
-      try { audio.src = ''; } catch(e){}
-      audio.onerror = null;
-      audio.onloadedmetadata = null;
-      audio.oncanplay = null;
-      resolve(ok);
-    };
-    audio.onerror = () => finish(false);
-    audio.onloadedmetadata = () => finish(true);
-    audio.oncanplay = () => finish(true);
-    setTimeout(() => finish(false), 5000);
-    audio.preload = 'metadata';
-    audio.src = url;
-  });
+async function fetchNameTxt(ep){
+  const paths = [];
+  paths.push('Episodes/' + ep.folderName + '/name.txt');
+  if (ep.folderKey !== ep.folderName) paths.push('Episodes/' + ep.folderKey + '/name.txt');
+  for (const url of paths) {
+    try {
+      const res = await fetch(url, { cache: 'no-store' });
+      if (!res.ok) continue;
+      const txt = await res.text();
+      const trimmed = txt.trim();
+      if (!trimmed || trimmed.length > 500) continue;
+      const lower = trimmed.toLowerCase();
+      if (lower.includes('<!doctype') || lower.includes('<html')) continue;
+      return trimmed;
+    } catch (e) {}
+  }
+  return null;
 }
 
-async function readNameTxt(url){
-  try {
-    const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) return null;
-    const txt = await res.text();
-    const trimmed = txt.trim();
-    if (!trimmed || trimmed.length > 500) return null;
-    const lower = trimmed.toLowerCase();
-    if (lower.includes('<!doctype') || lower.includes('<html')) return null;
-    return trimmed;
-  } catch (e) { return null; }
-}
-
-async function loadEpisodesFromJSON(){
+async function loadEpisodeList(){
   let data;
   try {
     const res = await fetch('Track_Instruction.json', { cache: 'no-store' });
@@ -1711,45 +1660,102 @@ async function loadEpisodesFromJSON(){
   } catch (e) { return []; }
 
   const map = (data && data.Episodes) || {};
-  const entries = Object.entries(map);
-  if (!entries.length) return [];
+  let entries = Object.entries(map);
+  entries.sort((a, b) => {
+    const numA = (a[0].match(/(\d+)/) || [0, 0])[1];
+    const numB = (b[0].match(/(\d+)/) || [0, 0])[1];
+    return parseInt(numA, 10) - parseInt(numB, 10);
+  });
 
-  const results = [];
-  for (const [folderKey, displayName] of entries) {
-    const folderName = displayName || folderKey;
-    const basePath = 'Episodes/' + folderName + '/';
-    const ep = {
-      folderKey,
-      folderName,
-      basePath,
-      title: displayName || folderKey,
-      audioUrl: null,
-      coverUrl: basePath + 'Cover.jpg',
-      dur: 0
-    };
+  const episodes = entries.map(([key, val]) => ({
+    folderKey: key,
+    folderName: val || key,
+    title: val || key,
+    audioUrl: null,
+    coverUrl: null,
+    dur: 0,
+    resolved: false
+  }));
 
-    const nameTxt = await readNameTxt(basePath + 'name.txt');
-    if (nameTxt) ep.title = nameTxt;
-
-    const audioCandidates = [];
-    if (nameTxt && nameTxt !== folderName) audioCandidates.push(basePath + nameTxt + '.mp3');
-    audioCandidates.push(basePath + folderName + '.mp3');
-    audioCandidates.push(basePath + 'audio.mp3');
-    audioCandidates.push(basePath + 'track.mp3');
-    audioCandidates.push(basePath + 'podcast.mp3');
-    if (folderKey !== folderName) audioCandidates.push(basePath + folderKey + '.mp3');
-    const uniqueAudio = [...new Set(audioCandidates)];
-
-    for (const url of uniqueAudio) {
-      if (await probeAudio(url)) {
-        ep.audioUrl = url;
-        break;
+  episodes.forEach((ep, idx) => {
+    fetchNameTxt(ep).then(nameTxt => {
+      if (nameTxt && nameTxt !== ep.title) {
+        ep.title = nameTxt;
+        const starEl = starEls[idx];
+        if (starEl) {
+          const label = starEl.querySelector('.star-label');
+          if (label) label.textContent = nameTxt;
+        }
+        if (current === idx) {
+          applyMarquee(pTitle, nameTxt);
+          if (miniPlayer.classList.contains('show')) applyMarquee(miniTitle, nameTxt);
+        }
       }
-    }
+    });
+  });
 
-    results.push(ep);
+  return episodes;
+}
+
+function probeAudio(url){
+  return new Promise(resolve => {
+    const audio = new Audio();
+    let done = false;
+    const finish = (ok) => {
+      if (done) return;
+      done = true;
+      audio.onloadedmetadata = null;
+      audio.oncanplay = null;
+      audio.onerror = null;
+      try { audio.pause(); } catch(e){}
+      setTimeout(() => {
+        try { audio.removeAttribute('src'); audio.load(); } catch(e){}
+      }, 200);
+      resolve(ok);
+    };
+    audio.onloadedmetadata = () => finish(true);
+    audio.oncanplay = () => finish(true);
+    audio.onerror = () => finish(false);
+    setTimeout(() => finish(false), 3500);
+    audio.preload = 'metadata';
+    audio.src = url;
+  });
+}
+
+async function resolveEpisode(ep){
+  if (ep.resolved) return ep;
+  ep.resolved = true;
+
+  const paths = [];
+  paths.push('Episodes/' + ep.folderName + '/');
+  if (ep.folderKey !== ep.folderName) paths.push('Episodes/' + ep.folderKey + '/');
+
+  const audioNames = [];
+  audioNames.push(ep.folderName + '.mp3');
+  audioNames.push('audio.mp3');
+  audioNames.push('track.mp3');
+  audioNames.push('podcast.mp3');
+  if (ep.folderKey !== ep.folderName) audioNames.push(ep.folderKey + '.mp3');
+
+  const candidates = [];
+  for (const path of paths) {
+    for (const name of audioNames) {
+      candidates.push(path + name);
+    }
   }
-  return results;
+  const unique = [...new Set(candidates)];
+
+  for (const url of unique) {
+    if (await probeAudio(url)) {
+      ep.audioUrl = url;
+      const folder = url.substring(0, url.lastIndexOf('/') + 1);
+      ep.coverUrl = folder + 'Cover.jpg';
+      return ep;
+    }
+  }
+
+  ep.audioUrl = null;
+  return ep;
 }
 
 function buildSky(){
@@ -1794,12 +1800,14 @@ function buildSky(){
       const star = document.createElement('button');
       star.className = 'star';
       star.dataset.index = i;
+      star.dataset.key = ep.folderKey;
       star.style.left = (pos[0] * 100) + '%';
       star.style.top = (pos[1] * 100) + '%';
       star.style.setProperty('--pulse-dur', (2.4 + Math.random() * 3.2).toFixed(2) + 's');
       star.style.setProperty('--pulse-delay', (Math.random() * 4).toFixed(2) + 's');
       star.style.setProperty('--core-size', (6 + Math.random() * 4.5).toFixed(1) + 'px');
       star.style.setProperty('--flare-w', (36 + Math.random() * 22).toFixed(0) + 'px');
+      if (!playedSet.has(ep.folderKey)) star.classList.add('unplayed');
       star.innerHTML =
         '<span class="star-flare h"></span>' +
         '<span class="star-flare v"></span>' +
@@ -1829,7 +1837,7 @@ let shuffleOn = false;
 let shuffleOrder = [];
 let shufflePosition = 0;
 let overlayHintShown = false;
-let switchToken = 0;
+let resolveToken = 0;
 
 function setLoading(v){
   if (loadingSpinner === v) return;
@@ -1891,13 +1899,12 @@ function switchToEpisode(n, autoPlay){
   if (EPISODES.length === 0) return;
   if (n < 0 || n >= EPISODES.length) return;
   if (autoPlay === undefined) autoPlay = playing || wantsToPlay;
-  switchToken++;
-  const token = switchToken;
+  resolveToken++;
+  playing = false;
   wantsToPlay = !!autoPlay;
+  setLoading(false);
   fadeOutEpisode(() => {
-    if (token !== switchToken) return;
     setCurrentTrack(n);
-    playing = false;
     const page = Math.floor(n / PER_PAGE);
     if (page !== currentPage) goToPage(page);
     if (autoPlay) play();
@@ -1905,22 +1912,42 @@ function switchToEpisode(n, autoPlay){
   });
 }
 
-function play(){
+async function play(){
   if (current < 0) return;
   const ep = EPISODES[current];
-  if (!ep || !ep.audioUrl) { showToast('аудио не найдено', 2200); return; }
+  if (!ep) return;
+
+  const myToken = ++resolveToken;
 
   wantsToPlay = true;
   playing = true;
   setLoading(true);
   updateIcons();
   applyAmbientState();
+  markPlayed(ep.folderKey);
+
+  if (!ep.resolved) {
+    await resolveEpisode(ep);
+    if (myToken !== resolveToken) return;
+  }
+
+  if (!ep.audioUrl) {
+    showToast('аудио не найдено', 2200);
+    playing = false;
+    wantsToPlay = false;
+    setLoading(false);
+    updateIcons();
+    applyAmbientState();
+    return;
+  }
 
   if (!episodeAudio || loadedIndex !== current) {
-    if (episodeAudio) { try { episodeAudio.pause(); } catch (e) {} }
+    if (episodeAudio) {
+      try { episodeAudio.pause(); } catch (e) {}
+    }
     const idx = current;
     const a = new Audio();
-    a.preload = 'metadata';
+    a.preload = 'auto';
     a.src = ep.audioUrl;
     a.volume = 0;
 
@@ -1958,20 +1985,23 @@ function play(){
 
   const audio = episodeAudio;
   const idx = current;
+
   audio.play().then(() => {
-    if (loadedIndex !== idx) return;
-    if (episodeAudio !== audio) return;
+    if (loadedIndex !== idx || episodeAudio !== audio) return;
+    if (myToken !== resolveToken) {
+      try { audio.pause(); } catch(e){}
+      return;
+    }
     playing = true;
     setLoading(false);
     updateIcons();
     applyAmbientState();
-    const startVol = audio.volume;
     const t0 = performance.now();
     const dur = 600;
     const step = (now) => {
       if (episodeAudio !== audio) return;
       const p = Math.min(1, (now - t0) / dur);
-      try { audio.volume = Math.min(1, startVol + (1 - startVol) * p); } catch(e){}
+      try { audio.volume = Math.min(1, p); } catch(e){ return; }
       if (p < 1) requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
@@ -1987,13 +2017,11 @@ function play(){
 }
 
 function pause(){
+  resolveToken++;
   wantsToPlay = false;
   setLoading(false);
   if (episodeAudio) {
     try { episodeAudio.pause(); } catch (e) {}
-    if (episodeAudio.readyState < 3) {
-      try { episodeAudio.preload = 'auto'; } catch(e){}
-    }
   }
   playing = false;
   updateIcons();
@@ -2023,7 +2051,6 @@ function buildShuffleOrder(startIndex){
   }
   shufflePosition = 0;
 }
-
 function getNextIndexAuto(){
   if (EPISODES.length === 0) return -1;
   if (shuffleOn) {
@@ -2041,7 +2068,6 @@ function getNextIndexAuto(){
   }
   return next;
 }
-
 function getNextIndexManual(){
   if (EPISODES.length === 0) return -1;
   if (shuffleOn) {
@@ -2055,7 +2081,6 @@ function getNextIndexManual(){
   }
   return (current + 1) % EPISODES.length;
 }
-
 function getPrevIndexManual(){
   if (EPISODES.length === 0) return -1;
   if (shuffleOn) {
@@ -2069,7 +2094,6 @@ function getPrevIndexManual(){
   }
   return (current - 1 + EPISODES.length) % EPISODES.length;
 }
-
 function onTrackEnd(){
   if (repeatMode === 'one') {
     const audio = episodeAudio;
@@ -2185,10 +2209,7 @@ function applyMarquee(el, text){
     if (singleW <= containerW) return;
     const dur = Math.max(8000, singleW / 40 * 1000);
     el._marqueeAnim = inner.animate(
-      [
-        { transform: 'translateX(0)' },
-        { transform: 'translateX(-' + singleW + 'px)' }
-      ],
+      [{ transform: 'translateX(0)' }, { transform: 'translateX(-' + singleW + 'px)' }],
       { duration: dur, iterations: Infinity, easing: 'linear' }
     );
   });
@@ -2197,7 +2218,6 @@ function applyMarquee(el, text){
 function updateActiveStars(){
   starEls.forEach(el => el.classList.toggle('active', +el.dataset.index === current));
 }
-
 function updateProgress(){
   const d = current >= 0 && EPISODES[current] ? EPISODES[current].dur : 0;
   const p = d ? Math.min(1, elapsed / d) : 0;
@@ -2206,7 +2226,6 @@ function updateProgress(){
   pCur.textContent = fmt(elapsed);
   miniFill.style.transform = 'scaleX(' + p + ')';
 }
-
 function updateFullUI(){
   if (current < 0 || !EPISODES[current]) {
     pTitle.textContent = '—';
@@ -2222,7 +2241,6 @@ function updateFullUI(){
   updateIcons();
   updateActiveStars();
 }
-
 function updateMiniUI(){
   if (current < 0 || !EPISODES[current]) { miniPlayer.classList.remove('show'); return; }
   const ep = EPISODES[current];
@@ -2231,7 +2249,6 @@ function updateMiniUI(){
   updateProgress();
   updateIcons();
 }
-
 function openOverlay(){
   closeSearch();
   overlay.classList.add('show');
@@ -2242,7 +2259,6 @@ function openOverlay(){
     overlayHintShown = true;
   }
 }
-
 function closeOverlay(){
   overlay.classList.remove('show');
   if (current >= 0) {
@@ -2257,7 +2273,6 @@ function closeOverlay(){
     }, 200);
   }
 }
-
 function updateRepeatIcon(){
   repeatBtn.classList.toggle('active', repeatMode !== 'off');
   if (repeatMode === 'one') {
@@ -2266,7 +2281,6 @@ function updateRepeatIcon(){
     repeatIconPath.setAttribute('d', 'M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z');
   }
 }
-
 function updateShuffleIcon(){ shuffleBtn.classList.toggle('active', shuffleOn); }
 
 let dragState = null;
@@ -2281,7 +2295,6 @@ function spawnTrail(x, y){
   requestAnimationFrame(() => { dot.style.opacity = '0'; dot.style.transform = 'translate(-50%,-50%) scale(.25)'; });
   setTimeout(() => dot.remove(), 600);
 }
-
 function showGhostLabel(text){
   ghostLabel = document.createElement('div');
   ghostLabel.className = 'ghostLabel';
@@ -2321,7 +2334,6 @@ function startDrag(index, starEl, e){
   window.addEventListener('pointerup', onDragUp);
   window.addEventListener('pointercancel', onDragUp);
 }
-
 function onDragMove(e){
   if (!dragState || e.pointerId !== dragState.pid) return;
   const dx = e.clientX - dragState.startX;
@@ -2339,7 +2351,6 @@ function onDragMove(e){
   const over = e.clientX > r.left && e.clientX < r.right && e.clientY > r.top && e.clientY < r.bottom;
   dropzone.classList.toggle('hover', over);
 }
-
 function onDragUp(e){
   if (!dragState || e.pointerId !== dragState.pid) return;
   window.removeEventListener('pointermove', onDragMove);
@@ -2425,7 +2436,6 @@ function goToPage(n){
   sky.style.transform = 'translateY(-' + (nn * 100) + 'vh)';
   pageCurrentEl.textContent = nn + 1;
 }
-
 function loadEpisode(n){
   if (EPISODES.length === 0) return;
   switchToEpisode(n, playing || wantsToPlay);
@@ -2446,14 +2456,12 @@ miniPlayer.addEventListener('pointerdown', (e) => {
   if (e.target.closest('#miniPlayBtn')) return;
   miniPtr = { x: e.clientX, y: e.clientY, id: e.pointerId, moved: false };
 });
-
 miniPlayer.addEventListener('pointermove', (e) => {
   if (!miniPtr || e.pointerId !== miniPtr.id) return;
   const dx = e.clientX - miniPtr.x;
   const dy = e.clientY - miniPtr.y;
   if (Math.hypot(dx, dy) > 8) miniPtr.moved = true;
 });
-
 miniPlayer.addEventListener('pointerup', (e) => {
   if (!miniPtr || e.pointerId !== miniPtr.id) return;
   const ptr = miniPtr;
@@ -2466,7 +2474,6 @@ miniPlayer.addEventListener('pointerup', (e) => {
     swipeEpisode(dx < 0 ? 1 : -1);
   }
 });
-
 miniPlayer.addEventListener('pointercancel', (e) => {
   if (miniPtr && e.pointerId === miniPtr.id) miniPtr = null;
 });
@@ -2611,9 +2618,10 @@ async function init(){
   updateIcons();
   updateRepeatIcon();
   updateShuffleIcon();
+  loadPlayedState();
   requestAnimationFrame(loop);
   loadPodcastInfo();
-  EPISODES = await loadEpisodesFromJSON();
+  EPISODES = await loadEpisodeList();
   buildSky();
 }
 
