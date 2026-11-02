@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#07070b">
+<title>Страшилки</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    background:radial-gradient(ellipse at 50% 28%, #141020 0%, #09080f 45%, #040407 100%);
+    color:#b9b9c8;
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+    user-select:none;
+  }
+  canvas#bg{position:fixed;inset:0;z-index:0;display:block}
+
+  #cursorLight{
+    position:fixed;top:0;left:0;width:700px;height:700px;border-radius:50%;
+    pointer-events:none;z-index:1;
+    background:radial-gradient(circle, rgba(150,120,255,.10) 0%, rgba(120,60,200,.05) 35%, rgba(0,0,0,0) 68%);
+    will-change:transform;
+  }
+
+  .grain{
+    position:fixed;inset:-60%;z-index:2;pointer-events:none;opacity:.055;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>");
+    animation:grainMove .9s steps(3) infinite;
+  }
+  @keyframes grainMove{
+    0%{transform:translate(0,0)}
+    33%{transform:translate(-3%,2%)}
+    66%{transform:translate(2%,-3%)}
+    100%{transform:translate(0,0)}
+  }
+
+  .vignette{
+    position:fixed;inset:0;z-index:3;pointer-events:none;
+    background:radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 35%, rgba(0,0,0,.55) 78%, rgba(0,0,0,.92) 100%);
+  }
+
+  header{
+    position:fixed;top:0;left:0;right:0;z-index:5;
+    text-align:center;padding:34px 20px 0;pointer-events:none;
+  }
+  header h1{
+    font-family:Georgia,"Times New Roman",serif;
+    font-size:clamp(16px,3.2vw,30px);
+    letter-spacing:.42em;
+    text-indent:.42em;
+    color:#ded7ee;
+    font-weight:400;
+    text-shadow:0 0 18px rgba(160,60,60,.55), 0 0 46px rgba(120,40,140,.35);
+    animation:flicker 7s infinite;
+  }
+  header p{
+    margin-top:12px;
+    font-size:10px;letter-spacing:.34em;text-transform:uppercase;
+    color:#57536b;
+  }
+  @keyframes flicker{
+    0%,100%{opacity:.94}
+    41%{opacity:.94}
+    42%{opacity:.28}
+    44%{opacity:.9}
+    46%{opacity:.4}
+    48%{opacity:.96}
+    67%{opacity:.8}
+    69%{opacity:1}
+  }
+
+  #field{position:fixed;inset:0;z-index:4}
+
+  .orb{
+    position:absolute;width:130px;height:130px;
+    transform:translate(-50%,-50%);
+    background:none;border:none;padding:0;
+    cursor:pointer;display:grid;place-items:center;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .orb .halo{
+    position:absolute;inset:24%;border-radius:50%;
+    border:1px solid var(--c);opacity:0;
+    animation:ripple 5s ease-out infinite;
+  }
+  .orb .halo.h2{animation-delay:2.5s}
+  @keyframes ripple{
+    0%{transform:scale(.35);opacity:.65}
+    100%{transform:scale(2.4);opacity:0}
+  }
+  .orb .core{
+    width:11px;height:11px;border-radius:50%;
+    background:var(--c);
+    box-shadow:0 0 12px 3px var(--g), 0 0 44px 12px var(--g);
+    animation:breathe 3.6s ease-in-out infinite;
+    transition:transform .45s cubic-bezier(.2,.9,.3,1.4), box-shadow .45s ease;
+  }
+  @keyframes breathe{
+    0%,100%{transform:scale(1);opacity:.85}
+    50%{transform:scale(1.45);opacity:1}
+  }
+  .orb:hover .core{transform:scale(1.9);box-shadow:0 0 18px 5px var(--g), 0 0 70px 20px var(--g)}
+  .orb.active .core{
+    transform:scale(2);
+    animation-duration:1.5s;
+    box-shadow:0 0 22px 7px var(--g), 0 0 90px 26px var(--g);
+  }
+  .orb.active .halo{animation-duration:2.2s;opacity:1}
+
+  .orb .label{
+    position:absolute;top:calc(50% + 34px);left:50%;
+    transform:translate(-50%,-6px);
+    white-space:nowrap;
+    font-size:10px;letter-spacing:.22em;text-transform:uppercase;
+    color:#8d87a3;opacity:0;transition:.35s ease;pointer-events:none;
+  }
+  .orb:hover .label,.orb.active .label{opacity:1;transform:translate(-50%,0)}
+  .orb.active .label{color:#e2dcf0}
+
+  .player{
+    position:fixed;left:50%;bottom:26px;z-index:6;
+    transform:translateX(-50%);
+    width:min(760px,calc(100% - 32px));
+    padding:14px 18px 10px;
+    display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+    background:rgba(10,9,16,.62);
+    border:1px solid rgba(120,100,170,.16);
+    border-radius:14px;
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    box-shadow:0 0 0 1px rgba(0,0,0,.4), 0 20px 60px rgba(0,0,0,.7), inset 0 0 40px rgba(80,40,120,.08);
+  }
+
+  #playBtn{
+    flex:0 0 auto;
+    width:46px;height:46px;border-radius:50%;
+    border:1px solid rgba(150,120,200,.3);
+    background:radial-gradient(circle at 35% 30%, rgba(90,60,140,.45), rgba(18,14,26,.9));
+    color:#d8d0ea;cursor:pointer;
+    display:grid;place-items:center;
+    transition:.3s ease;
+  }
+  #playBtn:hover{border-color:rgba(200,160,255,.7);box-shadow:0 0 22px rgba(150,90,255,.4);color:#fff}
+  #playBtn svg{width:19px;height:19px;fill:currentColor}
+
+  .meta{flex:1 1 160px;min-width:0}
+  .meta .now{
+    font-size:13px;letter-spacing:.06em;color:#e2dcf0;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .meta .sub{
+    margin-top:4px;font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;color:#5e5873;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+
+  #viz{flex:0 0 auto;width:220px;height:38px;display:block;opacity:.9}
+
+  .time{
+    flex:0 0 auto;font-size:10.5px;letter-spacing:.16em;color:#6b6484;
+    font-variant-numeric:tabular-nums;
+  }
+  .time i{font-style:normal;opacity:.4;margin:0 4px}
+
+  .bar{
+    flex:1 1 100%;height:2px;border-radius:2px;
+    background:rgba(120,100,170,.14);overflow:hidden;margin-top:2px;
+  }
+  #barFill{
+    height:100%;width:0%;
+    background:linear-gradient(90deg,#7b3b6b,#c96a8a,#8a5bff);
+    box-shadow:0 0 12px rgba(180,90,220,.8);
+    transition:width .22s linear;
+  }
+
+  @media (max-width:640px){
+    .orb{width:100px;height:100px}
+    .orb .label{font-size:9px;letter-spacing:.16em;top:calc(50% + 28px)}
+    #viz{display:none}
+    .player{bottom:16px;gap:12px;padding:12px 14px 8px}
+    header{padding-top:24px}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+<div id="cursorLight"></div>
+<div class="grain"></div>
+<div class="vignette"></div>
+
+<header>
+  <h1>ШЁПОТ В ТЕМНОТЕ</h1>
+  <p>нажми на огонёк — и слушай</p>
+</header>
+
+<main id="field"></main>
+
+<div class="player" id="player">
+  <button id="playBtn" aria-label="Воспроизвести"></button>
+  <div class="meta">
+    <div class="now" id="nowTitle">Тишина</div>
+    <div class="sub" id="nowSub">выберите огонёк в темноте</div>
+  </div>
+  <canvas id="viz"></canvas>
+  <div class="time"><span id="cur">0:00</span><i>/</i><span id="dur">0:00</span></div>
+  <div class="bar"><div id="barFill"></div></div>
+</div>
+
+<script>
+const EPISODES = [
+  {
+    title:'Тот, кто стучит в стену',
+    sub:'Эпизод 01 · 04:32',
+    dur:272, color:'#ff3b52', rgb:'255,59,82',
+    pos:[16,34],
+    tones:[[55,-7,'sine',.34],[82.4,6,'sine',.16],[110,-4,'triangle',.08],[41.2,3,'sine',.3]],
+    filter:420, noiseFreq:700, noiseGain:.05
+  },
+  {
+    title:'Станция, которой нет на карте',
+    sub:'Эпизод 02 · 07:18',
+    dur:438, color:'#5fc9ff', rgb:'95,201,255',
+    pos:[50,23],
+    tones:[[110,-9,'sine',.24],[164.8,7,'sine',.15],[220,-5,'triangle',.06],[73.4,4,'sine',.2]],
+    filter:880, noiseFreq:2400, noiseGain:.045
+  },
+  {
+    title:'Колыбельная для утонувших',
+    sub:'Эпизод 03 · 05:44',
+    dur:344, color:'#3bffb0', rgb:'59,255,176',
+    pos:[84,36],
+    tones:[[73.4,5,'sine',.28],[110,-6,'sine',.17],[146.8,9,'triangle',.08],[36.7,-3,'sine',.24]],
+    filter:520, noiseFreq:420, noiseGain:.06
+  },
+  {
+    title:'Дом помнит своих гостей',
+    sub:'Эпизод 04 · 06:07',
+    dur:367, color:'#ffb347', rgb:'255,179,71',
+    pos:[32,68],
+    tones:[[65.4,-8,'sine',.3],[98,6,'sine',.15],[130.8,-4,'triangle',.07],[43.7,2,'sine',.26]],
+    filter:640, noiseFreq:1100, noiseGain:.05
+  },
+  {
+    title:'Последняя запись',
+    sub:'Эпизод 05 · 03:59',
+    dur:239, color:'#b06bff', rgb:'176,107,255',
+    pos:[70,66],
+    tones:[[49,-10,'sine',.35],[73.4,8,'sine',.16],[98,-3,'triangle',.09],[32.7,5,'sine',.22]],
+    filter:350, noiseFreq:900, noiseGain:.055
+  }
+];
+
+const dpr = Math.min(window.devicePixelRatio || 1, 2);
+const canvas = document.getElementById('bg');
+const ctx = canvas.getContext('2d');
+const viz = document.getElementById('viz');
+const vctx = viz.getContext('2d');
+const field = document.getElementById('field');
+const playBtn = document.getElementById('playBtn');
+const nowTitle = document.getElementById('nowTitle');
+const nowSub = document.getElementById('nowSub');
+const curEl = document.getElementById('cur');
+const durEl = document.getElementById('dur');
+const barFill = document.getElementById('barFill');
+const cursorLight = document.getElementById('cursorLight');
+
+let W = 0, H = 0;
+let activeRgb = '138,123,216';
+let activeColor = '#8a7bd8';
+
+const motes = [];
+const blobs = [];
+
+for (let i = 0; i < 80; i++) {
+  motes.push({
+    x: Math.random(), y: Math.random(),
+    r: Math.random() * 1.5 + 0.4,
+    vy: -(Math.random() * 0.000045 + 0.000012),
+    vx: (Math.random() - 0.5) * 0.000035,
+    a: Math.random() * 0.45 + 0.08,
+    ph: Math.random() * Math.PI * 2
+  });
+}
+for (let i = 0; i < 6; i++) {
+  blobs.push({
+    x: Math.random(), y: Math.random(),
+    r: Math.random() * 0.25 + 0.2,
+    s: Math.random() * 0.6 + 0.4,
+    ph: Math.random() * Math.PI * 2
+  });
+}
+
+function resizeCanvas() {
+  W = canvas.width = Math.floor(innerWidth * dpr);
+  H = canvas.height = Math.floor(innerHeight * dpr);
+  canvas.style.width = innerWidth + 'px';
+  canvas.style.height = innerHeight + 'px';
+  sizeViz();
+}
+
+function sizeViz() {
+  const r = viz.getBoundingClientRect();
+  if (r.width && r.height) {
+    viz.width = Math.floor(r.width * dpr);
+    viz.height = Math.floor(r.height * dpr);
+  }
+}
+
+const orbs = [];
+EPISODES.forEach((ep, i) => {
+  const b = document.createElement('button');
+  b.className = 'orb';
+  b.style.left = ep.pos[0] + '%';
+  b.style.top = ep.pos[1] + '%';
+  b.style.setProperty('--c', ep.color);
+  b.style.setProperty('--g', `rgba(${ep.rgb},.55)`);
+  b.innerHTML =
+    '<span class="halo"></span><span class="halo h2"></span>' +
+    '<span class="core" style="animation-delay:' + (i * 0.7) + 's"></span>' +
+    '<span class="label">' + ep.title + '</span>';
+  b.addEventListener('click', () => handleOrb(i));
+  field.appendChild(b);
+  orbs.push(b);
+});
+
+let audioCtx = null, master = null, analyser = null, dataArr = null, sceneBus = null;
+let sceneNodes = [];
+let timers = [];
+let current = -1;
+let playing = false;
+let elapsed = 0;
+let lastTick = 0;
+
+function initAudio() {
+  if (audioCtx) return;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  audioCtx = new AC();
+  master = audioCtx.createGain();
+  master.gain.value = 0.55;
+  analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 128;
+  analyser.smoothingTimeConstant = 0.82;
+  master.connect(analyser);
+  analyser.connect(audioCtx.destination);
+  dataArr = new Uint8Array(analyser.frequencyBinCount);
+}
+
+function makeNoise(dur) {
+  const len = Math.floor(audioCtx.sampleRate * dur);
+  const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  return buf;
+}
+
+function buildScene(ep) {
+  const t0 = audioCtx.currentTime;
+  const bus = audioCtx.createGain();
+  bus.gain.setValueAtTime(0.0001, t0);
+  bus.gain.exponentialRampToValueAtTime(0.85, t0 + 2.4);
+  bus.connect(master);
+  sceneBus = bus;
+
+  const nodes = [bus];
+
+  const droneFilter = audioCtx.createBiquadFilter();
+  droneFilter.type = 'lowpass';
+  droneFilter.frequency.value = ep.filter;
+  droneFilter.Q.value = 5;
+  droneFilter.connect(bus);
+
+  const lfo = audioCtx.createOscillator();
+  lfo.frequency.value = 0.06 + Math.random() * 0.05;
+  const lfoGain = audioCtx.createGain();
+  lfoGain.gain.value = ep.filter * 0.55;
+  lfo.connect(lfoGain);
+  lfoGain.connect(droneFilter.frequency);
+  lfo.start(t0);
+  nodes.push(lfo, lfoGain, droneFilter);
+
+  ep.tones.forEach(([f, det, type, g]) => {
+    const o = audioCtx.createOscillator();
+    o.type = type;
+    o.frequency.value = f;
+    o.detune.value = det;
+    const gain = audioCtx.createGain();
+    gain.gain.value = g;
+    o.connect(gain);
+    gain.connect(droneFilter);
+    o.start(t0);
+    nodes.push(o, gain);
+  });
+
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = makeNoise(3);
+  noise.loop = true;
+  const nf = audioCtx.createBiquadFilter();
+  nf.type = 'bandpass';
+  nf.frequency.value = ep.noiseFreq;
+  nf.Q.value = 0.9;
+  const ng = audioCtx.createGain();
+  ng.gain.value = ep.noiseGain;
+  noise.connect(nf);
+  nf.connect(ng);
+  ng.connect(bus);
+  noise.start(t0);
+  nodes.push(noise, nf, ng);
+
+  const tl = audioCtx.createOscillator();
+  tl.frequency.value = 0.11 + Math.random() * 0.08;
+  const tlg = audioCtx.createGain();
+  tlg.gain.value = ep.noiseGain * 0.75;
+  tl.connect(tlg);
+  tlg.connect(ng.gain);
+  tl.start(t0);
+  nodes.push(tl, tlg);
+
+  sceneNodes = nodes;
+}
+
+function stopScene() {
+  timers.forEach(clearTimeout);
+  timers = [];
+  const nodes = sceneNodes;
+  sceneNodes = [];
+  sceneBus = null;
+  if (!audioCtx || !nodes.length) return;
+
+  const t = audioCtx.currentTime;
+  const bus = nodes[0];
+  try {
+    bus.gain.cancelScheduledValues(t);
+    bus.gain.setValueAtTime(Math.max(bus.gain.value, 0.0001), t);
+    bus.gain.exponentialRampToValueAtTime(0.0001, t + 1.1);
+  } catch (e) {}
+
+  setTimeout(() => {
+    nodes.forEach(n => {
+      try { if (n.stop) n.stop(); } catch (e) {}
+      try { n.disconnect(); } catch (e) {}
+    });
+  }, 1300);
+}
+
+function triggerEvent(ep) {
+  if (!audioCtx || !sceneBus) return;
+  const t = audioCtx.currentTime;
+  const k = Math.random();
+
+  if (k < 0.3) {
+    const o = audioCtx.createOscillator();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(95, t);
+    o.frequency.exponentialRampToValueAtTime(26, t + 0.75);
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.45, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.95);
+    o.connect(g);
+    g.connect(sceneBus);
+    o.start(t);
+    o.stop(t + 1);
+  } else if (k < 0.6) {
+    const src = audioCtx.createBufferSource();
+    src.buffer = makeNoise(1);
+    const f = audioCtx.createBiquadFilter();
+    f.type = 'bandpass';
+    f.Q.value = 9;
+    f.frequency.setValueAtTime(900 + Math.random() * 1300, t);
+    f.frequency.linearRampToValueAtTime(600 + Math.random() * 700, t + 0.9);
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(0.2, t + 0.25);
+    g.gain.linearRampToValueAtTime(0.0001, t + 0.95);
+    const pan = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
+    src.connect(f);
+    f.connect(g);
+    if (pan) {
+      pan.pan.value = Math.random() * 2 - 1;
+      g.connect(pan);
+      pan.connect(sceneBus);
+    } else {
+      g.connect(sceneBus);
+    }
+    src.start(t);
+    src.stop(t + 1);
+  } else if (k < 0.8) {
+    const o = audioCtx.createOscillator();
+    o.type = 'sawtooth';
+    o.frequency.setValueAtTime(150, t);
+    o.frequency.linearRampToValueAtTime(65 + Math.random() * 45, t + 1.2);
+    const f = audioCtx.createBiquadFilter();
+    f.type = 'bandpass';
+    f.frequency.value = 520;
+    f.Q.value = 13;
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(0.1, t + 0.3);
+    g.gain.linearRampToValueAtTime(0.0001, t + 1.2);
+    o.connect(f);
+    f.connect(g);
+    g.connect(sceneBus);
+    o.start(t);
+    o.stop(t + 1.3);
+  } else {
+    for (let i = 0; i < 3; i++) {
+      const tt = t + i * 0.29 + Math.random() * 0.05;
+      const o = audioCtx.createOscillator();
+      o.type = 'square';
+      o.frequency.setValueAtTime(180, tt);
+      o.frequency.exponentialRampToValueAtTime(58, tt + 0.13);
+      const f = audioCtx.createBiquadFilter();
+      f.type = 'lowpass';
+      f.frequency.value = 850;
+      const g = audioCtx.createGain();
+      g.gain.setValueAtTime(0.0001, tt);
+      g.gain.exponentialRampToValueAtTime(0.24, tt + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, tt + 0.19);
+      o.connect(f);
+      f.connect(g);
+      g.connect(sceneBus);
+      o.start(tt);
+      o.stop(tt + 0.22);
+    }
+  }
+}
+
+function scheduleEvent(ep) {
+  const id = setTimeout(() => {
+    if (!playing) return;
+    triggerEvent(ep);
+    scheduleEvent(ep);
+  }, 1200 + Math.random() * 3400);
+  timers.push(id);
+}
+
+function play() {
+  if (current < 0) return;
+  initAudio();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const ep = EPISODES[current];
+  buildScene(ep);
+  playing = true;
+  lastTick = performance.now();
+  scheduleEvent(ep);
+  activeRgb = ep.rgb;
+  activeColor = ep.color;
+  updateUI();
+}
+
+function pause() {
+  if (!playing) return;
+  playing = false;
+  stopScene();
+  updateUI();
+}
+
+function finish() {
+  playing = false;
+  stopScene();
+  elapsed = 0;
+  updateUI();
+  updateTime();
+}
+
+function handleOrb(i) {
+  if (current === i && playing) { pause(); return; }
+  if (current === i && !playing) { play(); return; }
+  current = i;
+  elapsed = 0;
+  const ep = EPISODES[i];
+  activeRgb = ep.rgb;
+  activeColor = ep.color;
+  updateMeta();
+  play();
+  updateTime();
+}
+
+function updateOrbs() {
+  orbs.forEach((o, i) => o.classList.toggle('active', i === current));
+}
+
+function updateMeta() {
+  if (current < 0) {
+    nowTitle.textContent = 'Тишина';
+    nowSub.textContent = 'выберите огонёк в темноте';
+    durEl.textContent = '0:00';
+    return;
+  }
+  const ep = EPISODES[current];
+  nowTitle.textContent = ep.title;
+  nowSub.textContent = ep.sub;
+  durEl.textContent = fmt(ep.dur);
+}
+
+function updateUI() {
+  updateOrbs();
+  updateMeta();
+  playBtn.innerHTML = playing
+    ? '<svg viewBox="0 0 24 24"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>'
+    : '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+}
+
+function fmt(s) {
+  s = Math.max(0, Math.floor(s));
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return m + ':' + (r < 10 ? '0' : '') + r;
+}
+
+function updateTime() {
+  const d = current >= 0 ? EPISODES[current].dur : 0;
+  curEl.textContent = fmt(elapsed);
+  barFill.style.width = d ? Math.min(100, (elapsed / d) * 100) + '%' : '0%';
+}
+
+playBtn.addEventListener('click', () => {
+  if (current < 0) { handleOrb(0); return; }
+  if (playing) pause(); else play();
+});
+
+setInterval(() => {
+  if (!playing || current < 0) return;
+  const now = performance.now();
+  elapsed += (now - lastTick) / 1000;
+  lastTick = now;
+  const d = EPISODES[current].dur;
+  if (elapsed >= d) { finish(); return; }
+  updateTime();
+}, 200);
+
+function drawBg(t) {
+  ctx.clearRect(0, 0, W, H);
+  ctx.globalCompositeOperation = 'lighter';
+
+  blobs.forEach(b => {
+    const x = (b.x + Math.sin(t * 0.00008 * b.s + b.ph) * 0.06) * W;
+    const y = (b.y + Math.cos(t * 0.00006 * b.s + b.ph) * 0.05) * H;
+    const r = b.r * Math.max(W, H);
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, 'rgba(70,45,110,.075)');
+    g.addColorStop(0.55, 'rgba(45,25,75,.03)');
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, 6.2832);
+    ctx.fill();
+  });
+
+  motes.forEach(m => {
+    m.y += m.vy;
+    m.x += m.vx + Math.sin(t * 0.0006 + m.ph) * 0.00006;
+    if (m.y < -0.05) { m.y = 1.05; m.x = Math.random(); }
+    if (m.x < -0.05) m.x = 1.05;
+    if (m.x > 1.05) m.x = -0.05;
+    const a = m.a * (0.55 + 0.45 * Math.sin(t * 0.0012 + m.ph));
+    ctx.fillStyle = 'rgba(' + activeRgb + ',' + (a * 0.55).toFixed(3) + ')';
+    ctx.beginPath();
+    ctx.arc(m.x * W, m.y * H, m.r * dpr, 0, 6.2832);
+    ctx.fill();
+  });
+
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+function drawLink(t) {
+  if (current < 0 || !playing) return;
+  const orbEl = orbs[current];
+  if (!orbEl) return;
+  const a = orbEl.getBoundingClientRect();
+  const b = playBtn.getBoundingClientRect();
+  const x1 = (a.left + a.width / 2) * dpr;
+  const y1 = (a.top + a.height / 2) * dpr;
+  const x2 = (b.left + b.width / 2) * dpr;
+  const y2 = (b.top + b.height / 2) * dpr;
+  const cx = (x1 + x2) / 2 + Math.sin(t * 0.0009) * 45 * dpr;
+  const cy = (y1 + y2) / 2 + 70 * dpr;
+
+  const g = ctx.createLinearGradient(x1, y1, x2, y2);
+  g.addColorStop(0, 'rgba(' + activeRgb + ',.34)');
+  g.addColorStop(1, 'rgba(' + activeRgb + ',.04)');
+
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.strokeStyle = g;
+  ctx.lineWidth = 1.2 * dpr;
+  ctx.setLineDash([5 * dpr, 10 * dpr]);
+  ctx.lineDashOffset = -t * 0.025 * dpr;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.quadraticCurveTo(cx, cy, x2, y2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+function drawViz(t) {
+  const w = viz.width, h = viz.height;
+  if (!w || !h) return;
+  vctx.clearRect(0, 0, w, h);
+
+  if (analyser && playing) analyser.getByteFrequencyData(dataArr);
+
+  const bars = 28;
+  const bw = w / bars;
+  for (let i = 0; i < bars; i++) {
+    let v;
+    if (playing && dataArr) {
+      v = dataArr[Math.floor((i * dataArr.length) / bars / 1.25)] / 255;
+    } else {
+      v = 0.04 + 0.025 * Math.sin(t * 0.0018 + i * 0.55);
+    }
+    const bh = Math.max(2 * dpr, v * h * 0.95);
+    vctx.fillStyle = 'rgba(' + activeRgb + ',' + (playing ? 0.85 : 0.22) + ')';
+    vctx.fillRect(i * bw + bw * 0.28, (h - bh) / 2, bw * 0.44, bh);
+  }
+}
+
+function loop(t) {
+  drawBg(t);
+  drawViz(t);
+  drawLink(t);
+  requestAnimationFrame(loop);
+}
+
+let px = innerWidth / 2, py = innerHeight / 2;
+let tx = px, ty = py;
+
+window.addEventListener('pointermove', e => {
+  tx = e.clientX;
+  ty = e.clientY;
+});
+
+function smoothLight() {
+  px += (tx - px) * 0.14;
+  py += (ty - py) * 0.14;
+  cursorLight.style.transform = 'translate3d(' + (px - 350) + 'px,' + (py - 350) + 'px,0)';
+  requestAnimationFrame(smoothLight);
+}
+
+window.addEventListener('resize', () => {
+  resizeCanvas();
+});
+
+resizeCanvas();
+updateUI();
+updateTime();
+requestAnimationFrame(loop);
+smoothLight();
+
+document.addEventListener('pointerdown', () => {
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}, { once: true });
+</script>
+</body>
+</html>
