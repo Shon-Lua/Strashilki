@@ -408,6 +408,16 @@
   #repeatBtn{margin-right:10px}
   #shuffleBtn{margin-left:10px}
 
+  .spinner-circle{
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: spinAnim 1s linear infinite;
+  }
+  @keyframes spinAnim{
+    from{transform:rotate(0deg)}
+    to{transform:rotate(360deg)}
+  }
+
   #miniPlayer{
     position:fixed;left:50%;bottom:22px;
     transform:translate(-50%, 200%);
@@ -1015,7 +1025,7 @@ const muteBtn = document.getElementById('muteBtn');
 
 const ICON_PLAY = '<path d="M8 5v14l11-7z"/>';
 const ICON_PAUSE = '<path d="M6 5h4v14H6zm8 0h4v14h-4z"/>';
-const ICON_LOADING = '<circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="13 41" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></circle>';
+const ICON_LOADING = '<circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="13 41" stroke-linecap="round" class="spinner-circle"/>';
 const ICON_MUTE_ON = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3z"/><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/><path d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>';
 const ICON_MUTE_OFF = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3z"/><line x1="4" y1="4" x2="20" y2="20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
 
@@ -1041,12 +1051,29 @@ function resize(){
 let ambientActive = false;
 let ambientAudio = null;
 let ambientGen = 0;
-let ambientQueue = [];
-let ambientQueuePos = 0;
-let ambientConsecFails = 0;
+let ambientNum = 1;
+let ambientFails = 0;
+let ambientWrapped = false;
 let ambientMuted = (function(){
   try { return localStorage.getItem('ambientMuted') === '1'; } catch(e){ return false; }
 })();
+
+function fadeVolume(audio, target, dur, onDone){
+  if (!audio) return;
+  audio._fadeToken = (audio._fadeToken || 0) + 1;
+  const token = audio._fadeToken;
+  const start = isFinite(audio.volume) ? audio.volume : 0;
+  const t0 = performance.now();
+  const step = (now) => {
+    if (audio._fadeToken !== token) return;
+    const p = Math.min(1, (now - t0) / Math.max(1, dur));
+    const v = start + (target - start) * p;
+    try { audio.volume = Math.max(0, Math.min(1, v)); } catch(e){ return; }
+    if (p < 1) requestAnimationFrame(step);
+    else if (onDone) onDone();
+  };
+  requestAnimationFrame(step);
+}
 
 function updateMuteIcon(){
   if (ambientMuted) {
@@ -1060,173 +1087,99 @@ function updateMuteIcon(){
   }
 }
 
+function ambientShouldPlay(){
+  return ambientActive && !ambientMuted && !playing;
+}
+
+function applyAmbientState(){
+  const a = ambientAudio;
+  if (!a) return;
+  if (ambientShouldPlay()) {
+    if (a.paused) {
+      a.volume = 0;
+      a.play().then(() => {
+        if (a !== ambientAudio) { try { a.pause(); } catch(e){} return; }
+        if (!ambientShouldPlay()) { try { a.pause(); } catch(e){} return; }
+        fadeVolume(a, 0.12, 500);
+      }).catch(() => {});
+    } else {
+      fadeVolume(a, 0.12, 300);
+    }
+  } else {
+    if (!a.paused) {
+      fadeVolume(a, 0, 300, () => {
+        if (a !== ambientAudio) return;
+        if (ambientShouldPlay()) return;
+        try { a.pause(); } catch(e){}
+      });
+    }
+  }
+}
+
+function ambientPlayNext(){
+  if (!ambientActive) return;
+  if (ambientFails > 15) {
+    if (ambientWrapped) { ambientActive = false; return; }
+    ambientNum = 1;
+    ambientFails = 0;
+    ambientWrapped = true;
+  }
+  const num = ambientNum++;
+  const myGen = ++ambientGen;
+  const audio = new Audio();
+  audio.preload = 'auto';
+  audio.src = 'DATA/' + num + '.mp3';
+  audio.volume = 0;
+
+  let failed = false;
+  const onFail = () => {
+    if (failed) return;
+    failed = true;
+    if (myGen !== ambientGen) return;
+    ambientFails++;
+    setTimeout(ambientPlayNext, 80);
+  };
+
+  audio.onerror = onFail;
+  audio.onended = () => {
+    if (myGen !== ambientGen) return;
+    ambientFails = 0;
+    ambientWrapped = false;
+    ambientPlayNext();
+  };
+
+  audio.play().then(() => {
+    if (failed) { try { audio.pause(); } catch(e){} return; }
+    if (myGen !== ambientGen) { try { audio.pause(); } catch(e){} return; }
+    ambientAudio = audio;
+    ambientFails = 0;
+    ambientWrapped = false;
+    if (ambientShouldPlay()) {
+      fadeVolume(audio, 0.12, 1200);
+    } else {
+      try { audio.pause(); } catch(e){}
+    }
+  }).catch(onFail);
+}
+
+function startAmbient(){
+  if (ambientActive) return;
+  ambientActive = true;
+  ambientNum = 1;
+  ambientFails = 0;
+  ambientWrapped = false;
+  ambientPlayNext();
+}
+
 function toggleMute(){
   ambientMuted = !ambientMuted;
   try { localStorage.setItem('ambientMuted', ambientMuted ? '1' : '0'); } catch(e){}
   updateMuteIcon();
-  const target = ambientMuted ? 0 : 0.12;
-  const audio = ambientAudio;
-  if (audio) {
-    const startVol = audio.volume;
-    const t0 = performance.now();
-    const dur = 300;
-    const step = (now) => {
-      if (ambientAudio !== audio) return;
-      const p = Math.min(1, (now - t0) / dur);
-      audio.volume = Math.max(0, Math.min(1, startVol + (target - startVol) * p));
-      if (p < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  }
+  applyAmbientState();
   showToast(ambientMuted ? 'фон выключен' : 'фон включён', 1500);
 }
 
 muteBtn.addEventListener('click', toggleMute);
-
-async function probeTrack(num){
-  const url = 'DATA/' + num + '.mp3';
-  try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 4000);
-    const res = await fetch(url, { method: 'HEAD', cache: 'no-store', signal: controller.signal });
-    clearTimeout(timer);
-    if (!res.ok) return false;
-    const ct = (res.headers.get('content-type') || '').toLowerCase();
-    if (ct.includes('text/html')) return false;
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
-async function buildAmbientQueue(){
-  const found = [];
-  const BATCH = 8;
-  let emptyBatches = 0;
-  for (let start = 1; start <= 80; start += BATCH) {
-    const promises = [];
-    for (let i = start; i < start + BATCH && i <= 80; i++) {
-      promises.push(probeTrack(i).then(ok => ({num: i, ok})));
-    }
-    const results = await Promise.all(promises);
-    let batchOk = 0;
-    for (const r of results) {
-      if (r.ok) { found.push(r.num); batchOk++; }
-    }
-    if (batchOk === 0) {
-      emptyBatches++;
-      if (found.length > 0 && emptyBatches >= 2) break;
-      if (found.length === 0 && emptyBatches >= 5) break;
-    } else {
-      emptyBatches = 0;
-    }
-  }
-  return found.sort((a, b) => a - b);
-}
-
-async function startAmbient(){
-  if (ambientActive) return;
-  ambientActive = true;
-  ambientQueue = await buildAmbientQueue();
-  if (!ambientActive) return;
-  if (ambientQueue.length === 0) {
-    ambientActive = false;
-    return;
-  }
-  ambientQueuePos = 0;
-  ambientConsecFails = 0;
-  playAmbientAt(0);
-}
-
-function playAmbientAt(pos){
-  if (!ambientActive) return;
-  if (ambientQueue.length === 0) return;
-  pos = ((pos % ambientQueue.length) + ambientQueue.length) % ambientQueue.length;
-  const num = ambientQueue[pos];
-
-  ambientGen++;
-  const gen = ambientGen;
-
-  const oldAudio = ambientAudio;
-  ambientAudio = null;
-  if (oldAudio) {
-    try { oldAudio.pause(); } catch (e) {}
-  }
-
-  const audio = new Audio();
-  audio.preload = 'auto';
-  audio.volume = 0;
-  audio.src = 'DATA/' + num + '.mp3';
-
-  let handled = false;
-
-  const onFail = () => {
-    if (handled) return;
-    if (gen !== ambientGen) return;
-    handled = true;
-    if (ambientAudio === audio) ambientAudio = null;
-    try { audio.pause(); } catch (e) {}
-    if (!ambientActive) return;
-    ambientConsecFails++;
-    if (ambientConsecFails >= ambientQueue.length) {
-      ambientActive = false;
-      return;
-    }
-    playAmbientAt(pos + 1);
-  };
-
-  audio.addEventListener('error', onFail);
-  audio.addEventListener('ended', () => {
-    if (handled) return;
-    if (gen !== ambientGen) return;
-    if (ambientAudio !== audio) return;
-    if (!ambientActive) return;
-    handled = true;
-    ambientConsecFails = 0;
-    playAmbientAt(pos + 1);
-  });
-
-  audio.play().then(() => {
-    if (handled) return;
-    if (gen !== ambientGen) return;
-    if (!ambientActive) return;
-    ambientAudio = audio;
-    ambientConsecFails = 0;
-    const targetVol = ambientMuted ? 0 : 0.12;
-    const t0 = performance.now();
-    const dur = 2000;
-    const step = (now) => {
-      if (gen !== ambientGen) return;
-      if (ambientAudio !== audio) return;
-      if (!ambientActive) return;
-      const p = Math.min(1, (now - t0) / dur);
-      audio.volume = targetVol * p;
-      if (p < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  }).catch(onFail);
-}
-
-function stopAmbient(permanent){
-  if (permanent) ambientActive = false;
-  ambientGen++;
-  const audio = ambientAudio;
-  ambientAudio = null;
-  if (!audio) return;
-  const startVol = audio.volume;
-  const t0 = performance.now();
-  const dur = 1200;
-  const step = (now) => {
-    const p = Math.min(1, (now - t0) / dur);
-    audio.volume = Math.max(0, startVol * (1 - p));
-    if (p < 1) {
-      requestAnimationFrame(step);
-    } else {
-      try { audio.pause(); } catch (e) {}
-    }
-  };
-  requestAnimationFrame(step);
-}
 
 function showToast(text, duration){
   if (!text) return;
@@ -1714,35 +1667,39 @@ function generatePositions(count){
   return positions;
 }
 
-async function headOk(url){
+function probeAudio(url){
+  return new Promise((resolve) => {
+    const audio = new Audio();
+    let done = false;
+    const finish = (ok) => {
+      if (done) return;
+      done = true;
+      try { audio.src = ''; } catch(e){}
+      audio.onerror = null;
+      audio.onloadedmetadata = null;
+      audio.oncanplay = null;
+      resolve(ok);
+    };
+    audio.onerror = () => finish(false);
+    audio.onloadedmetadata = () => finish(true);
+    audio.oncanplay = () => finish(true);
+    setTimeout(() => finish(false), 5000);
+    audio.preload = 'metadata';
+    audio.src = url;
+  });
+}
+
+async function readNameTxt(url){
   try {
-    const res = await fetch(url, { method: 'HEAD', cache: 'no-store' });
-    return res.ok;
-  } catch (e) { return false; }
-}
-
-async function findFirstExisting(candidates){
-  if (!candidates.length) return null;
-  const results = await Promise.all(candidates.map(headOk));
-  for (let i = 0; i < candidates.length; i++) if (results[i]) return candidates[i];
-  return null;
-}
-
-async function fetchFirstText(candidates){
-  for (const url of candidates) {
-    try {
-      const res = await fetch(url, { cache: 'no-store' });
-      if (!res.ok) continue;
-      const txt = await res.text();
-      const trimmed = txt.trim();
-      if (!trimmed) continue;
-      if (trimmed.length > 300) continue;
-      const lower = trimmed.toLowerCase();
-      if (lower.includes('<!doctype') || lower.includes('<html') || lower.includes('<body')) continue;
-      return trimmed;
-    } catch (e) {}
-  }
-  return null;
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const txt = await res.text();
+    const trimmed = txt.trim();
+    if (!trimmed || trimmed.length > 500) return null;
+    const lower = trimmed.toLowerCase();
+    if (lower.includes('<!doctype') || lower.includes('<html')) return null;
+    return trimmed;
+  } catch (e) { return null; }
 }
 
 async function loadEpisodesFromJSON(){
@@ -1752,65 +1709,47 @@ async function loadEpisodesFromJSON(){
     if (!res.ok) return [];
     data = await res.json();
   } catch (e) { return []; }
+
   const map = (data && data.Episodes) || {};
   const entries = Object.entries(map);
   if (!entries.length) return [];
 
-  const audioNamesBase = [
-    'audio.mp3','Audio.mp3','AUDIO.MP3','track.mp3','Track.mp3','TRACK.MP3',
-    'podcast.mp3','Podcast.mp3','PODCAST.MP3','episode.mp3','Episode.mp3','EPISODE.MP3',
-    'sound.mp3','Sound.mp3','record.mp3','Record.mp3','file.mp3','File.mp3','main.mp3','Main.mp3','1.mp3'
-  ];
-  const coverNamesBase = [
-    'Cover.jpg','Cover.JPG','Cover.Jpeg','Cover.JPEG','Cover.jpeg',
-    'cover.jpg','cover.JPG','cover.jpeg','cover.JPEG','cover.Jpeg',
-    'Cover.png','Cover.PNG','cover.png','cover.PNG',
-    'Cover.webp','Cover.WEBP','cover.webp','cover.WEBP',
-    'Cover.gif','cover.gif',
-    'Image.jpg','Image.JPG','image.jpg','image.JPG',
-    'Artwork.jpg','Artwork.JPG','artwork.jpg','artwork.JPG',
-    'Poster.jpg','Poster.JPG','poster.jpg','poster.JPG',
-    'Thumbnail.jpg','thumbnail.jpg','Picture.jpg','picture.jpg','Front.jpg','front.jpg',
-    '1.jpg','1.JPG','1.jpeg','1.png','1.PNG','1.webp'
-  ];
-
-  return Promise.all(entries.map(async ([folderKey, displayName]) => {
+  const results = [];
+  for (const [folderKey, displayName] of entries) {
+    const folderName = displayName || folderKey;
+    const basePath = 'Episodes/' + folderName + '/';
     const ep = {
-      folderKey, jsonValue: displayName, title: displayName || folderKey,
-      audioUrl: null, coverUrl: null, dur: 0
+      folderKey,
+      folderName,
+      basePath,
+      title: displayName || folderKey,
+      audioUrl: null,
+      coverUrl: basePath + 'Cover.jpg',
+      dur: 0
     };
-    const folderCandidates = [];
-    if (displayName && displayName !== folderKey) folderCandidates.push(displayName);
-    folderCandidates.push(folderKey);
 
-    const nameCandidates = [];
-    for (const folder of folderCandidates) {
-      nameCandidates.push('Episodes/' + folder + '/name.txt');
-      nameCandidates.push('Episodes/' + folder + '/Name.txt');
-      nameCandidates.push('Episodes/' + folder + '/NAME.txt');
-    }
-    const nameTxt = await fetchFirstText(nameCandidates);
+    const nameTxt = await readNameTxt(basePath + 'name.txt');
     if (nameTxt) ep.title = nameTxt;
 
-    for (const folder of folderCandidates) {
-      const audioNames = audioNamesBase.concat([folder + '.mp3', folderKey + '.mp3']);
-      if (displayName) audioNames.push(displayName + '.mp3');
-      const candidates = audioNames.map(n => 'Episodes/' + folder + '/' + n);
-      const found = await findFirstExisting(candidates);
-      if (found) { ep.audioUrl = found; break; }
+    const audioCandidates = [];
+    if (nameTxt && nameTxt !== folderName) audioCandidates.push(basePath + nameTxt + '.mp3');
+    audioCandidates.push(basePath + folderName + '.mp3');
+    audioCandidates.push(basePath + 'audio.mp3');
+    audioCandidates.push(basePath + 'track.mp3');
+    audioCandidates.push(basePath + 'podcast.mp3');
+    if (folderKey !== folderName) audioCandidates.push(basePath + folderKey + '.mp3');
+    const uniqueAudio = [...new Set(audioCandidates)];
+
+    for (const url of uniqueAudio) {
+      if (await probeAudio(url)) {
+        ep.audioUrl = url;
+        break;
+      }
     }
-    for (const folder of folderCandidates) {
-      const coverNames = coverNamesBase.concat([
-        folder + '.jpg', folder + '.png', folder + '.jpeg', folder + '.webp',
-        folderKey + '.jpg', folderKey + '.png'
-      ]);
-      if (displayName) { coverNames.push(displayName + '.jpg'); coverNames.push(displayName + '.png'); }
-      const candidates = coverNames.map(n => 'Episodes/' + folder + '/' + n);
-      const found = await findFirstExisting(candidates);
-      if (found) { ep.coverUrl = found; break; }
-    }
-    return ep;
-  }));
+
+    results.push(ep);
+  }
+  return results;
 }
 
 function buildSky(){
@@ -1899,11 +1838,12 @@ function setLoading(v){
 }
 
 function updateIcons(){
-  let icon;
-  if (loadingSpinner) icon = ICON_LOADING;
-  else icon = playing ? ICON_PAUSE : ICON_PLAY;
-  ppIcon.innerHTML = icon;
-  miniPlayIcon.innerHTML = icon;
+  let inner;
+  if (loadingSpinner) inner = ICON_LOADING;
+  else if (playing) inner = ICON_PAUSE;
+  else inner = ICON_PLAY;
+  ppIcon.innerHTML = inner;
+  miniPlayIcon.innerHTML = inner;
 }
 
 function fadeOutEpisode(callback){
@@ -1921,7 +1861,7 @@ function fadeOutEpisode(callback){
   const step = (now) => {
     if (episodeAudio !== audio) { if (callback) callback(); return; }
     const p = Math.min(1, (now - t0) / dur);
-    audio.volume = Math.max(0, startVol * (1 - p));
+    try { audio.volume = Math.max(0, startVol * (1 - p)); } catch(e){}
     if (p < 1) {
       requestAnimationFrame(step);
     } else {
@@ -1953,15 +1893,15 @@ function switchToEpisode(n, autoPlay){
   if (autoPlay === undefined) autoPlay = playing || wantsToPlay;
   switchToken++;
   const token = switchToken;
-  playing = false;
   wantsToPlay = !!autoPlay;
-  updateIcons();
   fadeOutEpisode(() => {
     if (token !== switchToken) return;
     setCurrentTrack(n);
+    playing = false;
     const page = Math.floor(n / PER_PAGE);
     if (page !== currentPage) goToPage(page);
     if (autoPlay) play();
+    else { updateIcons(); applyAmbientState(); }
   });
 }
 
@@ -1970,16 +1910,17 @@ function play(){
   const ep = EPISODES[current];
   if (!ep || !ep.audioUrl) { showToast('аудио не найдено', 2200); return; }
 
-  stopAmbient(true);
-
   wantsToPlay = true;
+  playing = true;
   setLoading(true);
+  updateIcons();
+  applyAmbientState();
 
   if (!episodeAudio || loadedIndex !== current) {
     if (episodeAudio) { try { episodeAudio.pause(); } catch (e) {} }
     const idx = current;
     const a = new Audio();
-    a.preload = 'auto';
+    a.preload = 'metadata';
     a.src = ep.audioUrl;
     a.volume = 0;
 
@@ -1997,17 +1938,18 @@ function play(){
         wantsToPlay = false;
         setLoading(false);
         updateIcons();
+        applyAmbientState();
         showToast('ошибка воспроизведения', 2500);
       }
     });
     a.addEventListener('playing', () => {
-      if (loadedIndex === idx) { setLoading(false); }
+      if (loadedIndex === idx && wantsToPlay) setLoading(false);
     });
     a.addEventListener('waiting', () => {
-      if (loadedIndex === idx && wantsToPlay) { setLoading(true); }
+      if (loadedIndex === idx && wantsToPlay) setLoading(true);
     });
     a.addEventListener('canplay', () => {
-      if (loadedIndex === idx && wantsToPlay && a.readyState >= 3) { setLoading(false); }
+      if (loadedIndex === idx && wantsToPlay && a.readyState >= 3) setLoading(false);
     });
 
     episodeAudio = a;
@@ -2020,14 +1962,16 @@ function play(){
     if (loadedIndex !== idx) return;
     if (episodeAudio !== audio) return;
     playing = true;
+    setLoading(false);
     updateIcons();
+    applyAmbientState();
     const startVol = audio.volume;
     const t0 = performance.now();
     const dur = 600;
     const step = (now) => {
       if (episodeAudio !== audio) return;
       const p = Math.min(1, (now - t0) / dur);
-      audio.volume = Math.min(1, startVol + (1 - startVol) * p);
+      try { audio.volume = Math.min(1, startVol + (1 - startVol) * p); } catch(e){}
       if (p < 1) requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
@@ -2037,6 +1981,7 @@ function play(){
       wantsToPlay = false;
       setLoading(false);
       updateIcons();
+      applyAmbientState();
     }
   });
 }
@@ -2044,9 +1989,15 @@ function play(){
 function pause(){
   wantsToPlay = false;
   setLoading(false);
-  if (episodeAudio) { try { episodeAudio.pause(); } catch (e) {} }
+  if (episodeAudio) {
+    try { episodeAudio.pause(); } catch (e) {}
+    if (episodeAudio.readyState < 3) {
+      try { episodeAudio.preload = 'auto'; } catch(e){}
+    }
+  }
   playing = false;
   updateIcons();
+  applyAmbientState();
 }
 
 function finish(){
@@ -2057,6 +2008,7 @@ function finish(){
   elapsed = 0;
   updateProgress();
   updateIcons();
+  applyAmbientState();
 }
 
 function buildShuffleOrder(startIndex){
@@ -2133,7 +2085,7 @@ function onTrackEnd(){
           const step = (now) => {
             if (episodeAudio !== audio) return;
             const p = Math.min(1, (now - t0) / dur);
-            audio.volume = p;
+            try { audio.volume = p; } catch(e){}
             if (p < 1) requestAnimationFrame(step);
           };
           requestAnimationFrame(step);
@@ -2193,6 +2145,7 @@ function setCoverTo(container, ep, idx){
 }
 
 function applyMarquee(el, text){
+  if (!el) return;
   if (el._marqueeAnim) { try { el._marqueeAnim.cancel(); } catch (e) {} el._marqueeAnim = null; }
   el.innerHTML = '';
   el.style.overflow = 'hidden';
@@ -2236,11 +2189,7 @@ function applyMarquee(el, text){
         { transform: 'translateX(0)' },
         { transform: 'translateX(-' + singleW + 'px)' }
       ],
-      {
-        duration: dur,
-        iterations: Infinity,
-        easing: 'linear'
-      }
+      { duration: dur, iterations: Infinity, easing: 'linear' }
     );
   });
 }
@@ -2300,7 +2249,11 @@ function closeOverlay(){
     updateMiniUI();
     setTimeout(() => {
       miniPlayer.classList.add('show');
-      if (miniTitle._pendingMarquee) applyMarquee(miniTitle, miniTitle._pendingMarquee);
+      if (miniTitle._pendingMarquee) {
+        setTimeout(() => {
+          if (miniTitle._pendingMarquee) applyMarquee(miniTitle, miniTitle._pendingMarquee);
+        }, 120);
+      }
     }, 200);
   }
 }
