@@ -9,6 +9,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Страшилки">
 <title>Страшилки</title>
+<link rel="icon" type="image/jpeg" href="DATA/Logo.jpg">
+<link rel="apple-touch-icon" href="DATA/Logo.jpg">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:wght@400;500;600&display=swap');
   *{margin:0;padding:0;box-sizing:border-box}
@@ -136,6 +138,7 @@
   .infoHeading{font-family:'Cinzel', Georgia, serif;font-weight:500;font-size:16px;letter-spacing:.14em;color:#eae6f2;margin-bottom:26px;line-height:1.45;text-transform:uppercase}
   .info-line{font-family:'Cormorant Garamond', Georgia, serif;font-weight:500;font-size:15px;line-height:1.7;color:#b8b2c5;margin-bottom:2px;word-break:break-word}
   .info-gap{height:14px}
+  .info-empty{font-family:'Cormorant Garamond', Georgia, serif;font-weight:500;font-size:14px;letter-spacing:.04em;color:#5e596f;text-align:center;font-style:italic;line-height:1.7}
   .info-link{color:#fff;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;text-decoration-color:rgba(255,255,255,.55);cursor:pointer;transition:text-decoration-color .25s ease, text-shadow .25s ease;margin:0 3px;word-break:break-all}
   .info-link:hover{text-decoration-color:#fff;text-shadow:0 0 14px rgba(255,255,255,.5)}
   #externalWarning{position:fixed;inset:0;z-index:90;display:grid;place-items:center;background:rgba(0,0,0,.94);opacity:0;pointer-events:none;transition:opacity .35s ease;padding:24px}
@@ -308,6 +311,29 @@
   </div>
 </div>
 <script>
+(function setupPWA(){
+  try {
+    const base = location.href.split('#')[0];
+    const scope = base.replace(/[^/]*$/, '');
+    const manifest = {
+      name: 'Страшилки', short_name: 'Страшилки',
+      description: 'Хоррор-подкасты в ночном небе',
+      start_url: base, scope: scope,
+      display: 'standalone', orientation: 'portrait',
+      background_color: '#000000', theme_color: '#000000',
+      icons: [
+        { src: 'DATA/Logo.jpg', sizes: '192x192', type: 'image/jpeg', purpose: 'any' },
+        { src: 'DATA/Logo.jpg', sizes: '512x512', type: 'image/jpeg', purpose: 'any' },
+        { src: 'DATA/Logo.jpg', sizes: '512x512', type: 'image/jpeg', purpose: 'maskable' }
+      ]
+    };
+    const link = document.createElement('link');
+    link.rel = 'manifest';
+    link.href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest));
+    document.head.appendChild(link);
+  } catch (e) {}
+})();
+
 function fmt(s){
   if (!isFinite(s) || s < 0) s = 0;
   s = Math.floor(s);
@@ -408,6 +434,20 @@ function buildUrl(segments){
   return segments.filter(s => s !== null && s !== undefined && s !== '').map(encodePathSegment).join('/');
 }
 
+async function fileExists(url){
+  try {
+    const res = await fetch(url, { method: 'HEAD', cache: 'no-store' });
+    if (res.ok) return true;
+    if (res.status === 405) {
+      const res2 = await fetch(url, { headers: { 'Range': 'bytes=0-0' }, cache: 'no-store' });
+      return res2.ok;
+    }
+    return false;
+  } catch (e) {
+    return false;
+  }
+}
+
 function detectGitHubRepo(){
   try {
     const host = location.hostname;
@@ -421,7 +461,7 @@ function detectGitHubRepo(){
   } catch (e) { return null; }
 }
 
-const GH_TREE_KEY = 'ghTreeCache_v4';
+const GH_TREE_KEY = 'ghTreeCache_v6';
 const GH_TREE_TTL = 30 * 60 * 1000;
 
 let ghTreeCache = null;
@@ -443,23 +483,16 @@ function saveTreeToLS(tree){
 async function getFullTree(){
   if (ghTreeCache) return ghTreeCache;
   const cached = loadTreeFromLS();
-  if (cached) {
-    ghTreeCache = cached;
-    return cached;
-  }
+  if (cached) { ghTreeCache = cached; return cached; }
   if (ghTreeDisabled) return null;
   const gh = detectGitHubRepo();
   if (!gh) return null;
-
   const branches = ['main', 'master', 'gh-pages'];
   for (const branch of branches) {
     try {
       const url = 'https://api.github.com/repos/' + gh.user + '/' + gh.repo + '/git/trees/' + encodeURIComponent(branch) + '?recursive=1';
       const res = await fetch(url, { cache: 'no-store' });
-      if (res.status === 403 || res.status === 429) {
-        ghTreeDisabled = true;
-        return null;
-      }
+      if (res.status === 403 || res.status === 429) { ghTreeDisabled = true; return null; }
       if (!res.ok) continue;
       const data = await res.json();
       if (data && Array.isArray(data.tree)) {
@@ -472,8 +505,31 @@ async function getFullTree(){
   return null;
 }
 
-function normalizeName(s){
-  return String(s).normalize('NFC').toLowerCase().trim().replace(/\s+/g, ' ');
+function looseNorm(s){
+  return String(s).normalize('NFC').toLowerCase()
+    .replace(/ё/g, 'е')
+    .replace(/[^a-zа-я0-9]/gi, '');
+}
+function levenshtein(a, b){
+  const m = a.length, n = b.length;
+  if (!m) return n;
+  if (!n) return m;
+  const d = new Array(m + 1);
+  for (let i = 0; i <= m; i++) { d[i] = new Array(n + 1); d[i][0] = i; }
+  for (let j = 0; j <= n; j++) d[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i-1] === b[j-1] ? 0 : 1;
+      d[i][j] = Math.min(d[i-1][j] + 1, d[i][j-1] + 1, d[i-1][j-1] + cost);
+    }
+  }
+  return d[m][n];
+}
+function numberMatch(a, b){
+  const na = String(a).match(/\d+/);
+  const nb = String(b).match(/\d+/);
+  if (na && nb) return na[0] === nb[0];
+  return true;
 }
 
 function collectFolders(tree){
@@ -481,15 +537,14 @@ function collectFolders(tree){
   for (const f of tree) {
     if (!f || !f.path) continue;
     const parts = f.path.split('/');
-    for (let i = 1; i <= parts.length - 1; i++) {
-      folders.add(parts.slice(0, i).join('/'));
-    }
+    for (let i = 1; i <= parts.length - 1; i++) folders.add(parts.slice(0, i).join('/'));
   }
   return folders;
 }
 
 function findFolderInTree(tree, candidates, folders){
   if (!folders) folders = collectFolders(tree);
+
   for (const c of candidates) {
     if (!c) continue;
     if (folders.has('Episodes/' + c)) return 'Episodes/' + c + '/';
@@ -498,13 +553,40 @@ function findFolderInTree(tree, candidates, folders){
     if (!c) continue;
     if (folders.has(c)) return c + '/';
   }
-  const normCands = candidates.filter(Boolean).map(normalizeName);
+
+  const looseCands = candidates.filter(Boolean).map(looseNorm).filter(Boolean);
   for (const folder of folders) {
-    const name = folder.split('/').pop();
-    if (normCands.includes(normalizeName(name))) {
-      return folder + '/';
+    if (!folder.startsWith('Episodes/')) continue;
+    const name = folder.slice('Episodes/'.length);
+    if (name.includes('/')) continue;
+    const ln = looseNorm(name);
+    if (!ln) continue;
+    for (let i = 0; i < looseCands.length; i++) {
+      if (looseCands[i] === ln) {
+        if (numberMatch(name, candidates[i])) return folder + '/';
+      }
     }
   }
+
+  let best = null, bestScore = 0;
+  for (const folder of folders) {
+    if (!folder.startsWith('Episodes/')) continue;
+    const name = folder.slice('Episodes/'.length);
+    if (name.includes('/')) continue;
+    const ln = looseNorm(name);
+    if (!ln) continue;
+    for (const cand of candidates) {
+      if (!cand) continue;
+      const lc = looseNorm(cand);
+      if (!lc) continue;
+      if (!numberMatch(name, cand)) continue;
+      const dist = levenshtein(ln, lc);
+      const maxLen = Math.max(ln.length, lc.length);
+      const score = 1 - dist / maxLen;
+      if (score > bestScore) { bestScore = score; best = folder + '/'; }
+    }
+  }
+  if (bestScore >= 0.75) return best;
   return null;
 }
 
@@ -517,7 +599,6 @@ function pickFromNames(names){
   }
   return { mp3, cover, nameTxt };
 }
-
 function findFilesInFolder(tree, folderPath){
   const names = [];
   for (const f of tree) {
@@ -528,37 +609,6 @@ function findFilesInFolder(tree, folderPath){
     names.push(rel);
   }
   return pickFromNames(names);
-}
-
-async function fetchDirListing(folderName){
-  try {
-    const url = buildUrl(['Episodes', folderName]) + '/';
-    const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) return null;
-    const ct = res.headers.get('content-type') || '';
-    if (!ct.includes('text/html')) return null;
-    const html = await res.text();
-    if (html.includes('id="skyWrap"')) return null;
-    if (!/Index of/i.test(html)) return null;
-    const doc = new DOMParser().parseFromString(html, 'text/html');
-    const anchors = doc.querySelectorAll('a[href]');
-    const files = [];
-    for (const a of anchors) {
-      let href = a.getAttribute('href');
-      if (!href) continue;
-      href = href.trim();
-      if (href === '../' || href === '..') continue;
-      if (href.startsWith('?') || href.startsWith('#')) continue;
-      if (href.startsWith('/') || href.startsWith('http')) continue;
-      if (href.endsWith('/')) continue;
-      const qIdx = href.indexOf('?');
-      if (qIdx >= 0) href = href.slice(0, qIdx);
-      try { href = decodeURIComponent(href); } catch (e) {}
-      if (!href) continue;
-      files.push(href);
-    }
-    return [...new Set(files)];
-  } catch (e) { return null; }
 }
 
 async function fetchText(url){
@@ -573,44 +623,19 @@ async function fetchText(url){
   } catch (e) { return null; }
 }
 
-async function probeAudio(url){
-  return new Promise(resolve => {
-    const audio = new Audio();
-    let done = false;
-    const finish = (ok) => {
-      if (done) return;
-      done = true;
-      audio.onloadedmetadata = null;
-      audio.oncanplay = null;
-      audio.onerror = null;
-      try { audio.pause(); } catch(e){}
-      setTimeout(() => {
-        try { audio.removeAttribute('src'); audio.load(); } catch(e){}
-      }, 150);
-      resolve(ok);
-    };
-    audio.onloadedmetadata = () => finish(true);
-    audio.oncanplay = () => finish(true);
-    audio.onerror = () => finish(false);
-    setTimeout(() => finish(false), 3500);
-    audio.preload = 'metadata';
-    audio.src = url;
-  });
-}
-
 function parseJsonEntry(key, val){
-  const out = { folderKey: key, folderName: null, title: null, audioFile: null, coverFile: null };
-  if (val && typeof val === 'object' && !Array.isArray(val)) {
-    out.folderName = val.folder || val.name || key;
-    out.title = val.name || val.title || out.folderName;
-    out.audioFile = val.audio || null;
-    out.coverFile = val.cover || null;
-  } else if (typeof val === 'string') {
+  const out = { folderKey: key, folderName: key, title: key, audioFile: null, coverFile: null };
+  if (typeof val === 'string') {
     out.folderName = val || key;
     out.title = val || key;
-  } else {
-    out.folderName = key;
-    out.title = key;
+  } else if (val && typeof val === 'object') {
+    if (val.folder) out.folderName = val.folder;
+    else if (val.name) out.folderName = val.name;
+    if (val.title) out.title = val.title;
+    else if (val.name) out.title = val.name;
+    else if (val.folder) out.title = val.folder;
+    if (val.audio) out.audioFile = val.audio;
+    if (val.cover) out.coverFile = val.cover;
   }
   return out;
 }
@@ -620,25 +645,88 @@ function extractNumber(str){
   return m ? parseInt(m[1], 10) : -1;
 }
 
+function sanitizeVariants(name){
+  const out = new Set();
+  out.add(name);
+  out.add(name.replace(/[()]/g, '').replace(/\s+/g, ' ').trim());
+  out.add(name.replace(/\s*\(/g, ' ').replace(/\)/g, ' ').replace(/\s+/g, ' ').trim());
+  out.add(name.replace(/[()]/g, '').trim());
+  return [...out];
+}
+
+async function resolveAudioForFolder(folderCandidates, extraNames){
+  const names = [];
+  if (extraNames) for (const n of extraNames) if (n) names.push(n);
+
+  for (const c of folderCandidates) {
+    if (!c) continue;
+    for (const v of sanitizeVariants(c)) {
+      names.push(v + '.mp3');
+      names.push(v + '.MP3');
+    }
+  }
+  names.push('audio.mp3', 'Audio.mp3', 'AUDIO.MP3');
+  names.push('track.mp3', 'Track.mp3', 'podcast.mp3', 'Podcast.mp3', '1.mp3');
+
+  const seen = new Set();
+  const unique = [];
+  for (const n of names) {
+    if (!n) continue;
+    const low = n.toLowerCase();
+    if (seen.has(low)) continue;
+    seen.add(low);
+    unique.push(n);
+  }
+
+  for (const folder of folderCandidates) {
+    if (!folder) continue;
+    for (const name of unique) {
+      const url = buildUrl(['Episodes', folder, name]);
+      if (await fileExists(url)) return { audioUrl: url, actualFolder: folder };
+    }
+  }
+  return null;
+}
+
+async function resolveCoverForFolder(folder){
+  const covers = ['Cover.jpg', 'cover.jpg', 'Cover.png', 'cover.png', 'Cover.jpeg', 'cover.jpeg', 'Cover.webp', 'cover.webp', 'Cover.gif', 'cover.gif'];
+  for (const n of covers) {
+    const url = buildUrl(['Episodes', folder, n]);
+    if (await fileExists(url)) return url;
+  }
+  return null;
+}
+
+async function loadManifest(){
+  try {
+    const res = await fetch('Episodes/files.json', { cache: 'no-store' });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data || typeof data !== 'object') return null;
+    return data;
+  } catch (e) { return null; }
+}
+
 async function loadEpisodeList(){
   let data;
   try {
     const res = await fetch('Track_Instruction.json', { cache: 'no-store' });
-    if (!res.ok) return { episodes: [], treeError: false, noResolved: false };
+    if (!res.ok) return { episodes: [], treeError: true };
     data = await res.json();
-  } catch (e) { return { episodes: [], treeError: false, noResolved: false }; }
+  } catch (e) { return { episodes: [], treeError: true }; }
 
   const map = (data && data.Episodes) || {};
   const entries = Object.entries(map);
   entries.sort((a, b) => {
     const na = extractNumber(a[0]);
     const nb = extractNumber(b[0]);
-    if (na !== nb) return nb - na;
-    return String(a[1] || a[0]).localeCompare(String(b[1] || b[0]));
+    if (na >= 0 && nb >= 0 && na !== nb) return nb - na;
+    return 0;
   });
 
   const tree = await getFullTree();
   const folders = tree ? collectFolders(tree) : null;
+  const manifest = !tree ? await loadManifest() : null;
 
   const episodes = entries.map(([key, val]) => {
     const p = parseJsonEntry(key, val);
@@ -657,25 +745,19 @@ async function loadEpisodeList(){
   });
 
   for (const ep of episodes) {
-    const candidates = [ep.folderName, ep.folderKey].filter(Boolean);
+    const candidates = [...new Set([ep.folderName, ep.folderKey, ep.title].filter(Boolean))];
+    if (!candidates.length) continue;
 
     if (tree && folders) {
       const folderPath = findFolderInTree(tree, candidates, folders);
       if (folderPath) {
         const { mp3, cover: coverFile, nameTxt } = findFilesInFolder(tree, folderPath);
         const pathSegs = folderPath.split('/').filter(Boolean);
-        ep.actualFolder = folderPath;
-        if (mp3) {
-          ep.audioFile = mp3;
-          ep.audioUrl = buildUrl(pathSegs.concat([mp3]));
-        }
-        if (coverFile) {
-          ep.coverFile = coverFile;
-          ep.coverUrl = buildUrl(pathSegs.concat([coverFile]));
-        }
+        ep.actualFolder = pathSegs[pathSegs.length - 1];
+        if (mp3) ep.audioUrl = buildUrl(pathSegs.concat([mp3]));
+        if (coverFile) ep.coverUrl = buildUrl(pathSegs.concat([coverFile]));
         if (nameTxt) {
-          const nameUrl = buildUrl(pathSegs.concat([nameTxt]));
-          const txt = await fetchText(nameUrl);
+          const txt = await fetchText(buildUrl(pathSegs.concat([nameTxt])));
           if (txt) ep.title = txt;
         }
         ep.resolved = !!mp3;
@@ -683,55 +765,62 @@ async function loadEpisodeList(){
       }
     }
 
-    for (const folder of candidates) {
-      const files = await fetchDirListing(folder);
-      if (files && files.length) {
-        const picked = pickFromNames(files);
-        if (picked.mp3) {
+    if (manifest) {
+      for (const cand of candidates) {
+        const m = manifest[cand];
+        if (!m) continue;
+        const audioFile = typeof m === 'string' ? m : m.audio;
+        const coverFile = typeof m === 'object' ? m.cover : null;
+        const folder = typeof m === 'object' ? (m.folder || cand) : cand;
+        const titleFromM = typeof m === 'object' ? m.name : null;
+        if (titleFromM) ep.title = titleFromM;
+        if (audioFile) {
+          ep.audioUrl = buildUrl(['Episodes', folder, audioFile]);
           ep.actualFolder = folder;
-          ep.audioFile = picked.mp3;
-          ep.audioUrl = buildUrl(['Episodes', folder, picked.mp3]);
-          if (picked.cover) {
-            ep.coverFile = picked.cover;
-            ep.coverUrl = buildUrl(['Episodes', folder, picked.cover]);
-          }
-          if (picked.nameTxt) {
-            const url = buildUrl(['Episodes', folder, picked.nameTxt]);
-            const txt = await fetchText(url);
-            if (txt) ep.title = txt;
-          }
+          ep.coverUrl = buildUrl(['Episodes', folder, coverFile || 'Cover.jpg']);
           ep.resolved = true;
           break;
         }
       }
+      if (ep.resolved) continue;
     }
-    if (ep.resolved) continue;
 
-    if (ep.audioFile) {
-      const tryFolder = ep.folderName || ep.folderKey;
-      const tryUrl = buildUrl(['Episodes', tryFolder, ep.audioFile]);
-      if (await probeAudio(tryUrl)) {
-        ep.audioUrl = tryUrl;
-        ep.coverUrl = buildUrl(['Episodes', tryFolder, ep.coverFile || 'Cover.jpg']);
-        ep.actualFolder = tryFolder;
-        ep.resolved = true;
+    const extraNames = [];
+    if (ep.audioFile) extraNames.push(ep.audioFile);
+
+    const found = await resolveAudioForFolder(candidates, extraNames);
+    if (found) {
+      ep.audioUrl = found.audioUrl;
+      ep.actualFolder = found.actualFolder;
+      if (ep.coverFile) {
+        ep.coverUrl = buildUrl(['Episodes', found.actualFolder, ep.coverFile]);
+      } else {
+        ep.coverUrl = await resolveCoverForFolder(found.actualFolder);
       }
+      ep.resolved = true;
     }
   }
 
-  const anyResolved = episodes.some(e => e.audioUrl);
-  return { episodes, treeError: !tree, noResolved: !anyResolved };
+  return { episodes, treeError: !tree };
 }
 
 let ambientActive = false;
 let ambientAudio = null;
 let ambientGen = 0;
-let ambientNum = 1;
-let ambientFails = 0;
-let ambientWrapped = false;
+let ambientQueue = [];
+let ambientQueuePos = 0;
+let ambientTracksFound = false;
 let ambientMuted = (function(){
   try { return localStorage.getItem('ambientMuted') === '1'; } catch(e){ return false; }
 })();
+
+function shuffleArray(arr){
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
 
 function fadeVolume(audio, target, dur, onDone){
   if (!audio) return;
@@ -791,15 +880,7 @@ function applyAmbientState(){
   }
 }
 
-function ambientPlayNext(){
-  if (!ambientActive) return;
-  if (ambientFails > 15) {
-    if (ambientWrapped) { ambientActive = false; return; }
-    ambientNum = 1;
-    ambientFails = 0;
-    ambientWrapped = true;
-  }
-  const num = ambientNum++;
+function playAmbientTrack(num){
   const myGen = ++ambientGen;
   const audio = new Audio();
   audio.preload = 'auto';
@@ -811,39 +892,66 @@ function ambientPlayNext(){
     if (failed) return;
     failed = true;
     if (myGen !== ambientGen) return;
-    ambientFails++;
-    setTimeout(ambientPlayNext, 80);
+    if (!ambientActive) return;
+    if (ambientAudio === audio) ambientAudio = null;
+    try { audio.pause(); } catch(e){}
+    const idx = ambientQueue.indexOf(num);
+    if (idx >= 0) {
+      ambientQueue.splice(idx, 1);
+      if (ambientQueuePos > idx) ambientQueuePos--;
+    }
+    playAmbientFromQueue();
   };
 
   audio.onerror = onFail;
   audio.onended = () => {
     if (myGen !== ambientGen) return;
-    ambientFails = 0;
-    ambientWrapped = false;
-    ambientPlayNext();
+    if (ambientAudio !== audio) return;
+    if (!ambientActive) return;
+    playAmbientFromQueue();
   };
 
   audio.play().then(() => {
     if (failed) { try { audio.pause(); } catch(e){} return; }
     if (myGen !== ambientGen) { try { audio.pause(); } catch(e){} return; }
     ambientAudio = audio;
-    ambientFails = 0;
-    ambientWrapped = false;
-    if (ambientShouldPlay()) {
-      fadeVolume(audio, 0.12, 1200);
-    } else {
-      try { audio.pause(); } catch(e){}
-    }
+    if (ambientShouldPlay()) fadeVolume(audio, 0.12, 1200);
+    else try { audio.pause(); } catch(e){}
   }).catch(onFail);
 }
 
-function startAmbient(){
+function playAmbientFromQueue(){
+  if (!ambientActive) return;
+  if (!ambientQueue.length) return;
+  if (ambientQueuePos >= ambientQueue.length) {
+    shuffleArray(ambientQueue);
+    ambientQueuePos = 0;
+  }
+  const num = ambientQueue[ambientQueuePos++];
+  playAmbientTrack(num);
+}
+
+async function startAmbient(){
   if (ambientActive) return;
   ambientActive = true;
-  ambientNum = 1;
-  ambientFails = 0;
-  ambientWrapped = false;
-  ambientPlayNext();
+
+  if (!ambientTracksFound) {
+    ambientTracksFound = true;
+    const checks = [];
+    for (let i = 1; i <= 25; i++) {
+      checks.push(fileExists('DATA/' + i + '.mp3').then(ok => ok ? i : null));
+    }
+    const results = await Promise.all(checks);
+    const found = results.filter(x => x !== null);
+    if (found.length) {
+      ambientQueue = shuffleArray(found.slice());
+      ambientQueuePos = 0;
+    }
+  }
+
+  if (!ambientActive) return;
+  if (!ambientQueue.length) return;
+  playAmbientFromQueue();
 }
 
 function toggleMute(){
@@ -915,19 +1023,15 @@ document.getElementById('ageEnterBtn').addEventListener('click', () => {
   }, 600);
 });
 
-const DEFAULT_INFO =
-  'Страшные истории и легенды\n' +
-  'Ссылка на телеграм: https://t.me/strashil_ki\n' +
-  '\n' +
-  'Группа вк: https://vk.com/club222323809\n' +
-  '\n' +
-  'Теперь мы есть и на Литрес!\n' +
-  'https://www.litres.ru/podcast/leo-dummer/strashilki-71234161';
-
-let podcastInfoText = DEFAULT_INFO;
+let podcastInfoText = '';
+let podcastInfoLoaded = false;
 let pendingExternalUrl = '';
 
 function renderInfoPanel(){
+  if (!podcastInfoText) {
+    infoContent.innerHTML = '<div class="info-empty">информация недоступна</div>';
+    return;
+  }
   const urlRegex = /(https?:\/\/[^\s]+)/g;
   const lines = podcastInfoText.split('\n');
   let html = '';
@@ -952,17 +1056,26 @@ function renderInfoPanel(){
 }
 
 async function loadPodcastInfo(){
+  podcastInfoLoaded = true;
   try {
     const res = await fetch('Podcast_Info.txt', { cache: 'no-store' });
     if (res.ok) {
       const txt = await res.text();
-      if (txt && txt.trim()) podcastInfoText = txt;
+      const trimmed = txt.trim();
+      if (trimmed && !/<!doctype|<html/i.test(trimmed)) podcastInfoText = trimmed;
     }
   } catch (e) {}
   renderInfoPanel();
 }
 
-function openInfoPanel(){ closeSearch(); infoPanel.classList.add('show'); }
+function openInfoPanel(){
+  closeSearch();
+  if (!podcastInfoLoaded) {
+    infoContent.innerHTML = '<div class="info-empty">загрузка...</div>';
+    loadPodcastInfo();
+  }
+  infoPanel.classList.add('show');
+}
 function closeInfoPanel(){ infoPanel.classList.remove('show'); }
 
 infoBtn.addEventListener('click', () => {
@@ -1015,21 +1128,6 @@ function normalizeSearch(str){
     .replace(/[^\wа-я\s]/gi, ' ')
     .replace(/\s+/g, ' ')
     .trim();
-}
-function levenshtein(a, b){
-  const m = a.length, n = b.length;
-  if (!m) return n;
-  if (!n) return m;
-  const d = new Array(m + 1);
-  for (let i = 0; i <= m; i++) { d[i] = new Array(n + 1); d[i][0] = i; }
-  for (let j = 0; j <= n; j++) d[0][j] = j;
-  for (let i = 1; i <= m; i++) {
-    for (let j = 1; j <= n; j++) {
-      const cost = a[i-1] === b[j-1] ? 0 : 1;
-      d[i][j] = Math.min(d[i-1][j] + 1, d[i][j-1] + 1, d[i-1][j-1] + cost);
-    }
-  }
-  return d[m][n];
 }
 function titleScore(q, title){
   if (q === title) return 1;
@@ -2164,11 +2262,6 @@ async function init(){
   const result = await loadEpisodeList();
   EPISODES = result.episodes || [];
   buildSky();
-  if (result.noResolved && EPISODES.length > 0) {
-    setTimeout(() => {
-      showToast('файлы не найдены · репозиторий должен быть публичным', 5500);
-    }, 1200);
-  }
 }
 
 init();
