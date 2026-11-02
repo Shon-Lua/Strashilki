@@ -186,7 +186,7 @@
   }
   #skyHintBanner.show{opacity:1;pointer-events:auto}
   .skyHintCard{
-    width:min(420px, 100%);
+    width:min(440px, 100%);
     padding:36px 32px 32px;
     border:1px solid rgba(255,255,255,.14);
     border-radius:4px;
@@ -198,11 +198,48 @@
     font-family:'Cormorant Garamond', Georgia, serif;
     font-weight:500;
     font-size:clamp(15px, 3.6vw, 17px);
-    letter-spacing:.18em;
-    text-transform:uppercase;
+    letter-spacing:.06em;
     color:#ded9ea;
-    line-height:1.55;
-    margin-bottom:24px;
+    line-height:1.6;
+    margin-bottom:10px;
+  }
+  .skyHintText b{
+    font-family:'Cinzel', Georgia, serif;
+    font-weight:500;
+    color:#fff;
+    letter-spacing:.18em;
+    font-size:.92em;
+    display:inline-block;
+    padding:0 2px;
+  }
+  .skyHintList{
+    list-style:none;
+    text-align:left;
+    margin:16px auto 24px;
+    padding:14px 18px;
+    background:rgba(255,255,255,.025);
+    border:1px solid rgba(255,255,255,.07);
+    border-radius:3px;
+    max-width:340px;
+  }
+  .skyHintList li{
+    position:relative;
+    padding-left:20px;
+    font-family:'Cormorant Garamond', Georgia, serif;
+    font-weight:500;
+    font-size:13.5px;
+    letter-spacing:.03em;
+    line-height:1.65;
+    color:#b8b2c5;
+    margin-bottom:8px;
+  }
+  .skyHintList li:last-child{margin-bottom:0}
+  .skyHintList li::before{
+    content:'';
+    position:absolute;
+    left:2px;top:.72em;
+    width:8px;height:1px;
+    background:rgba(255,255,255,.55);
   }
   .skyHintCheck{
     display:inline-flex;
@@ -323,8 +360,10 @@
     .extGo{padding:14px 44px;font-size:11px}
     #searchInput{padding:11px 15px;font-size:14px}
     .suggestion{padding:10px 14px;font-size:13.5px}
-    .skyHintCard{padding:30px 24px 26px}
-    .skyHintText{font-size:14px;letter-spacing:.14em;margin-bottom:22px}
+    .skyHintCard{padding:30px 22px 26px}
+    .skyHintText{font-size:14px;margin-bottom:8px}
+    .skyHintList{padding:12px 14px;margin:14px auto 20px}
+    .skyHintList li{font-size:12.5px;padding-left:18px}
     .skyHintCheck{font-size:10px;letter-spacing:.18em;margin-bottom:20px}
     .skyHintBtn{padding:12px 48px;font-size:10.5px;letter-spacing:.42em;text-indent:.42em}
   }
@@ -419,7 +458,12 @@
 </div>
 <div id="skyHintBanner">
   <div class="skyHintCard">
-    <div class="skyHintText">Прокрутите небо<br>и коснитесь звезды</div>
+    <div class="skyHintText">Добро пожаловать в <b>Страшилки</b></div>
+    <ul class="skyHintList">
+      <li>Прокручивайте небо вверх и вниз — это листает страницы с выпусками</li>
+      <li>Коснитесь звезды — чтобы открыть плеер и начать слушать</li>
+      <li>Звезду можно <b>перетащить вниз</b>, в круг — так выпуск тоже запустится</li>
+    </ul>
     <div class="skyHintCheck" id="skyHintCheck">
       <span class="skyHintCheckBox"></span>
       <span>больше не показывать</span>
@@ -531,7 +575,7 @@ let currentPage = 0;
 let loadingSpinner = false;
 
 let pageSizes = [];
-let pageStarts = [];
+let pageStarts = [0];
 
 const POSITIONS_KEY = 'episodePositions_v1';
 let savedPositions = {};
@@ -635,7 +679,7 @@ function detectGitHubRepo(){
   } catch (e) { return null; }
 }
 
-const GH_TREE_KEY = 'ghTreeCache_v10';
+const GH_TREE_KEY = 'ghTreeCache_v11';
 const GH_TREE_TTL = 5 * 60 * 1000;
 
 let ghTreeCache = null;
@@ -848,10 +892,16 @@ async function resolveOneEpisode(key, val, episodeFolders, tree){
 
 function computePageSizes(total){
   pageSizes = [];
-  pageStarts = [0];
   let remaining = total;
+  const vw = innerWidth;
+  let minS, maxS;
+  if (vw >= 1300) { minS = 7; maxS = 11; }
+  else if (vw >= 1000) { minS = 6; maxS = 10; }
+  else if (vw >= 700) { minS = 5; maxS = 9; }
+  else { minS = 4; maxS = 7; }
   while (remaining > 0) {
-    const size = Math.min(remaining, 4 + Math.floor(Math.random() * 5));
+    const range = maxS - minS + 1;
+    const size = Math.min(remaining, minS + Math.floor(Math.random() * range));
     pageSizes.push(size);
     remaining -= size;
   }
@@ -892,11 +942,18 @@ function generateChaoticPositions(count){
   const vw = innerWidth;
 
   const labelW = Math.min(180, vw * 0.55);
-  const minDx = (labelW / vw) * 1.05;
-  const minDy = 0.26;
+  const baseMinDx = (labelW / vw) * 0.85;
+  const baseMinDy = 0.22;
+  let density = 1;
+  if (count > 10) density = 0.65;
+  else if (count > 8) density = 0.75;
+  else if (count > 6) density = 0.85;
+
+  const minDx = Math.max(0.075, baseMinDx * density);
+  const minDy = Math.max(0.13, baseMinDy * density);
 
   let attempts = 0;
-  const maxAttempts = count * 300;
+  const maxAttempts = count * 400;
 
   while (positions.length < count && attempts < maxAttempts) {
     attempts++;
@@ -916,7 +973,14 @@ function generateChaoticPositions(count){
   }
 
   while (positions.length < count) {
-    positions.push([0.08 + Math.random() * 0.84, 0.15 + Math.random() * 0.7]);
+    const i = positions.length;
+    const cols = Math.ceil(Math.sqrt(count));
+    const c = i % cols;
+    const r = Math.floor(i / cols);
+    positions.push([
+      0.1 + (c / cols) * 0.8 + (Math.random() - 0.5) * 0.04,
+      0.15 + (r / Math.max(1, Math.ceil(count / cols))) * 0.7 + (Math.random() - 0.5) * 0.04
+    ]);
   }
 
   return positions;
@@ -1061,7 +1125,7 @@ async function buildSkyProgressively(){
       pages[p].appendChild(star);
       starEls.push(star);
       const thisStar = star;
-      const delay = Math.min(globalIdx * 70, 900);
+      const delay = Math.min(globalIdx * 60, 900);
       setTimeout(() => {
         thisStar.style.opacity = '1';
         thisStar.style.transform = 'translate(-50%,-50%) scale(1)';
@@ -1748,7 +1812,7 @@ async function play(){
     const a = new Audio();
     a.preload = 'auto';
     a.src = ep.audioUrl;
-    a.volume = 0;
+    try { a.volume = 1; } catch(e) {}
 
     a.addEventListener('loadedmetadata', () => {
       if (!EPISODES[idx].dur && isFinite(a.duration)) EPISODES[idx].dur = a.duration;
@@ -1790,7 +1854,10 @@ async function play(){
       }
     });
     a.addEventListener('playing', () => {
-      if (loadedIndex === idx && wantsToPlay) setLoading(false);
+      if (loadedIndex === idx && wantsToPlay) {
+        setLoading(false);
+        try { if (a.volume < 0.99) a.volume = 1; } catch(e) {}
+      }
     });
     a.addEventListener('waiting', () => {
       if (loadedIndex === idx && wantsToPlay) setLoading(true);
@@ -1801,6 +1868,8 @@ async function play(){
 
     episodeAudio = a;
     loadedIndex = idx;
+  } else {
+    try { episodeAudio.volume = 1; } catch(e) {}
   }
 
   const audio = episodeAudio;
@@ -1813,16 +1882,16 @@ async function play(){
     setLoading(false);
     updateIcons();
     applyAmbientState();
-    const t0 = performance.now();
-    const dur = 600;
-    const startVol = audio.volume;
-    const step = (now) => {
-      if (episodeAudio !== audio) return;
-      const p = Math.min(1, (now - t0) / dur);
-      try { audio.volume = Math.min(1, startVol + (1 - startVol) * p); } catch(e){ return; }
-      if (p < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
+    try { audio.volume = 1; } catch(e) {}
+    if (audio.volume < 0.99) {
+      let attempts = 0;
+      const forceVol = () => {
+        if (episodeAudio !== audio) return;
+        try { audio.volume = 1; } catch(e) {}
+        if (audio.volume < 0.99 && attempts++ < 20) setTimeout(forceVol, 100);
+      };
+      forceVol();
+    }
   }).catch(() => {
     if (episodeAudio === audio) {
       playing = false;
@@ -1919,19 +1988,10 @@ function onTrackEnd(){
     if (audio) {
       try {
         audio.currentTime = 0;
-        audio.volume = 0;
         audio.play().then(() => {
           playing = true;
           updateIcons();
-          const t0 = performance.now();
-          const dur = 600;
-          const step = (now) => {
-            if (episodeAudio !== audio) return;
-            const p = Math.min(1, (now - t0) / dur);
-            try { audio.volume = p; } catch(e){}
-            if (p < 1) requestAnimationFrame(step);
-          };
-          requestAnimationFrame(step);
+          try { audio.volume = 1; } catch(e) {}
         }).catch(() => { playing = false; updateIcons(); });
       } catch (e) {}
     }
