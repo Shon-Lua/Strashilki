@@ -161,22 +161,22 @@
     position:relative;
     pointer-events:auto;
     max-width:100%;
-    padding:11px 18px 11px 30px;
+    padding:12px 20px;
     background:rgba(8,5,7,.94);
     border:1px solid rgba(255,255,255,.1);
-    border-left:2px solid rgba(255,255,255,.75);
     border-radius:3px;
     font-size:10px;
     letter-spacing:.22em;
     text-transform:uppercase;
     color:#c8c3d6;
+    text-align:center;
     box-shadow:0 10px 34px rgba(0,0,0,.85), 0 0 22px rgba(255,255,255,.03);
     transform:translate3d(0,-140%,0);
     opacity:0;
     transition:transform .45s cubic-bezier(.2,.9,.3,1.15), opacity .32s ease;
     will-change:transform,opacity;
     touch-action:none;
-    cursor:grab;
+    cursor:pointer;
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
@@ -185,21 +185,6 @@
   .toast.show{
     transform:translate3d(0,0,0);
     opacity:1;
-  }
-  .toast::before{
-    content:'';
-    position:absolute;
-    left:12px;top:50%;
-    width:5px;height:5px;
-    background:rgba(255,255,255,.85);
-    border-radius:50%;
-    transform:translateY(-50%);
-    animation:blink 1.4s ease-in-out infinite;
-    box-shadow:0 0 10px rgba(255,255,255,.7);
-  }
-  @keyframes blink{
-    0%,100%{opacity:.22}
-    50%{opacity:1}
   }
 
   .ghostStar{
@@ -227,20 +212,18 @@
   }
   .ghostLabel{
     position:fixed;
-    transform:translate(-50%,-100%);
+    transform:translate(-50%, 0);
     padding:7px 14px;
-    background:rgba(6,4,5,.92);
-    border:1px solid rgba(255,255,255,.18);
-    border-left:2px solid rgba(255,255,255,.85);
+    background:rgba(6,4,5,.85);
     border-radius:3px;
-    font-size:10px;
-    letter-spacing:.2em;
+    font-size:9.5px;
+    letter-spacing:.22em;
     text-transform:uppercase;
     color:#e2ddee;
     white-space:nowrap;
     pointer-events:none;
     z-index:201;
-    box-shadow:0 10px 30px rgba(0,0,0,.85);
+    text-shadow:0 0 14px #000, 0 0 6px #000, 0 0 2px #000;
     max-width:82vw;
     overflow:hidden;
     text-overflow:ellipsis;
@@ -568,8 +551,7 @@
     .pageNav{top:22px;right:18px;font-size:10px}
     .star{width:68px;height:68px}
     .star-label{font-size:8.5px;letter-spacing:.14em;top:calc(100% + 2px)}
-    .toast{font-size:9px;padding:10px 16px 10px 26px;letter-spacing:.18em}
-    .toast::before{left:10px;width:4px;height:4px}
+    .toast{font-size:9px;padding:10px 16px;letter-spacing:.18em}
     .playerCard{width:88vw;gap:18px}
     .controls{gap:8px}
     .ctrlBtn{width:42px;height:42px}
@@ -854,17 +836,21 @@ function showToast(text, duration){
   requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
 
   let timer = null;
+  let dismissed = false;
   const dismiss = () => {
+    if (dismissed) return;
+    dismissed = true;
     clearTimeout(timer);
     el.classList.remove('show');
     setTimeout(() => el.remove(), 480);
   };
   if (duration) timer = setTimeout(dismiss, duration);
 
-  let sx = 0, sy = 0, dx = 0, dy = 0, dragging = false;
+  let sx = 0, sy = 0, dx = 0, dy = 0, dragging = false, moved = false;
   el.addEventListener('pointerdown', (e) => {
     if (!e.isPrimary) return;
     dragging = true;
+    moved = false;
     sx = e.clientX;
     sy = e.clientY;
     dx = 0;
@@ -876,6 +862,7 @@ function showToast(text, duration){
     if (!dragging) return;
     dx = e.clientX - sx;
     dy = e.clientY - sy;
+    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) moved = true;
     const cy = Math.min(0, dy);
     el.style.transform = 'translate3d(' + dx + 'px,' + cy + 'px,0)';
     el.style.opacity = String(Math.max(0.1, 1 - (Math.abs(dx) / 200 + Math.abs(dy) / 140)));
@@ -894,6 +881,9 @@ function showToast(text, duration){
   };
   el.addEventListener('pointerup', end);
   el.addEventListener('pointercancel', end);
+  el.addEventListener('click', () => {
+    if (!moved) dismiss();
+  });
   return el;
 }
 
@@ -1037,6 +1027,7 @@ let repeatMode = 'off';
 let shuffleOn = false;
 let shuffleOrder = [];
 let shufflePosition = 0;
+let overlayHintShown = false;
 
 function initAudio(){
   if (audioCtx) return;
@@ -1374,14 +1365,13 @@ function updateMiniUI(){
   updateProgress();
   updateIcons();
 }
-let overlayOpenCount = 0;
 function openOverlay(){
   overlay.classList.add('show');
   miniPlayer.classList.remove('show');
   updateFullUI();
-  if (overlayOpenCount < 3) {
-    showToast('нажмите снаружи · чтобы свернуть', 2600);
-    overlayOpenCount++;
+  if (!overlayHintShown) {
+    showToast('нажмите снаружи · чтобы свернуть', 3200);
+    overlayHintShown = true;
   }
 }
 function closeOverlay(){
@@ -1430,7 +1420,7 @@ function showGhostLabel(text){
 function moveGhostLabel(x, y){
   if (!ghostLabel) return;
   ghostLabel.style.left = x + 'px';
-  ghostLabel.style.top = (y - 34) + 'px';
+  ghostLabel.style.top = (y + 22) + 'px';
 }
 function removeGhostLabel(){
   if (ghostLabel) {
