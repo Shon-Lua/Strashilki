@@ -924,14 +924,11 @@
 </div>
 
 <script>
-/* ================= PWA + LOGO ================= */
 (function setupPWA(){
   try {
     const logoUrl = new URL('DATA/Logo.jpg', location.href).href;
-
     const base = location.href.split('#')[0];
     const scope = base.replace(/[^/]*$/, '');
-
     const manifest = {
       name: 'Страшилки', short_name: 'Страшилки',
       description: 'Хоррор-подкасты в ночном небе',
@@ -944,18 +941,15 @@
         { src: logoUrl, sizes: '512x512', type: 'image/jpeg', purpose: 'maskable' }
       ]
     };
-
     const link = document.createElement('link');
     link.rel = 'manifest';
     link.href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest));
     document.head.appendChild(link);
-
     const favicon = document.createElement('link');
     favicon.rel = 'icon';
     favicon.type = 'image/jpeg';
     favicon.href = logoUrl;
     document.head.appendChild(favicon);
-
     const apple = document.createElement('link');
     apple.rel = 'apple-touch-icon';
     apple.href = logoUrl;
@@ -963,7 +957,6 @@
   } catch (e) {}
 })();
 
-/* ================= DATA ================= */
 function fmt(s){
   s = Math.max(0, Math.floor(s));
   const m = Math.floor(s / 60);
@@ -1014,7 +1007,6 @@ const EPISODES = TITLES.map((title, i) => {
   };
 });
 
-/* ================= SETUP ================= */
 const isMobile = innerWidth < 700;
 const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2);
 const canvas = document.getElementById('bg');
@@ -1065,10 +1057,8 @@ function resize(){
   canvas.style.height = innerHeight + 'px';
 }
 
-/* ================= AMBIENT ================= */
 let ambientActive = false;
 let ambientAudio = null;
-let ambientTrackNum = 1;
 
 function playAmbientByNum(num){
   if (!ambientActive) return;
@@ -1077,12 +1067,10 @@ function playAmbientByNum(num){
     try { ambientAudio.src = ''; } catch (e) {}
     ambientAudio = null;
   }
-
   const audio = new Audio();
   audio.preload = 'auto';
   audio.volume = 0;
   audio.src = 'DATA/' + num + '.mp3';
-
   let failed = false;
   const onFail = () => {
     if (failed) return;
@@ -1093,14 +1081,12 @@ function playAmbientByNum(num){
     }
     playAmbientByNum(1);
   };
-
   audio.addEventListener('error', onFail);
   audio.addEventListener('ended', () => {
     if (ambientAudio !== audio) return;
     if (!ambientActive) return;
     playAmbientByNum(num + 1);
   });
-
   audio.play().then(() => {
     if (failed || !ambientActive) {
       try { audio.pause(); } catch (e) {}
@@ -1124,7 +1110,6 @@ function playAmbientByNum(num){
 function startAmbient(){
   if (ambientActive) return;
   ambientActive = true;
-  ambientTrackNum = 1;
   playAmbientByNum(1);
 }
 
@@ -1149,7 +1134,6 @@ function stopAmbient(permanent){
   requestAnimationFrame(step);
 }
 
-/* ================= TOASTS ================= */
 function showToast(text, duration){
   if (!text) return;
   while (toastContainer.children.length >= 3) {
@@ -1160,7 +1144,6 @@ function showToast(text, duration){
   el.textContent = text;
   toastContainer.appendChild(el);
   requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
-
   let timer = null;
   let dismissed = false;
   const dismiss = () => {
@@ -1171,7 +1154,6 @@ function showToast(text, duration){
     setTimeout(() => el.remove(), 480);
   };
   if (duration) timer = setTimeout(dismiss, duration);
-
   let sx = 0, sy = 0, dx = 0, dy = 0, dragging = false, moved = false;
   el.addEventListener('pointerdown', (e) => {
     if (!e.isPrimary) return;
@@ -1202,7 +1184,6 @@ function showToast(text, duration){
   return el;
 }
 
-/* ================= AGE GATE ================= */
 document.getElementById('ageEnterBtn').addEventListener('click', () => {
   startAmbient();
   const g = document.getElementById('ageGate');
@@ -1214,7 +1195,6 @@ document.getElementById('ageEnterBtn').addEventListener('click', () => {
   }, 600);
 });
 
-/* ================= INFO ================= */
 const DEFAULT_INFO =
   'Страшные истории и легенды\n' +
   'Ссылка на телеграм: https://t.me/strashil_ki\n' +
@@ -1279,7 +1259,6 @@ infoBtn.addEventListener('click', () => {
 document.getElementById('infoClose').addEventListener('click', closeInfoPanel);
 infoPanel.addEventListener('click', (e) => { if (e.target === infoPanel) closeInfoPanel(); });
 
-/* ================= EXTERNAL WARNING ================= */
 function openExternalWarning(url){
   pendingExternalUrl = url;
   extUrl.textContent = url;
@@ -1298,7 +1277,6 @@ externalWarning.addEventListener('click', (e) => {
   if (e.target === externalWarning) closeExternalWarning();
 });
 
-/* ================= SEARCH ================= */
 function openSearch(){
   searchBox.classList.add('show');
   searchOpen = true;
@@ -1466,17 +1444,14 @@ function showMapArrow(starEl){
   const tx = rect.left + rect.width / 2;
   const ty = rect.top + rect.height / 2;
   const vw = innerWidth, vh = innerHeight;
-
   const hDir = tx < vw / 2 ? -1 : 1;
   const vDir = ty < vh / 2 ? 1 : -1;
   let sx = tx + hDir * 120;
   let sy = ty + vDir * 140;
   sx = Math.max(30, Math.min(vw - 30, sx));
   sy = Math.max(30, Math.min(vh - 30, sy));
-
   const ctrlX = (sx + tx) / 2 + hDir * 40;
   const ctrlY = (sy + ty) / 2 - vDir * 30;
-
   const angle = Math.atan2(ty - ctrlY, tx - ctrlX);
   const ahLen = 16;
   const ahW = 9;
@@ -1487,12 +1462,10 @@ function showMapArrow(starEl){
   const baseY = tipY - Math.sin(angle) * ahLen;
   const perpX = -Math.sin(angle) * ahW;
   const perpY = Math.cos(angle) * ahW;
-
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('class', 'map-arrow');
   svg.setAttribute('viewBox', '0 0 ' + vw + ' ' + vh);
   svg.setAttribute('preserveAspectRatio', 'none');
-
   const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   path.setAttribute('d', 'M ' + sx + ' ' + sy + ' Q ' + ctrlX + ' ' + ctrlY + ' ' + baseX + ' ' + baseY);
   path.setAttribute('fill', 'none');
@@ -1504,7 +1477,6 @@ function showMapArrow(starEl){
   path.setAttribute('stroke-dasharray', approxLen);
   path.setAttribute('stroke-dashoffset', approxLen);
   path.style.transition = 'stroke-dashoffset .85s cubic-bezier(.4,0,.2,1)';
-
   const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
   polygon.setAttribute('points',
     tipX + ',' + tipY + ' ' +
@@ -1515,19 +1487,16 @@ function showMapArrow(starEl){
   polygon.style.filter = 'drop-shadow(0 0 6px rgba(255,255,255,.75))';
   polygon.style.opacity = '0';
   polygon.style.transition = 'opacity .35s ease';
-
   svg.appendChild(path);
   svg.appendChild(polygon);
   document.body.appendChild(svg);
   currentArrow = svg;
-
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       path.setAttribute('stroke-dashoffset', '0');
       setTimeout(() => { polygon.style.opacity = '1'; }, 680);
     });
   });
-
   setTimeout(() => {
     if (svg.parentNode) {
       svg.style.opacity = '0';
@@ -1544,26 +1513,20 @@ function performSearch(rawQuery){
   if (q.length < 2) { showToast('введите название', 1800); return; }
   const idx = findBestMatch(q);
   if (idx < 0) { showToast('выпуск не найден', 2200); return; }
-
   clearSearchedState();
   closeSearch();
-
   const targetPage = Math.floor(idx / PER_PAGE);
   const needsNav = targetPage !== currentPage;
   if (needsNav) goToPage(targetPage);
-
   const starEl = starEls[idx];
   starEl.classList.add('searched');
-
   const delay = needsNav ? 1100 : 60;
   searchArrowTimer = setTimeout(() => {
     showMapArrow(starEl);
   }, delay);
-
   setTimeout(() => { starEl.classList.remove('searched'); }, 6000);
 }
 
-/* ================= BACKGROUND ================= */
 const spheres = [];
 const sphereCount = isMobile ? 4 : 7;
 for (let i = 0; i < sphereCount; i++) {
@@ -1621,23 +1584,54 @@ function makeSkySVG(count){
   return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + SW + ' ' + SH + '" preserveAspectRatio="xMidYMid slice">' + out + '</svg>';
 }
 
+function getExclusionZones(){
+  const zones = [];
+  const bar = document.getElementById('topBar');
+  if (bar) {
+    const r = bar.getBoundingClientRect();
+    const vw = innerWidth, vh = innerHeight;
+    const pad = 0.05;
+    zones.push({
+      x1: Math.max(0, (r.left - 8) / vw - pad),
+      y1: Math.max(0, (r.top - 8) / vh - pad),
+      x2: Math.min(1, (r.right + 8) / vw + pad),
+      y2: Math.min(1, (r.bottom + 8) / vh + pad)
+    });
+  }
+  return zones;
+}
+
+function inZone(x, y, z){
+  return x >= z.x1 && x <= z.x2 && y >= z.y1 && y <= z.y2;
+}
+
 function generatePositions(count){
-  const cols = 4, rows = 3;
-  const cells = [];
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) cells.push([c, r]);
+  const zones = getExclusionZones();
+  const positions = [];
+  const minDist = 0.11;
+  let attempts = 0;
+  const maxAttempts = count * 300;
+  while (positions.length < count && attempts < maxAttempts) {
+    attempts++;
+    const x = 0.08 + Math.random() * 0.84;
+    const y = 0.1 + Math.random() * 0.8;
+    let ok = true;
+    for (const z of zones) {
+      if (inZone(x, y, z)) { ok = false; break; }
+    }
+    if (ok) {
+      for (const p of positions) {
+        const dx = p[0] - x;
+        const dy = p[1] - y;
+        if (Math.hypot(dx, dy) < minDist) { ok = false; break; }
+      }
+    }
+    if (ok) positions.push([x, y]);
   }
-  for (let i = cells.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [cells[i], cells[j]] = [cells[j], cells[i]];
+  while (positions.length < count) {
+    positions.push([0.1 + Math.random() * 0.8, 0.1 + Math.random() * 0.8]);
   }
-  const chosen = cells.slice(0, Math.min(count, cells.length));
-  while (chosen.length < count) chosen.push([Math.random() * cols, Math.random() * rows]);
-  const cw = 100 / cols, rh = 100 / rows;
-  return chosen.map(([c, r]) => [
-    cw * (c + 0.18 + Math.random() * 0.64),
-    rh * (r + 0.2 + Math.random() * 0.6)
-  ]);
+  return positions;
 }
 
 const PER_PAGE = 12;
@@ -1652,19 +1646,17 @@ for (let p = 0; p < totalPages; p++) {
   skyLayer.className = 'page-sky';
   skyLayer.innerHTML = makeSkySVG(260 + Math.floor(Math.random() * 160));
   page.appendChild(skyLayer);
-
   const start = p * PER_PAGE;
   const end = Math.min(start + PER_PAGE, EPISODES.length);
   const positions = generatePositions(end - start);
-
   for (let i = start; i < end; i++) {
     const pos = positions[i - start];
     const ep = EPISODES[i];
     const star = document.createElement('button');
     star.className = 'star';
     star.dataset.index = i;
-    star.style.left = pos[0] + '%';
-    star.style.top = pos[1] + '%';
+    star.style.left = (pos[0] * 100) + '%';
+    star.style.top = (pos[1] * 100) + '%';
     star.style.setProperty('--pulse-dur', (2.4 + Math.random() * 3.2).toFixed(2) + 's');
     star.style.setProperty('--pulse-delay', (Math.random() * 4).toFixed(2) + 's');
     star.style.setProperty('--core-size', (6 + Math.random() * 4.5).toFixed(1) + 'px');
@@ -1685,7 +1677,6 @@ for (let p = 0; p < totalPages; p++) {
 }
 pageTotalEl.textContent = totalPages;
 
-/* ================= AUDIO ================= */
 let audioCtx = null, master = null;
 let sceneBus = null, sceneNodes = [];
 let timers = [];
@@ -1874,7 +1865,6 @@ function finish(){
   updateIcons();
 }
 
-/* ================= SHUFFLE ================= */
 function buildShuffleOrder(startIndex){
   shuffleOrder = EPISODES.map((_, i) => i);
   for (let i = shuffleOrder.length - 1; i > 0; i--) {
@@ -1923,7 +1913,6 @@ function onTrackEnd(){
   loadEpisode(next);
 }
 
-/* ================= COVER ================= */
 const coverCache = {};
 function makeCoverSVG(index){
   if (coverCache[index]) return coverCache[index];
@@ -1954,7 +1943,6 @@ function makeCoverSVG(index){
   return svg;
 }
 
-/* ================= UI UPDATES ================= */
 function updateActiveStars(){
   starEls.forEach(el => el.classList.toggle('active', +el.dataset.index === current));
 }
@@ -2022,7 +2010,6 @@ function updateRepeatIcon(){
 }
 function updateShuffleIcon(){ shuffleBtn.classList.toggle('active', shuffleOn); }
 
-/* ================= DRAG ================= */
 let dragState = null;
 let ghostLabel = null;
 
@@ -2056,11 +2043,9 @@ function removeGhostLabel(){
 function startDrag(index, starEl, e){
   if (transitioning || dragState) return;
   e.preventDefault();
-
   if (starEl.classList.contains('searched')) {
     clearSearchedState();
   }
-
   closeSearch();
   const rect = starEl.getBoundingClientRect();
   const cx = rect.left + rect.width / 2;
@@ -2186,7 +2171,6 @@ function setCurrentTrack(n){
   updateMiniUI();
 }
 
-/* ================= LOAD / NAV ================= */
 let currentPage = 0;
 function goToPage(n){
   removeMapArrow();
@@ -2204,7 +2188,6 @@ function loadEpisode(n){
   play();
 }
 
-/* ================= MINI PLAYER SWIPE ================= */
 let miniPtr = null;
 let miniWasSwipe = false;
 
@@ -2260,7 +2243,6 @@ miniPlayer.addEventListener('pointercancel', (e) => {
   if (miniPtr && e.pointerId === miniPtr.id) miniPtr = null;
 });
 
-/* ================= CONTROLS ================= */
 overlay.addEventListener('click', (e) => { if (e.target === overlay) closeOverlay(); });
 
 document.getElementById('playPauseBtn').addEventListener('click', () => {
@@ -2325,7 +2307,6 @@ miniPlayBtn.addEventListener('click', (e) => {
   else { if (elapsed >= EPISODES[current].dur) elapsed = 0; play(); }
 });
 
-/* ================= KEYBOARD / SCROLL ================= */
 document.addEventListener('keydown', (e) => {
   if (ageGateActive) return;
   if (e.key === 'Escape') {
