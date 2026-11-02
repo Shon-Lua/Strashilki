@@ -45,8 +45,20 @@
   .star-flare.h{width:var(--flare-w,44px);height:1px;background:radial-gradient(ellipse at center, rgba(255,255,255,.9) 0%, rgba(255,255,255,0) 78%)}
   .star-flare.v{width:1px;height:var(--flare-w,44px);background:radial-gradient(ellipse at center, rgba(255,255,255,.9) 0%, rgba(255,255,255,0) 78%)}
   .star:hover .star-flare{opacity:1}
-  .star-label{position:absolute;top:calc(100% - 2px);left:50%;transform:translate(-50%,-6px);white-space:nowrap;font-size:11px;letter-spacing:.2em;text-transform:uppercase;font-weight:500;color:#c8c3d6;opacity:0;transition:.35s ease;pointer-events:none;text-shadow:0 0 14px #000, 0 0 6px #000, 0 0 2px #000}
-  .star:hover .star-label,.star.active .star-label{opacity:1;transform:translate(-50%,0)}
+  .star-label{
+    position:absolute;top:calc(100% - 4px);left:50%;
+    transform:translate(-50%,0);
+    white-space:nowrap;
+    max-width:var(--label-max,140px);
+    overflow:hidden;text-overflow:ellipsis;
+    font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+    font-weight:500;color:#c8c3d6;
+    opacity:1;
+    transition:color .25s ease;
+    pointer-events:none;
+    text-shadow:0 0 14px #000, 0 0 6px #000, 0 0 2px #000;
+    text-align:center;
+  }
   .star.active .star-label{color:#fff}
   .star.active .star-core{background:#fff;box-shadow:0 0 18px 6px #fff, 0 0 62px 20px rgba(255,255,255,.6);animation-duration:1.15s !important;animation-delay:0s !important}
   .star.unplayed::before{content:'';position:absolute;top:50%;left:50%;width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.55);transform:translate(-50%,-50%);animation:unplayedPulse 2.4s ease-in-out infinite;pointer-events:none}
@@ -98,10 +110,9 @@
   .ctrlBtn.main{width:62px;height:62px;border-color:rgba(255,255,255,.3);background:radial-gradient(circle at 35% 30%, rgba(70,70,80,.6), rgba(10,10,12,.95));color:#fff}
   .ctrlBtn.main svg{width:24px;height:24px}
   .ctrlBtn.main:hover{box-shadow:0 0 34px -4px rgba(255,255,255,.45)}
-  .ctrlBtn.minor{width:40px;height:40px;border:none;background:transparent;color:rgba(255,255,255,.42);box-shadow:none}
-  .ctrlBtn.minor svg{width:18px;height:18px}
-  .ctrlBtn.minor:hover{color:#fff;background:transparent;border:none;box-shadow:none;filter:drop-shadow(0 0 8px rgba(255,255,255,.6))}
-  .ctrlBtn.minor.active{color:#fff;background:transparent;border:none;box-shadow:none;filter:drop-shadow(0 0 10px rgba(255,255,255,.85))}
+  .ctrlBtn.minor{width:40px;height:40px;border:none;background:transparent;color:rgba(255,255,255,.42);box-shadow:none;cursor:pointer;flex-shrink:0;display:grid;place-items:center}
+  .ctrlBtn.minor svg{width:18px;height:18px;fill:currentColor}
+  .ctrlBtn.minor.active{color:#fff;filter:drop-shadow(0 0 10px rgba(255,255,255,.85))}
   #repeatBtn{margin-right:10px}
   #shuffleBtn{margin-left:10px}
   .spinner-circle{transform-box: fill-box;transform-origin: center;animation: spinAnim 1s linear infinite}
@@ -177,7 +188,7 @@
     .pageNav{font-size:12px;letter-spacing:.26em;gap:6px;margin-left:4px}
     #searchBox{top:54px;right:12px;width:calc(100% - 24px);max-width:320px}
     .star{width:68px;height:68px}
-    .star-label{font-size:9.5px;letter-spacing:.14em;top:calc(100% + 2px)}
+    .star-label{font-size:9.5px;letter-spacing:.13em;max-width:var(--label-max,120px)}
     .toast{font-size:10px;padding:10px 16px;letter-spacing:.18em}
     .playerCard{width:88vw;gap:20px}
     .controls{gap:8px}
@@ -391,7 +402,7 @@ let searchOpen = false;
 let currentArrow = null;
 let searchArrowTimer = null;
 let EPISODES = [];
-let PER_PAGE = 12;
+let PER_PAGE = 8;
 let totalPages = 1;
 let starEls = [];
 let currentPage = 0;
@@ -447,8 +458,8 @@ function detectGitHubRepo(){
   } catch (e) { return null; }
 }
 
-const GH_TREE_KEY = 'ghTreeCache_v7';
-const GH_TREE_TTL = 30 * 60 * 1000;
+const GH_TREE_KEY = 'ghTreeCache_v8';
+const GH_TREE_TTL = 5 * 60 * 1000;
 
 let ghTreeCache = null;
 let ghTreeDisabled = false;
@@ -577,10 +588,31 @@ function findDataTracks(tree){
   return tracks.sort((a, b) => a - b);
 }
 
+async function probeDataFile(num){
+  const url = 'DATA/' + num + '.mp3';
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 3000);
+    const res = await fetch(url, { method: 'HEAD', cache: 'no-store', signal: controller.signal });
+    clearTimeout(timer);
+    if (!res.ok) return false;
+    const ct = (res.headers.get('content-type') || '').toLowerCase();
+    if (ct.includes('audio') || ct.includes('octet-stream') || ct.includes('mpeg')) return true;
+    if (ct.includes('html') || ct.includes('text') || ct.includes('json')) return false;
+    const cl = parseInt(res.headers.get('content-length') || '0', 10);
+    if (cl > 30000) return true;
+    return false;
+  } catch (e) {
+    return false;
+  }
+}
+
 async function fetchText(url){
   try {
     const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) return null;
+    const ct = (res.headers.get('content-type') || '').toLowerCase();
+    if (ct.includes('html')) return null;
     const txt = await res.text();
     const trimmed = txt.trim();
     if (!trimmed || trimmed.length > 500) return null;
@@ -628,21 +660,7 @@ async function loadEpisodeList(){
 
   const tree = await getFullTree();
   if (!tree) {
-    const episodes = entries.map(([key, val]) => {
-      const p = parseJsonEntry(key, val);
-      return {
-        folderKey: key,
-        folderName: p.folderName,
-        title: p.title,
-        audioUrl: null,
-        coverUrl: null,
-        actualFolder: null,
-        dur: 0,
-        resolved: false,
-        treeFailed: true
-      };
-    });
-    return { episodes, treeError: true };
+    return { episodes: [], treeError: true };
   }
 
   const episodeFolders = getEpisodeFolders(tree);
@@ -654,7 +672,6 @@ async function loadEpisodeList(){
     const folder = findEpisodeFolder(episodeFolders, candidates);
     if (!folder) continue;
 
-    const folderPath = 'Episodes/' + folder + '/';
     const files = listFilesInFolder(tree, 'Episodes/' + folder);
 
     let mp3 = null;
@@ -686,8 +703,7 @@ async function loadEpisodeList(){
       coverUrl: coverFile ? buildUrl(['Episodes', folder, coverFile]) : null,
       actualFolder: folder,
       dur: 0,
-      resolved: true,
-      treeFailed: false
+      resolved: true
     });
   }
 
@@ -827,18 +843,10 @@ async function getDataTracks(){
     return findDataTracks(tree);
   }
   const found = [];
-  for (let i = 1; i <= 50; i++) {
-    const url = 'DATA/' + i + '.mp3';
-    try {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 3000);
-      const res = await fetch(url, { method: 'HEAD', cache: 'no-store', signal: controller.signal });
-      clearTimeout(timer);
-      if (res.ok) found.push(i);
-      else break;
-    } catch (e) {
-      break;
-    }
+  for (let i = 1; i <= 10; i++) {
+    const ok = await probeDataFile(i);
+    if (ok) found.push(i);
+    else break;
   }
   return found;
 }
@@ -1283,38 +1291,60 @@ function getExclusionZones(){
   return zones;
 }
 function inZone(x, y, z){ return x >= z.x1 && x <= z.x2 && y >= z.y1 && y <= z.y2; }
+
+function getGridCols(count){
+  if (innerWidth < 700) return 2;
+  if (count <= 4) return 2;
+  if (count <= 9) return 3;
+  return 4;
+}
+
 function generatePositions(count){
-  const zones = getExclusionZones();
   const positions = [];
   if (count === 0) return positions;
-  let cols, rows;
-  if (count <= 1) { cols = 1; rows = 1; }
-  else if (count === 2) { cols = 2; rows = 1; }
-  else if (count <= 4) { cols = 2; rows = 2; }
-  else if (count <= 6) { cols = 3; rows = 2; }
-  else if (count <= 9) { cols = 3; rows = 3; }
-  else if (count <= 12) { cols = 4; rows = 3; }
-  else { cols = 4; rows = Math.ceil(count / 4); }
+  const zones = getExclusionZones();
+
+  const cols = getGridCols(count);
+  const rows = Math.ceil(count / cols);
+  const cellW = 1 / cols;
+  const cellH = 1 / rows;
+
   const cells = [];
-  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) cells.push([c, r]);
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) cells.push([c, r]);
+  }
   for (let i = cells.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [cells[i], cells[j]] = [cells[j], cells[i]];
   }
-  const cw = 1 / cols, rh = 1 / rows;
+
   for (const [c, r] of cells) {
     if (positions.length >= count) break;
     let tries = 0;
-    while (tries < 25) {
+    let placed = false;
+    while (tries < 30 && !placed) {
       tries++;
-      const x = cw * (c + 0.2 + Math.random() * 0.6);
-      const y = rh * (r + 0.22 + Math.random() * 0.56);
+      const x = cellW * (c + 0.5) + (Math.random() - 0.5) * cellW * 0.18;
+      const y = cellH * (r + 0.28) + Math.random() * cellH * 0.15;
       let ok = true;
       for (const z of zones) if (inZone(x, y, z)) { ok = false; break; }
-      if (ok) { positions.push([x, y]); break; }
+      if (!ok) continue;
+      for (const p of positions) {
+        if (Math.abs(p[0] - x) < cellW * 0.55 && Math.abs(p[1] - y) < cellH * 0.6) {
+          ok = false;
+          break;
+        }
+      }
+      if (ok) {
+        positions.push([x, y]);
+        placed = true;
+      }
+    }
+    if (!placed) {
+      positions.push([cellW * (c + 0.5), cellH * (r + 0.28)]);
     }
   }
-  while (positions.length < count) positions.push([0.15 + Math.random() * 0.7, 0.2 + Math.random() * 0.6]);
+
   return positions;
 }
 
@@ -1337,12 +1367,13 @@ function buildSky(){
     pageCurrentEl.textContent = '0';
     return;
   }
-  PER_PAGE = Math.min(12, Math.max(1, EPISODES.length));
+  PER_PAGE = innerWidth < 700 ? 6 : 8;
   totalPages = Math.max(1, Math.ceil(EPISODES.length / PER_PAGE));
   pageTotalEl.textContent = totalPages;
   pageCurrentEl.textContent = 1;
   currentPage = 0;
   sky.style.transform = 'translateY(0)';
+
   for (let p = 0; p < totalPages; p++) {
     const page = document.createElement('div');
     page.className = 'page';
@@ -1353,7 +1384,11 @@ function buildSky(){
     page.appendChild(skyLayer);
     const start = p * PER_PAGE;
     const end = Math.min(start + PER_PAGE, EPISODES.length);
-    const positions = generatePositions(end - start);
+    const pageCount = end - start;
+    const positions = generatePositions(pageCount);
+    const cols = getGridCols(pageCount);
+    const labelMax = Math.floor((innerWidth / cols) * 0.72);
+
     for (let i = start; i < end; i++) {
       const pos = positions[i - start];
       const ep = EPISODES[i];
@@ -1363,6 +1398,7 @@ function buildSky(){
       star.dataset.key = ep.folderKey;
       star.style.left = (pos[0] * 100) + '%';
       star.style.top = (pos[1] * 100) + '%';
+      star.style.setProperty('--label-max', labelMax + 'px');
       star.style.setProperty('--pulse-dur', (2.4 + Math.random() * 3.2).toFixed(2) + 's');
       star.style.setProperty('--pulse-delay', (Math.random() * 4).toFixed(2) + 's');
       star.style.setProperty('--core-size', (6 + Math.random() * 4.5).toFixed(1) + 'px');
