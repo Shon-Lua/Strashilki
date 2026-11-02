@@ -153,19 +153,47 @@
   .map-arrow{
     position:fixed;inset:0;
     width:100%;height:100%;
-    pointer-events:none;
-    z-index:210;
-    opacity:1;
+    pointer-events:none;z-index:210;opacity:1;
     transition:opacity .6s ease;
   }
 
+  /* ===== TOP BAR ===== */
+  #topBar{
+    position:fixed;
+    top:24px;
+    right:20px;
+    z-index:26;
+    display:flex;
+    align-items:center;
+    gap:2px;
+  }
+  #topBar button{
+    background:none;border:none;
+    padding:6px;
+    width:34px;height:34px;
+    display:grid;place-items:center;
+    color:rgba(255,255,255,.42);
+    cursor:pointer;
+    transition:color .3s ease, filter .3s ease;
+    -webkit-tap-highlight-color:transparent;
+    text-shadow:0 0 10px rgba(0,0,0,.9);
+  }
+  #topBar button:hover{
+    color:#fff;
+    filter:drop-shadow(0 0 8px rgba(255,255,255,.55));
+  }
+  #topBar button svg{
+    width:20px;height:20px;display:block;
+  }
   .pageNav{
-    position:fixed;top:32px;right:28px;z-index:6;
-    display:flex;gap:8px;align-items:baseline;
+    display:flex;
+    gap:8px;
+    align-items:baseline;
     font-family:'Cinzel', Georgia, serif;
     font-size:14px;letter-spacing:.32em;
     font-weight:500;color:#fff;
     font-variant-numeric:tabular-nums;
+    margin-left:6px;
     pointer-events:none;
     text-shadow:0 0 10px rgba(0,0,0,.95), 0 0 22px rgba(255,255,255,.22);
   }
@@ -436,41 +464,14 @@
   .mini-btn:hover{background:rgba(255,255,255,.14)}
   .mini-btn svg{width:16px;height:16px;fill:currentColor}
 
-  /* ===== SEARCH & INFO BUTTONS ===== */
-  #cornerBtns{
-    position:fixed;
-    bottom:22px;right:18px;
-    z-index:25;
-    display:flex;
-    gap:2px;
-    align-items:center;
-  }
-  #cornerBtns button{
-    background:none;border:none;
-    padding:8px;
-    color:rgba(255,255,255,.35);
-    cursor:pointer;
-    width:44px;height:44px;
-    display:grid;place-items:center;
-    transition:color .3s ease, filter .3s ease;
-    -webkit-tap-highlight-color:transparent;
-    text-shadow:0 0 10px rgba(0,0,0,.9);
-  }
-  #cornerBtns button:hover{
-    color:#fff;
-    filter:drop-shadow(0 0 8px rgba(255,255,255,.5));
-  }
-  #cornerBtns button svg{
-    width:22px;height:22px;display:block;
-  }
-
   /* ===== SEARCH BOX ===== */
   #searchBox{
     position:fixed;
-    bottom:88px;right:18px;
-    width:min(320px, calc(100% - 36px));
-    z-index:26;
-    opacity:0;transform:translateY(10px);
+    top:68px;
+    right:20px;
+    width:min(320px, calc(100% - 40px));
+    z-index:27;
+    opacity:0;transform:translateY(-10px);
     pointer-events:none;
     transition:opacity .3s ease, transform .3s ease;
   }
@@ -480,7 +481,7 @@
   }
   #searchInput{
     width:100%;
-    padding:13px 18px;
+    padding:12px 18px;
     background:rgba(8,6,10,.95);
     border:1px solid rgba(255,255,255,.15);
     border-radius:3px;
@@ -502,6 +503,41 @@
     color:rgba(255,255,255,.28);
     letter-spacing:.04em;
   }
+  #searchSuggestions{
+    margin-top:6px;
+    background:rgba(8,6,10,.97);
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:3px;
+    box-shadow:0 10px 30px rgba(0,0,0,.9);
+    max-height:260px;
+    overflow-y:auto;
+    display:none;
+    -webkit-overflow-scrolling:touch;
+  }
+  #searchSuggestions.show{display:block}
+  .suggestion{
+    padding:11px 16px;
+    font-family:'Cormorant Garamond', Georgia, serif;
+    font-weight:500;
+    font-size:14px;
+    letter-spacing:.02em;
+    color:#b8b2c5;
+    cursor:pointer;
+    border-bottom:1px solid rgba(255,255,255,.05);
+    transition:background .18s ease, color .18s ease;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .suggestion:last-child{border-bottom:none}
+  .suggestion:hover{background:rgba(255,255,255,.06);color:#fff}
+  .suggestion.no-results{
+    cursor:default;
+    font-style:italic;
+    color:rgba(255,255,255,.3);
+    text-align:center;
+  }
+  .suggestion.no-results:hover{background:none;color:rgba(255,255,255,.3)}
 
   /* ===== INFO PANEL ===== */
   #infoPanel{
@@ -637,7 +673,7 @@
     transition:opacity .55s ease;
     overflow-y:auto;
     -webkit-overflow-scrolling:touch;
-    padding:40px 22px;
+    padding:20px 20px;
     overscroll-behavior:contain;
   }
   #ageGate.hide{opacity:0;pointer-events:none}
@@ -648,38 +684,49 @@
     text-align:center;
     max-width:520px;
     margin:0 auto;
-    padding:20px 0 30px;
-    min-height:calc(100vh - 80px);
+    min-height:100%;
     justify-content:center;
+    padding:8px 0;
   }
   .ageBrand{
     font-family:'Cinzel', Georgia, serif;
-    font-weight:500;font-size:12px;
-    letter-spacing:.55em;text-indent:.55em;
+    font-weight:500;font-size:11px;
+    letter-spacing:.5em;text-indent:.5em;
     text-transform:uppercase;
-    color:#7c7688;margin-bottom:22px;
+    color:#8a8496;margin-bottom:12px;
+  }
+  .ageTagline{
+    font-family:'Cormorant Garamond', Georgia, serif;
+    font-weight:500;
+    font-style:italic;
+    font-size:14px;
+    letter-spacing:.04em;
+    color:#7c7688;
+    line-height:1.5;
+    margin-bottom:16px;
+    max-width:340px;
   }
   .ageBig{
     font-family:'Cinzel', Georgia, serif;
     font-weight:500;
-    font-size:clamp(110px, 26vw, 180px);
+    font-size:clamp(84px, 20vw, 128px);
     line-height:.85;
     color:#fff;
     letter-spacing:.02em;
-    margin-bottom:44px;
-    text-shadow:0 0 80px rgba(255,255,255,.22);
+    margin-bottom:22px;
+    text-shadow:0 0 70px rgba(255,255,255,.22);
     user-select:none;
   }
   .ageBody{
     font-family:'Cormorant Garamond', Georgia, serif;
     font-weight:500;
-    font-size:clamp(14px, 3.4vw, 16px);
-    line-height:1.7;
+    font-size:clamp(13px, 3.3vw, 14.5px);
+    line-height:1.55;
     color:#b8b2c5;
     display:flex;
     flex-direction:column;
-    gap:16px;
-    margin-bottom:36px;
+    gap:9px;
+    margin-bottom:20px;
     text-align:justify;
     text-align-last:center;
     hyphens:auto;
@@ -688,35 +735,34 @@
   .ageBody p{text-align:justify;text-align-last:center}
   .ageBody strong{color:#eae6f2;font-weight:600}
   .ageEnter{
-    padding:17px 76px;
+    padding:14px 60px;
     background:transparent;
     border:1px solid rgba(255,255,255,.4);
     color:#eae6f2;
     font-family:'Cinzel', Georgia, serif;
-    font-weight:500;font-size:13px;
-    letter-spacing:.5em;text-indent:.5em;
+    font-weight:500;font-size:12px;
+    letter-spacing:.48em;text-indent:.48em;
     text-transform:uppercase;
     cursor:pointer;
     transition:color .3s ease, border-color .3s ease, box-shadow .3s ease, letter-spacing .3s ease;
     border-radius:2px;
     -webkit-tap-highlight-color:transparent;
-    margin-top:4px;
   }
   .ageEnter:hover{
     color:#fff;border-color:#fff;
     box-shadow:0 0 50px rgba(255,255,255,.24);
-    letter-spacing:.58em;
+    letter-spacing:.56em;
   }
   .ageEnter:active{
     box-shadow:0 0 30px rgba(255,255,255,.35), inset 0 0 26px rgba(255,255,255,.1);
   }
   .ageNote{
-    margin-top:22px;
+    margin-top:14px;
     font-family:'Cormorant Garamond', Georgia, serif;
-    font-weight:500;font-size:11px;
-    letter-spacing:.22em;text-transform:uppercase;
-    color:#4e4a5e;line-height:1.7;
-    max-width:360px;
+    font-weight:500;font-size:10px;
+    letter-spacing:.2em;text-transform:uppercase;
+    color:#4e4a5e;line-height:1.6;
+    max-width:340px;
   }
 
   @media (max-width:768px){
@@ -734,7 +780,11 @@
   }
 
   @media (max-width:640px){
-    .pageNav{top:22px;right:18px;font-size:13px;letter-spacing:.28em;gap:7px}
+    #topBar{top:16px;right:12px;gap:0}
+    #topBar button{width:30px;height:30px;padding:5px}
+    #topBar button svg{width:18px;height:18px}
+    .pageNav{font-size:12px;letter-spacing:.26em;gap:6px;margin-left:4px}
+    #searchBox{top:54px;right:12px;width:calc(100% - 24px);max-width:320px}
     .star{width:68px;height:68px}
     .star-label{font-size:9.5px;letter-spacing:.14em;top:calc(100% + 2px)}
     .toast{font-size:10px;padding:10px 16px;letter-spacing:.18em}
@@ -753,22 +803,21 @@
     .mini-cover{width:40px;height:40px}
     .mini-title{font-size:13px}
     .ghostLabel{font-size:10px;letter-spacing:.16em}
-    #cornerBtns{bottom:18px;right:12px}
-    #miniPlayer.show ~ #cornerBtns{bottom:92px;right:12px}
-    #searchBox{bottom:78px;right:12px;width:calc(100% - 24px);max-width:340px}
-    #miniPlayer.show ~ #searchBox{bottom:148px}
-    #ageGate{padding:32px 20px}
-    .ageBrand{font-size:11px;letter-spacing:.45em;text-indent:.45em;margin-bottom:18px}
-    .ageBig{margin-bottom:36px}
-    .ageBody{font-size:14px;gap:13px;margin-bottom:30px}
-    .ageEnter{padding:15px 56px;font-size:12px;letter-spacing:.44em;text-indent:.44em}
-    .ageEnter:hover{letter-spacing:.48em}
-    .ageNote{font-size:10px;letter-spacing:.2em;margin-top:18px}
+    #ageGate{padding:18px 16px}
+    .ageBrand{font-size:10px;letter-spacing:.4em;text-indent:.4em;margin-bottom:10px}
+    .ageTagline{font-size:12.5px;margin-bottom:14px;max-width:300px}
+    .ageBig{margin-bottom:20px}
+    .ageBody{font-size:13px;gap:8px;margin-bottom:18px;line-height:1.5}
+    .ageEnter{padding:13px 50px;font-size:11px;letter-spacing:.44em;text-indent:.44em}
+    .ageEnter:hover{letter-spacing:.5em}
+    .ageNote{font-size:9.5px;letter-spacing:.18em;margin-top:12px}
     .infoCard{padding:38px 24px 30px}
     .infoHeading{font-size:14px;margin-bottom:22px}
     .info-line{font-size:14px}
     .extCard{padding:32px 24px 26px}
     .extGo{padding:14px 44px;font-size:11px}
+    #searchInput{padding:11px 15px;font-size:14px}
+    .suggestion{padding:10px 14px;font-size:13.5px}
   }
 </style>
 </head>
@@ -780,8 +829,23 @@
 
 <div id="skyWrap"><div id="sky"></div></div>
 
-<div class="pageNav">
-  <span id="pageCurrent">1</span><i>/</i><span id="pageTotal">1</span>
+<div id="topBar">
+  <button id="searchBtn" aria-label="Поиск">
+    <svg viewBox="0 0 24 24">
+      <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <line x1="15.5" y1="15.5" x2="20" y2="20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+  </button>
+  <button id="infoBtn" aria-label="Информация">
+    <svg viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.3"/>
+      <circle cx="12" cy="7.4" r="1.3" fill="currentColor"/>
+      <rect x="11.1" y="10" width="1.8" height="7.2" rx="0.9" fill="currentColor"/>
+    </svg>
+  </button>
+  <div class="pageNav">
+    <span id="pageCurrent">1</span><i>/</i><span id="pageTotal">1</span>
+  </div>
 </div>
 
 <div id="toastContainer" aria-live="polite"></div>
@@ -803,22 +867,7 @@
 
 <div id="searchBox">
   <input type="text" id="searchInput" placeholder="название выпуска..." autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search" />
-</div>
-
-<div id="cornerBtns">
-  <button id="searchBtn" aria-label="Поиск">
-    <svg viewBox="0 0 24 24">
-      <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/>
-      <line x1="15.5" y1="15.5" x2="20" y2="20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-    </svg>
-  </button>
-  <button id="infoBtn" aria-label="Информация">
-    <svg viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.3"/>
-      <circle cx="12" cy="7.4" r="1.3" fill="currentColor"/>
-      <rect x="11.1" y="10" width="1.8" height="7.2" rx="0.9" fill="currentColor"/>
-    </svg>
-  </button>
+  <div id="searchSuggestions"></div>
 </div>
 
 <div id="playerOverlay">
@@ -873,14 +922,13 @@
 <div id="ageGate" role="dialog" aria-modal="true">
   <div class="ageInner">
     <div class="ageBrand">Страшилки</div>
+    <div class="ageTagline">Эти истории вас немного напугают или заинтригуют.</div>
     <div class="ageBig">18+</div>
     <div class="ageBody">
-      <p>Настоящий подкаст «Страшилки» (далее — Подкаст) является произведением художественной литературы и создан исключительно в развлекательных и творческих целях.</p>
-      <p>Все персонажи, события, места, организации и обстоятельства, упомянутые в выпусках, являются вымышленными. Любые совпадения с реальными лицами, живыми или умершими, событиями или локациями являются случайными.</p>
-      <p>Содержание Подкаста может включать нецензурную лексику, описания насилия, жестокости, смерти и членовредительства, сцены физического и психологического насилия, упоминания психических расстройств, зависимостей и суицидального поведения, а также иные тревожные, шокирующие или вызывающие дискомфорт материалы.</p>
-      <p>Прослушивание не рекомендовано лицам с повышенной чувствительностью, тревожными состояниями, посттравматическим стрессовым расстройством и склонностью к впечатлительности.</p>
-      <p>Подкаст не является медицинской, психологической, психиатрической, юридической или иной профессиональной консультацией. Авторы не несут ответственности за возможные последствия, связанные с восприятием содержания.</p>
-      <p>Нажимая кнопку «Войти», вы подтверждаете, что достигли восемнадцатилетнего возраста, ознакомлены с настоящим уведомлением, принимаете его условия и берёте на себя полную ответственность за прослушивание.</p>
+      <p>Подкаст «Страшилки» является произведением художественной литературы. Все персонажи, события и места вымышлены, любые совпадения случайны.</p>
+      <p>Содержание может включать нецензурную лексику, сцены насилия и смерти, упоминания психических расстройств и иные тяжёлые темы. Прослушивание не рекомендовано лицам с повышенной чувствительностью.</p>
+      <p>Подкаст не является профессиональной консультацией. Авторы не несут ответственности за последствия восприятия содержания.</p>
+      <p>Нажимая «Войти», вы подтверждаете, что вам есть 18 лет, и принимаете эти условия.</p>
     </div>
     <button class="ageEnter" id="ageEnterBtn">Войти</button>
     <div class="ageNote">продолжая, вы подтверждаете, что вам есть 18 лет</div>
@@ -1054,6 +1102,7 @@ const searchBox = document.getElementById('searchBox');
 const searchInput = document.getElementById('searchInput');
 const searchBtn = document.getElementById('searchBtn');
 const infoBtn = document.getElementById('infoBtn');
+const searchSuggestions = document.getElementById('searchSuggestions');
 
 let ageGateActive = true;
 let searchOpen = false;
@@ -1220,12 +1269,12 @@ externalWarning.addEventListener('click', (e) => {
 function openSearch(){
   searchBox.classList.add('show');
   searchOpen = true;
-  setTimeout(() => {
-    if (searchOpen) searchInput.focus();
-  }, 80);
+  setTimeout(() => { if (searchOpen) searchInput.focus(); }, 80);
 }
 function closeSearch(){
   searchBox.classList.remove('show');
+  searchSuggestions.classList.remove('show');
+  searchSuggestions.innerHTML = '';
   searchOpen = false;
   searchInput.blur();
 }
@@ -1236,24 +1285,6 @@ searchBtn.addEventListener('click', () => {
   if (externalWarning.classList.contains('show')) closeExternalWarning();
   if (searchOpen) closeSearch();
   else openSearch();
-});
-
-searchInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    performSearch(searchInput.value);
-  } else if (e.key === 'Escape') {
-    e.preventDefault();
-    closeSearch();
-  } else if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','PageUp','PageDown'].includes(e.key)) {
-    e.stopPropagation();
-  }
-});
-
-document.addEventListener('pointerdown', (e) => {
-  if (!searchOpen) return;
-  if (searchBox.contains(e.target) || searchBtn.contains(e.target)) return;
-  closeSearch();
 });
 
 function normalize(str){
@@ -1322,11 +1353,71 @@ function findBestMatch(rawQuery){
   return bestScore >= 0.55 ? best : -1;
 }
 
-function removeMapArrow(){
-  if (currentArrow) {
-    currentArrow.remove();
-    currentArrow = null;
+function getSuggestions(rawQuery){
+  const q = normalize(rawQuery);
+  if (!q || q.length < 1) return [];
+  const out = [];
+  EPISODES.forEach((ep, i) => {
+    const title = normalize(ep.title);
+    const s = Math.max(titleScore(q, title), tokenScore(q, title) * 0.95);
+    if (s >= 0.22) out.push({ index: i, title: ep.title, score: s });
+  });
+  out.sort((a, b) => b.score - a.score);
+  return out.slice(0, 6);
+}
+
+function renderSuggestions(rawQuery){
+  const q = String(rawQuery || '').trim();
+  if (!q) {
+    searchSuggestions.classList.remove('show');
+    searchSuggestions.innerHTML = '';
+    return;
   }
+  const list = getSuggestions(q);
+  if (!list.length) {
+    searchSuggestions.innerHTML = '<div class="suggestion no-results">ничего не найдено</div>';
+    searchSuggestions.classList.add('show');
+    return;
+  }
+  searchSuggestions.innerHTML = list.map(r =>
+    '<div class="suggestion" data-index="' + r.index + '">' + r.title + '</div>'
+  ).join('');
+  searchSuggestions.classList.add('show');
+}
+
+searchInput.addEventListener('input', () => {
+  renderSuggestions(searchInput.value);
+});
+
+searchInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    performSearch(searchInput.value);
+  } else if (e.key === 'Escape') {
+    e.preventDefault();
+    closeSearch();
+  } else if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','PageUp','PageDown'].includes(e.key)) {
+    e.stopPropagation();
+  }
+});
+
+searchSuggestions.addEventListener('click', (e) => {
+  const el = e.target.closest('.suggestion');
+  if (!el || el.classList.contains('no-results')) return;
+  const idx = parseInt(el.getAttribute('data-index'), 10);
+  if (isNaN(idx)) return;
+  searchInput.value = EPISODES[idx].title;
+  performSearch(EPISODES[idx].title);
+});
+
+document.addEventListener('pointerdown', (e) => {
+  if (!searchOpen) return;
+  if (searchBox.contains(e.target) || searchBtn.contains(e.target)) return;
+  closeSearch();
+});
+
+function removeMapArrow(){
+  if (currentArrow) { currentArrow.remove(); currentArrow = null; }
 }
 
 function showMapArrow(starEl){
@@ -1335,8 +1426,7 @@ function showMapArrow(starEl){
   const rect = starEl.getBoundingClientRect();
   const tx = rect.left + rect.width / 2;
   const ty = rect.top + rect.height / 2;
-  const vw = innerWidth;
-  const vh = innerHeight;
+  const vw = innerWidth, vh = innerHeight;
 
   const hDir = tx < vw / 2 ? -1 : 1;
   const vDir = ty < vh / 2 ? 1 : -1;
@@ -1412,15 +1502,9 @@ function showMapArrow(starEl){
 
 function performSearch(rawQuery){
   const q = String(rawQuery || '').trim();
-  if (q.length < 2) {
-    showToast('введите название', 1800);
-    return;
-  }
+  if (q.length < 2) { showToast('введите название', 1800); return; }
   const idx = findBestMatch(q);
-  if (idx < 0) {
-    showToast('выпуск не найден', 2200);
-    return;
-  }
+  if (idx < 0) { showToast('выпуск не найден', 2200); return; }
 
   clearTimeout(searchArrowTimer);
   removeMapArrow();
