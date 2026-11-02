@@ -34,7 +34,7 @@
 
   .vignette{
     position:fixed;inset:0;z-index:3;pointer-events:none;
-    background:radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 38%, rgba(0,0,0,.6) 78%, rgba(0,0,0,.97) 100%);
+    background:radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 36%, rgba(0,0,0,.62) 78%, rgba(0,0,0,.97) 100%);
   }
 
   #skyWrap{position:fixed;inset:0;z-index:4;overflow:hidden}
@@ -49,7 +49,7 @@
 
   .star{
     position:absolute;
-    width:110px;height:110px;
+    width:78px;height:78px;
     transform:translate(-50%,-50%);
     background:none;border:none;padding:0;
     cursor:grab;display:grid;place-items:center;
@@ -100,10 +100,10 @@
   .star:hover .star-flare{opacity:1}
 
   .star-label{
-    position:absolute;top:calc(100% - 6px);left:50%;
+    position:absolute;top:calc(100% - 2px);left:50%;
     transform:translate(-50%,-6px);
     white-space:nowrap;
-    font-size:10px;letter-spacing:.22em;text-transform:uppercase;
+    font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;
     color:#c8c3d6;
     opacity:0;transition:.35s ease;pointer-events:none;
     text-shadow:0 0 14px #000, 0 0 6px #000, 0 0 2px #000;
@@ -130,20 +130,49 @@
   .pageNav i{font-style:normal;opacity:.4}
   #pageCurrent{color:rgba(255,255,255,.8)}
 
-  .hint{
-    position:fixed;bottom:32px;left:50%;
-    transform:translateX(-50%);
-    z-index:5;
-    font-size:10px;letter-spacing:.34em;text-transform:uppercase;
-    color:rgba(255,255,255,.26);
-    animation:hintPulse 2.6s ease-in-out infinite;
+  .notification{
+    position:fixed;
+    bottom:30px;left:50%;
+    transform:translateX(-50%) translateY(18px);
+    padding:13px 22px 13px 34px;
+    background:rgba(8,5,6,.92);
+    border:1px solid rgba(255,255,255,.12);
+    border-left:2px solid rgba(255,255,255,.7);
+    border-radius:3px;
+    font-size:10.5px;
+    letter-spacing:.24em;
+    text-transform:uppercase;
+    color:#c8c3d6;
+    opacity:0;
     pointer-events:none;
-    transition:opacity .8s ease;
+    transition:opacity .6s ease, transform .6s ease;
+    z-index:8;
+    box-shadow:
+      0 12px 44px rgba(0,0,0,.85),
+      0 0 30px rgba(255,255,255,.04),
+      inset 0 0 24px rgba(255,255,255,.02);
     white-space:nowrap;
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
   }
-  @keyframes hintPulse{
-    0%,100%{opacity:.25}
-    50%{opacity:.6}
+  .notification.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(0);
+  }
+  .notification::before{
+    content:'';
+    position:absolute;
+    left:14px;top:50%;
+    width:5px;height:5px;
+    background:rgba(255,255,255,.85);
+    border-radius:50%;
+    transform:translateY(-50%);
+    animation:blink 1.4s ease-in-out infinite;
+    box-shadow:0 0 10px rgba(255,255,255,.7);
+  }
+  @keyframes blink{
+    0%,100%{opacity:.22}
+    50%{opacity:1}
   }
 
   .ghostStar{
@@ -237,26 +266,6 @@
     opacity:1;
   }
 
-  .closeBtn{
-    position:absolute;
-    top:-52px;right:0;
-    width:38px;height:38px;
-    border-radius:50%;
-    border:1px solid rgba(255,255,255,.14);
-    background:rgba(0,0,0,.5);
-    color:rgba(255,255,255,.7);
-    font-size:22px;line-height:1;
-    cursor:pointer;
-    display:grid;place-items:center;
-    transition:.25s ease;
-    font-family:Arial,sans-serif;
-  }
-  .closeBtn:hover{
-    color:#fff;
-    border-color:rgba(255,255,255,.5);
-    box-shadow:0 0 20px rgba(255,255,255,.2);
-  }
-
   .cover{
     width:100%;
     aspect-ratio:1/1;
@@ -341,33 +350,49 @@
   .controls{
     width:100%;
     display:flex;align-items:center;justify-content:center;
-    gap:34px;
+    gap:14px;
   }
   .ctrlBtn{
-    width:52px;height:52px;
+    width:48px;height:48px;
     border-radius:50%;
     border:1px solid rgba(255,255,255,.14);
     background:rgba(255,255,255,.03);
-    color:rgba(255,255,255,.8);
+    color:rgba(255,255,255,.75);
     cursor:pointer;
     display:grid;place-items:center;
     transition:.25s ease;
+    flex-shrink:0;
   }
-  .ctrlBtn svg{width:20px;height:20px;fill:currentColor}
+  .ctrlBtn svg{width:18px;height:18px;fill:currentColor}
   .ctrlBtn:hover{
     color:#fff;
     border-color:rgba(255,255,255,.4);
     box-shadow:0 0 22px -2px rgba(255,255,255,.3);
   }
+  .ctrlBtn.active{
+    color:#fff;
+    border-color:rgba(255,255,255,.6);
+    box-shadow:0 0 22px -2px rgba(255,255,255,.45), inset 0 0 16px rgba(255,255,255,.08);
+    background:rgba(255,255,255,.08);
+  }
   .ctrlBtn.main{
-    width:66px;height:66px;
+    width:62px;height:62px;
     border-color:rgba(255,255,255,.3);
     background:radial-gradient(circle at 35% 30%, rgba(70,70,80,.6), rgba(10,10,12,.95));
     color:#fff;
   }
-  .ctrlBtn.main svg{width:26px;height:26px}
+  .ctrlBtn.main svg{width:24px;height:24px}
   .ctrlBtn.main:hover{
     box-shadow:0 0 34px -4px rgba(255,255,255,.45);
+  }
+
+  .closeHint{
+    font-size:9px;
+    letter-spacing:.28em;
+    text-transform:uppercase;
+    color:rgba(255,255,255,.18);
+    text-align:center;
+    margin-top:-10px;
   }
 
   #miniPlayer{
@@ -453,17 +478,20 @@
 
   @media (max-width:640px){
     .pageNav{top:22px;right:18px;font-size:10px}
-    .hint{bottom:20px;font-size:9px;letter-spacing:.28em}
-    .star{width:100px;height:100px}
-    .star-label{font-size:9px;letter-spacing:.16em;top:calc(100% + 0px)}
-    .playerCard{width:86vw;gap:18px}
-    .closeBtn{top:-46px;width:34px;height:34px;font-size:20px}
-    .controls{gap:28px}
-    .ctrlBtn{width:46px;height:46px}
-    .ctrlBtn.main{width:60px;height:60px}
+    .star{width:68px;height:68px}
+    .star-label{font-size:8.5px;letter-spacing:.14em;top:calc(100% + 2px)}
+    .notification{font-size:9px;padding:10px 16px 10px 28px;letter-spacing:.18em;bottom:20px}
+    .notification::before{left:11px;width:4px;height:4px}
+    .playerCard{width:88vw;gap:18px}
+    .controls{gap:8px}
+    .ctrlBtn{width:42px;height:42px}
+    .ctrlBtn svg{width:16px;height:16px}
+    .ctrlBtn.main{width:56px;height:56px}
+    .ctrlBtn.main svg{width:22px;height:22px}
     .dropzone{width:120px;height:120px;bottom:80px}
     #miniPlayer{grid-template-columns:40px 1fr 36px;padding:8px 12px 8px 8px}
     .mini-cover{width:40px;height:40px}
+    .closeHint{font-size:8px;letter-spacing:.22em}
   }
 </style>
 </head>
@@ -483,7 +511,9 @@
   <span id="pageTotal">1</span>
 </div>
 
-<div class="hint" id="hint">прокрутите небо · коснитесь звезды</div>
+<div class="notification" id="notification">
+  <span class="notification-text" id="notificationText">прокрутите небо · коснитесь звезды</span>
+</div>
 
 <div class="dropzone" id="dropzone">
   <div class="dropzone-label">отпустите<br>здесь</div>
@@ -502,7 +532,6 @@
 
 <div id="playerOverlay">
   <div class="playerCard" id="playerCard">
-    <button class="closeBtn" id="closeBtn" aria-label="Свернуть">×</button>
     <div class="cover" id="cover"></div>
     <div class="titleBlock">
       <h2 id="pTitle">—</h2>
@@ -517,6 +546,9 @@
       <span class="timeTxt right" id="pDur">0:00</span>
     </div>
     <div class="controls">
+      <button class="ctrlBtn" id="repeatBtn" aria-label="Повтор">
+        <svg viewBox="0 0 24 24"><path id="repeatIconPath" d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
+      </button>
       <button class="ctrlBtn" id="prevBtn" aria-label="Назад">
         <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
       </button>
@@ -526,7 +558,11 @@
       <button class="ctrlBtn" id="nextBtn" aria-label="Дальше">
         <svg viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z"/></svg>
       </button>
+      <button class="ctrlBtn" id="shuffleBtn" aria-label="Перемешать">
+        <svg viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
+      </button>
     </div>
+    <div class="closeHint">нажмите снаружи · чтобы свернуть</div>
   </div>
 </div>
 
@@ -588,7 +624,8 @@ const ctx = canvas.getContext('2d');
 const sky = document.getElementById('sky');
 const pageCurrentEl = document.getElementById('pageCurrent');
 const pageTotalEl = document.getElementById('pageTotal');
-const hint = document.getElementById('hint');
+const notification = document.getElementById('notification');
+const notificationText = document.getElementById('notificationText');
 const dropzone = document.getElementById('dropzone');
 const overlay = document.getElementById('playerOverlay');
 const playerCard = document.getElementById('playerCard');
@@ -601,6 +638,9 @@ const progressBar = document.getElementById('progressBar');
 const progressFill = document.getElementById('progressFill');
 const progressKnob = document.getElementById('progressKnob');
 const ppIcon = document.getElementById('ppIcon');
+const repeatBtn = document.getElementById('repeatBtn');
+const repeatIconPath = document.getElementById('repeatIconPath');
+const shuffleBtn = document.getElementById('shuffleBtn');
 const miniPlayer = document.getElementById('miniPlayer');
 const miniCover = document.getElementById('miniCover');
 const miniTitle = document.getElementById('miniTitle');
@@ -623,11 +663,11 @@ for (let i = 0; i < 7; i++) {
     x: 0.1 + Math.random() * 0.8,
     y: 0.1 + Math.random() * 0.8,
     r: 0.32 + Math.random() * 0.28,
-    a: deep ? (0.006 + Math.random() * 0.006) : (0.007 + Math.random() * 0.009),
+    a: deep ? (0.005 + Math.random() * 0.005) : (0.006 + Math.random() * 0.008),
     fx: 0.00006 + Math.random() * 0.0001,
     fy: 0.00006 + Math.random() * 0.0001,
     ph: Math.random() * Math.PI * 2,
-    color: deep ? [110, 8, 22] : [200, 200, 210]
+    color: deep ? [100, 6, 18] : [190, 190, 200]
   });
 }
 
@@ -659,21 +699,21 @@ function makeSkySVG(count){
     const x = (Math.random() * SW).toFixed(1);
     const y = (Math.random() * SH).toFixed(1);
     const r = (Math.random() * 1.3 + 0.25).toFixed(2);
-    const o = (Math.random() * 0.4 + 0.05).toFixed(3);
+    const o = (Math.random() * 0.38 + 0.05).toFixed(3);
     out += '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" fill="#fff" opacity="' + o + '"/>';
   }
   for (let i = 0; i < 6; i++) {
     const x = (Math.random() * SW).toFixed(1);
     const y = (Math.random() * SH).toFixed(1);
     const r = (Math.random() * 1.3 + 0.6).toFixed(2);
-    const o = (Math.random() * 0.22 + 0.05).toFixed(3);
+    const o = (Math.random() * 0.2 + 0.05).toFixed(3);
     out += '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" fill="#fff" opacity="' + o + '"/>';
   }
   return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + SW + ' ' + SH + '" preserveAspectRatio="xMidYMid slice">' + out + '</svg>';
 }
 
 function generatePositions(count){
-  const cols = 3, rows = 3;
+  const cols = 4, rows = 3;
   const cells = [];
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) cells.push([c, r]);
@@ -683,17 +723,19 @@ function generatePositions(count){
     [cells[i], cells[j]] = [cells[j], cells[i]];
   }
   const chosen = cells.slice(0, Math.min(count, cells.length));
-  while (chosen.length < count) chosen.push([Math.random() * cols, Math.random() * rows]);
+  while (chosen.length < count) {
+    chosen.push([Math.random() * cols, Math.random() * rows]);
+  }
   const cw = 100 / cols;
   const rh = 100 / rows;
   return chosen.map(([c, r]) => {
     const x = cw * (c + 0.18 + Math.random() * 0.64);
-    const y = rh * (r + 0.18 + Math.random() * 0.64);
+    const y = rh * (r + 0.2 + Math.random() * 0.6);
     return [x, y];
   });
 }
 
-const PER_PAGE = 8;
+const PER_PAGE = 12;
 const totalPages = Math.ceil(EPISODES.length / PER_PAGE);
 const starEls = [];
 
@@ -704,7 +746,7 @@ for (let p = 0; p < totalPages; p++) {
 
   const skyLayer = document.createElement('div');
   skyLayer.className = 'page-sky';
-  skyLayer.innerHTML = makeSkySVG(220 + Math.floor(Math.random() * 130));
+  skyLayer.innerHTML = makeSkySVG(260 + Math.floor(Math.random() * 160));
   page.appendChild(skyLayer);
 
   const start = p * PER_PAGE;
@@ -739,6 +781,21 @@ for (let p = 0; p < totalPages; p++) {
 }
 pageTotalEl.textContent = totalPages;
 
+/* ================= NOTIFICATION ================= */
+let notifTimer = null;
+function showNotification(text, duration){
+  notificationText.textContent = text;
+  notification.classList.add('show');
+  clearTimeout(notifTimer);
+  if (duration) notifTimer = setTimeout(hideNotification, duration);
+}
+function hideNotification(){
+  notification.classList.remove('show');
+  clearTimeout(notifTimer);
+}
+setTimeout(() => showNotification('прокрутите небо · коснитесь звезды', 9000), 900);
+
+/* ================= AUDIO ================= */
 let audioCtx = null, master = null;
 let sceneBus = null, sceneNodes = [];
 let timers = [];
@@ -747,6 +804,10 @@ let playing = false;
 let elapsed = 0;
 let lastTick = 0;
 let transitioning = false;
+let repeatMode = 'off'; // 'off' | 'all' | 'one'
+let shuffleOn = false;
+let shuffleOrder = [];
+let shufflePosition = 0;
 
 function initAudio(){
   if (audioCtx) return;
@@ -952,34 +1013,96 @@ function finish(){
   updateIcons();
 }
 
-let coverIdCounter = 0;
-function makeCoverSVG(){
-  coverIdCounter++;
-  const id = 'cbg' + coverIdCounter;
-  return '<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">' +
+/* ================= SHUFFLE ================= */
+function buildShuffleOrder(startIndex){
+  shuffleOrder = EPISODES.map((_, i) => i);
+  for (let i = shuffleOrder.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffleOrder[i], shuffleOrder[j]] = [shuffleOrder[j], shuffleOrder[i]];
+  }
+  if (startIndex >= 0) {
+    const idx = shuffleOrder.indexOf(startIndex);
+    if (idx > 0) {
+      shuffleOrder.splice(idx, 1);
+      shuffleOrder.unshift(startIndex);
+    }
+  }
+  shufflePosition = 0;
+}
+
+function getNextIndex(){
+  if (shuffleOn) {
+    if (shufflePosition >= shuffleOrder.length - 1) {
+      if (repeatMode === 'all') {
+        buildShuffleOrder(-1);
+        return shuffleOrder[0];
+      }
+      return -1;
+    }
+    shufflePosition++;
+    return shuffleOrder[shufflePosition];
+  }
+  const next = current + 1;
+  if (next >= EPISODES.length) {
+    if (repeatMode === 'all') return 0;
+    return -1;
+  }
+  return next;
+}
+
+function getPrevIndex(){
+  if (shuffleOn) {
+    if (shufflePosition <= 0) return -1;
+    shufflePosition--;
+    return shuffleOrder[shufflePosition];
+  }
+  return (current - 1 + EPISODES.length) % EPISODES.length;
+}
+
+function onTrackEnd(){
+  if (repeatMode === 'one') {
+    elapsed = 0;
+    updateProgress();
+    play();
+    return;
+  }
+  const next = getNextIndex();
+  if (next < 0) { finish(); return; }
+  loadEpisode(next);
+}
+
+/* ================= COVER (микрофон) ================= */
+const coverCache = {};
+function makeCoverSVG(index){
+  if (coverCache[index]) return coverCache[index];
+  const id = 'cbg' + index;
+  const svg = '<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">' +
     '<defs>' +
       '<radialGradient id="' + id + '" cx="50%" cy="42%">' +
-        '<stop offset="0%" stop-color="#1c1c20"/>' +
-        '<stop offset="55%" stop-color="#0a0a0c"/>' +
+        '<stop offset="0%" stop-color="#1a1a1e"/>' +
+        '<stop offset="55%" stop-color="#09090b"/>' +
         '<stop offset="100%" stop-color="#000"/>' +
       '</radialGradient>' +
     '</defs>' +
     '<rect width="400" height="400" fill="url(#' + id + ')"/>' +
     '<g transform="translate(200 200)">' +
-      '<rect x="-25" y="-82" width="50" height="95" rx="25" fill="#fff" fill-opacity="0.92"/>' +
-      '<g stroke="#0a0a0a" stroke-width="1.6" stroke-opacity="0.4">' +
-        '<line x1="-15" y1="-62" x2="15" y2="-62"/>' +
-        '<line x1="-15" y1="-47" x2="15" y2="-47"/>' +
-        '<line x1="-15" y1="-32" x2="15" y2="-32"/>' +
-        '<line x1="-15" y1="-17" x2="15" y2="-17"/>' +
+      '<rect x="-26" y="-84" width="52" height="98" rx="26" fill="#fff" fill-opacity="0.9"/>' +
+      '<g stroke="#0a0a0a" stroke-width="1.6" stroke-opacity="0.35">' +
+        '<line x1="-16" y1="-64" x2="16" y2="-64"/>' +
+        '<line x1="-16" y1="-49" x2="16" y2="-49"/>' +
+        '<line x1="-16" y1="-34" x2="16" y2="-34"/>' +
+        '<line x1="-16" y1="-19" x2="16" y2="-19"/>' +
       '</g>' +
-      '<path d="M -52 -6 Q -52 62 0 62 Q 52 62 52 -6" fill="none" stroke="#fff" stroke-opacity="0.92" stroke-width="6.5" stroke-linecap="round"/>' +
-      '<line x1="0" y1="62" x2="0" y2="95" stroke="#fff" stroke-opacity="0.92" stroke-width="6.5" stroke-linecap="round"/>' +
-      '<line x1="-27" y1="95" x2="27" y2="95" stroke="#fff" stroke-opacity="0.92" stroke-width="6.5" stroke-linecap="round"/>' +
+      '<path d="M -54 -6 Q -54 64 0 64 Q 54 64 54 -6" fill="none" stroke="#fff" stroke-opacity="0.9" stroke-width="6.5" stroke-linecap="round"/>' +
+      '<line x1="0" y1="64" x2="0" y2="98" stroke="#fff" stroke-opacity="0.9" stroke-width="6.5" stroke-linecap="round"/>' +
+      '<line x1="-28" y1="98" x2="28" y2="98" stroke="#fff" stroke-opacity="0.9" stroke-width="6.5" stroke-linecap="round"/>' +
     '</g>' +
   '</svg>';
+  coverCache[index] = svg;
+  return svg;
 }
 
+/* ================= UI UPDATES ================= */
 function updateActiveStars(){
   starEls.forEach(el => el.classList.toggle('active', +el.dataset.index === current));
 }
@@ -1009,7 +1132,7 @@ function updateFullUI(){
   pTitle.textContent = ep.title;
   pSub.textContent = ep.sub;
   pDur.textContent = fmt(ep.dur);
-  cover.innerHTML = makeCoverSVG();
+  cover.innerHTML = makeCoverSVG(current);
   updateProgress();
   updateIcons();
   updateActiveStars();
@@ -1018,7 +1141,7 @@ function updateMiniUI(){
   if (current < 0) { miniPlayer.classList.remove('show'); return; }
   const ep = EPISODES[current];
   miniTitle.textContent = ep.title;
-  miniCover.innerHTML = makeCoverSVG();
+  miniCover.innerHTML = makeCoverSVG(current);
   updateProgress();
   updateIcons();
 }
@@ -1035,6 +1158,19 @@ function closeOverlay(){
   }
 }
 
+function updateRepeatIcon(){
+  repeatBtn.classList.toggle('active', repeatMode !== 'off');
+  if (repeatMode === 'one') {
+    repeatIconPath.setAttribute('d', 'M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4zm-4-2V9h-1l-2 1v1h1.5v4H13z');
+  } else {
+    repeatIconPath.setAttribute('d', 'M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z');
+  }
+}
+function updateShuffleIcon(){
+  shuffleBtn.classList.toggle('active', shuffleOn);
+}
+
+/* ================= DRAG INTERACTION ================= */
 let dragState = null;
 
 function spawnTrail(x, y){
@@ -1053,7 +1189,7 @@ function spawnTrail(x, y){
 function startDrag(index, starEl, e){
   if (transitioning || dragState) return;
   e.preventDefault();
-  hint.style.opacity = '0';
+  hideNotification();
   const rect = starEl.getBoundingClientRect();
   const cx = rect.left + rect.width / 2;
   const cy = rect.top + rect.height / 2;
@@ -1125,9 +1261,7 @@ function onDragUp(e){
       setTimeout(() => {
         g.remove();
         state.starEl.classList.remove('dragging');
-        current = state.index;
-        elapsed = 0;
-        updateFullUI();
+        setCurrentTrack(state.index);
         openOverlay();
         play();
         transitioning = false;
@@ -1175,9 +1309,7 @@ function onDragUp(e){
       g.remove();
       dropzone.classList.remove('visible');
       state.starEl.classList.remove('dragging');
-      current = state.index;
-      elapsed = 0;
-      updateFullUI();
+      setCurrentTrack(state.index);
       openOverlay();
       play();
       setTimeout(() => { transitioning = false; }, 200);
@@ -1185,10 +1317,19 @@ function onDragUp(e){
   }, 480);
 }
 
+function setCurrentTrack(n){
+  current = n;
+  elapsed = 0;
+  if (shuffleOn) buildShuffleOrder(n);
+  updateFullUI();
+  updateMiniUI();
+}
+
+/* ================= LOAD / NAV ================= */
 let currentPage = 0;
 
 function goToPage(n){
-  hint.style.opacity = '0';
+  hideNotification();
   const nn = Math.max(0, Math.min(totalPages - 1, n));
   if (nn === currentPage) return;
   currentPage = nn;
@@ -1196,18 +1337,15 @@ function goToPage(n){
   pageCurrentEl.textContent = nn + 1;
 }
 
-function loadEpisode(n, openOv){
+function loadEpisode(n){
   pause();
-  current = n;
-  elapsed = 0;
+  setCurrentTrack(n);
   const page = Math.floor(n / PER_PAGE);
   if (page !== currentPage) goToPage(page);
-  updateFullUI();
-  if (openOv) openOverlay();
   play();
 }
 
-document.getElementById('closeBtn').addEventListener('click', closeOverlay);
+/* ================= CONTROLS ================= */
 overlay.addEventListener('click', (e) => {
   if (e.target === overlay) closeOverlay();
 });
@@ -1228,14 +1366,39 @@ document.getElementById('prevBtn').addEventListener('click', () => {
     updateProgress();
     return;
   }
+  if (shuffleOn) {
+    const prev = getPrevIndex();
+    if (prev < 0) return;
+    loadEpisode(prev);
+    return;
+  }
   const n = (current - 1 + EPISODES.length) % EPISODES.length;
-  loadEpisode(n, true);
+  loadEpisode(n);
 });
 
 document.getElementById('nextBtn').addEventListener('click', () => {
   if (current < 0) return;
-  const n = (current + 1) % EPISODES.length;
-  loadEpisode(n, true);
+  const next = getNextIndex();
+  if (next < 0) { pause(); return; }
+  loadEpisode(next);
+});
+
+document.getElementById('repeatBtn').addEventListener('click', () => {
+  const modes = ['off', 'all', 'one'];
+  const idx = modes.indexOf(repeatMode);
+  repeatMode = modes[(idx + 1) % 3];
+  updateRepeatIcon();
+  if (current >= 0) {
+    const names = { off: 'повтор выключен', all: 'повтор всех', one: 'повтор трека' };
+    showNotification(names[repeatMode], 2000);
+  }
+});
+
+document.getElementById('shuffleBtn').addEventListener('click', () => {
+  shuffleOn = !shuffleOn;
+  if (shuffleOn && current >= 0) buildShuffleOrder(current);
+  updateShuffleIcon();
+  showNotification(shuffleOn ? 'случайный порядок' : 'по порядку', 2000);
 });
 
 progressBar.addEventListener('click', (e) => {
@@ -1262,6 +1425,7 @@ miniPlayBtn.addEventListener('click', (e) => {
   }
 });
 
+/* ================= KEYBOARD / SCROLL ================= */
 document.addEventListener('keydown', (e) => {
   if (overlay.classList.contains('show')) {
     if (e.key === 'Escape') closeOverlay();
@@ -1282,7 +1446,7 @@ setInterval(() => {
   const now = performance.now();
   elapsed += (now - lastTick) / 1000;
   lastTick = now;
-  if (elapsed >= EPISODES[current].dur) { finish(); return; }
+  if (elapsed >= EPISODES[current].dur) { onTrackEnd(); return; }
   updateProgress();
 }, 200);
 
@@ -1332,6 +1496,8 @@ document.addEventListener('pointerdown', () => {
 resize();
 updateActiveStars();
 updateIcons();
+updateRepeatIcon();
+updateShuffleIcon();
 requestAnimationFrame(loop);
 </script>
 </body>
