@@ -2,8 +2,12 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#000000">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Страшилки">
 <title>Страшилки</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
@@ -15,21 +19,26 @@
     overflow:hidden;
     -webkit-font-smoothing:antialiased;
     user-select:none;
+    -webkit-user-select:none;
+    -webkit-touch-callout:none;
     -webkit-tap-highlight-color:transparent;
+    overscroll-behavior:none;
   }
 
-  canvas#bg{position:fixed;inset:0;z-index:0;display:block;background:#000}
+  canvas#bg{position:fixed;inset:0;z-index:0;display:block;background:#000;contain:strict}
 
   .grain{
-    position:fixed;inset:-60%;z-index:2;pointer-events:none;opacity:.028;
+    position:fixed;inset:-60%;z-index:2;pointer-events:none;opacity:.026;
     background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>");
     animation:grainMove .9s steps(3) infinite;
+    will-change:transform;
+    transform:translateZ(0);
   }
   @keyframes grainMove{
-    0%{transform:translate(0,0)}
-    33%{transform:translate(-3%,2%)}
-    66%{transform:translate(2%,-3%)}
-    100%{transform:translate(0,0)}
+    0%{transform:translate3d(0,0,0)}
+    33%{transform:translate3d(-3%,2%,0)}
+    66%{transform:translate3d(2%,-3%,0)}
+    100%{transform:translate3d(0,0,0)}
   }
 
   .vignette{
@@ -42,8 +51,10 @@
     position:absolute;top:0;left:0;width:100%;height:100%;
     transition:transform .95s cubic-bezier(.7,0,.28,1);
     will-change:transform;
+    backface-visibility:hidden;
+    -webkit-backface-visibility:hidden;
   }
-  .page{position:absolute;left:0;width:100%;height:100vh;overflow:hidden}
+  .page{position:absolute;left:0;width:100%;height:100vh;overflow:hidden;backface-visibility:hidden}
   .page-sky{position:absolute;inset:0;pointer-events:none}
   .page-sky svg{display:block;width:100%;height:100%}
 
@@ -56,6 +67,7 @@
     -webkit-tap-highlight-color:transparent;
     touch-action:none;
     z-index:5;
+    backface-visibility:hidden;
   }
   .star.dragging{opacity:0;pointer-events:none}
 
@@ -70,6 +82,7 @@
     animation:twinkle var(--pulse-dur,3s) ease-in-out infinite;
     animation-delay:var(--pulse-delay,0s);
     transition:transform .35s ease, box-shadow .35s ease;
+    backface-visibility:hidden;
   }
   @keyframes twinkle{
     0%,100%{opacity:.45}
@@ -130,39 +143,53 @@
   .pageNav i{font-style:normal;opacity:.4}
   #pageCurrent{color:rgba(255,255,255,.8)}
 
-  .notification{
+  /* ===== TOASTS ===== */
+  #toastContainer{
     position:fixed;
-    bottom:30px;left:50%;
-    transform:translateX(-50%) translateY(18px);
-    padding:13px 22px 13px 34px;
-    background:rgba(8,5,6,.92);
-    border:1px solid rgba(255,255,255,.12);
-    border-left:2px solid rgba(255,255,255,.7);
+    top:calc(env(safe-area-inset-top, 0px) + 16px);
+    left:50%;
+    transform:translateX(-50%);
+    z-index:60;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    width:min(420px, calc(100% - 24px));
+    pointer-events:none;
+  }
+  .toast{
+    position:relative;
+    pointer-events:auto;
+    max-width:100%;
+    padding:11px 18px 11px 30px;
+    background:rgba(8,5,7,.94);
+    border:1px solid rgba(255,255,255,.1);
+    border-left:2px solid rgba(255,255,255,.75);
     border-radius:3px;
-    font-size:10.5px;
-    letter-spacing:.24em;
+    font-size:10px;
+    letter-spacing:.22em;
     text-transform:uppercase;
     color:#c8c3d6;
+    box-shadow:0 10px 34px rgba(0,0,0,.85), 0 0 22px rgba(255,255,255,.03);
+    transform:translate3d(0,-140%,0);
     opacity:0;
-    pointer-events:none;
-    transition:opacity .6s ease, transform .6s ease;
-    z-index:8;
-    box-shadow:
-      0 12px 44px rgba(0,0,0,.85),
-      0 0 30px rgba(255,255,255,.04),
-      inset 0 0 24px rgba(255,255,255,.02);
+    transition:transform .45s cubic-bezier(.2,.9,.3,1.15), opacity .32s ease;
+    will-change:transform,opacity;
+    touch-action:none;
+    cursor:grab;
     white-space:nowrap;
-    backdrop-filter:blur(10px);
-    -webkit-backdrop-filter:blur(10px);
+    overflow:hidden;
+    text-overflow:ellipsis;
+    backface-visibility:hidden;
   }
-  .notification.show{
+  .toast.show{
+    transform:translate3d(0,0,0);
     opacity:1;
-    transform:translateX(-50%) translateY(0);
   }
-  .notification::before{
+  .toast::before{
     content:'';
     position:absolute;
-    left:14px;top:50%;
+    left:12px;top:50%;
     width:5px;height:5px;
     background:rgba(255,255,255,.85);
     border-radius:50%;
@@ -184,6 +211,7 @@
     pointer-events:none;
     z-index:200;
     box-shadow:0 0 30px 10px rgba(255,255,255,.85), 0 0 90px 30px rgba(255,255,255,.3);
+    will-change:transform,left,top;
   }
   .trailDot{
     position:fixed;
@@ -196,6 +224,27 @@
     z-index:199;
     opacity:.9;
     transition:opacity .55s ease, transform .55s ease;
+  }
+  .ghostLabel{
+    position:fixed;
+    transform:translate(-50%,-100%);
+    padding:7px 14px;
+    background:rgba(6,4,5,.92);
+    border:1px solid rgba(255,255,255,.18);
+    border-left:2px solid rgba(255,255,255,.85);
+    border-radius:3px;
+    font-size:10px;
+    letter-spacing:.2em;
+    text-transform:uppercase;
+    color:#e2ddee;
+    white-space:nowrap;
+    pointer-events:none;
+    z-index:201;
+    box-shadow:0 10px 30px rgba(0,0,0,.85);
+    max-width:82vw;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    will-change:left,top;
   }
 
   .dropzone{
@@ -260,6 +309,9 @@
     transform:translateY(35vh) scale(.35);
     opacity:0;
     transition:transform .65s cubic-bezier(.2,.9,.3,1.25), opacity .4s ease;
+    will-change:transform,opacity;
+    backface-visibility:hidden;
+    -webkit-backface-visibility:hidden;
   }
   #playerOverlay.show .playerCard{
     transform:translateY(0) scale(1);
@@ -329,11 +381,14 @@
     position:absolute;
     left:0;top:50%;
     height:3px;margin-top:-1.5px;
-    width:0%;
+    width:100%;
     background:#fff;
     border-radius:3px;
+    transform:scaleX(0);
+    transform-origin:left center;
     box-shadow:0 0 10px rgba(255,255,255,.85);
-    transition:width .2s linear;
+    transition:transform .2s linear;
+    will-change:transform;
   }
   .progressKnob{
     position:absolute;
@@ -350,7 +405,7 @@
   .controls{
     width:100%;
     display:flex;align-items:center;justify-content:center;
-    gap:14px;
+    gap:12px;
   }
   .ctrlBtn{
     width:48px;height:48px;
@@ -360,7 +415,7 @@
     color:rgba(255,255,255,.75);
     cursor:pointer;
     display:grid;place-items:center;
-    transition:.25s ease;
+    transition:color .25s ease, border-color .25s ease, box-shadow .25s ease, background .25s ease;
     flex-shrink:0;
   }
   .ctrlBtn svg{width:18px;height:18px;fill:currentColor}
@@ -368,12 +423,6 @@
     color:#fff;
     border-color:rgba(255,255,255,.4);
     box-shadow:0 0 22px -2px rgba(255,255,255,.3);
-  }
-  .ctrlBtn.active{
-    color:#fff;
-    border-color:rgba(255,255,255,.6);
-    box-shadow:0 0 22px -2px rgba(255,255,255,.45), inset 0 0 16px rgba(255,255,255,.08);
-    background:rgba(255,255,255,.08);
   }
   .ctrlBtn.main{
     width:62px;height:62px;
@@ -385,15 +434,30 @@
   .ctrlBtn.main:hover{
     box-shadow:0 0 34px -4px rgba(255,255,255,.45);
   }
-
-  .closeHint{
-    font-size:9px;
-    letter-spacing:.28em;
-    text-transform:uppercase;
-    color:rgba(255,255,255,.18);
-    text-align:center;
-    margin-top:-10px;
+  .ctrlBtn.minor{
+    width:40px;height:40px;
+    border:none;
+    background:transparent;
+    color:rgba(255,255,255,.42);
+    box-shadow:none;
   }
+  .ctrlBtn.minor svg{width:18px;height:18px}
+  .ctrlBtn.minor:hover{
+    color:#fff;
+    background:transparent;
+    border:none;
+    box-shadow:none;
+    filter:drop-shadow(0 0 8px rgba(255,255,255,.6));
+  }
+  .ctrlBtn.minor.active{
+    color:#fff;
+    background:transparent;
+    border:none;
+    box-shadow:none;
+    filter:drop-shadow(0 0 10px rgba(255,255,255,.85));
+  }
+  #repeatBtn{margin-right:10px}
+  #shuffleBtn{margin-left:10px}
 
   #miniPlayer{
     position:fixed;
@@ -415,6 +479,8 @@
     opacity:0;
     cursor:pointer;
     box-shadow:0 15px 50px rgba(0,0,0,.75), 0 0 0 1px rgba(0,0,0,.4);
+    will-change:transform,opacity;
+    backface-visibility:hidden;
   }
   #miniPlayer.show{
     transform:translate(-50%, 0);
@@ -457,10 +523,13 @@
   }
   .mini-fill{
     height:100%;
-    width:0%;
+    width:100%;
     background:#fff;
     box-shadow:0 0 8px rgba(255,255,255,.8);
-    transition:width .2s linear;
+    transform:scaleX(0);
+    transform-origin:left center;
+    transition:transform .2s linear;
+    will-change:transform;
   }
 
   .mini-btn{
@@ -476,22 +545,45 @@
   .mini-btn:hover{background:rgba(255,255,255,.14)}
   .mini-btn svg{width:16px;height:16px;fill:currentColor}
 
+  @media (max-width:768px){
+    .grain{animation:none}
+    #playerOverlay{
+      backdrop-filter:none;
+      -webkit-backdrop-filter:none;
+      background:radial-gradient(circle at 50% 42%, rgba(16,16,20,.94) 0%, rgba(0,0,0,.985) 72%);
+    }
+    #miniPlayer{
+      backdrop-filter:none;
+      -webkit-backdrop-filter:none;
+      background:rgba(8,8,10,.97);
+    }
+    .toast{
+      backdrop-filter:none;
+      -webkit-backdrop-filter:none;
+    }
+    #sky{transition:transform .8s cubic-bezier(.7,0,.28,1)}
+  }
+
   @media (max-width:640px){
     .pageNav{top:22px;right:18px;font-size:10px}
     .star{width:68px;height:68px}
     .star-label{font-size:8.5px;letter-spacing:.14em;top:calc(100% + 2px)}
-    .notification{font-size:9px;padding:10px 16px 10px 28px;letter-spacing:.18em;bottom:20px}
-    .notification::before{left:11px;width:4px;height:4px}
+    .toast{font-size:9px;padding:10px 16px 10px 26px;letter-spacing:.18em}
+    .toast::before{left:10px;width:4px;height:4px}
     .playerCard{width:88vw;gap:18px}
     .controls{gap:8px}
     .ctrlBtn{width:42px;height:42px}
     .ctrlBtn svg{width:16px;height:16px}
     .ctrlBtn.main{width:56px;height:56px}
     .ctrlBtn.main svg{width:22px;height:22px}
+    .ctrlBtn.minor{width:36px;height:36px}
+    .ctrlBtn.minor svg{width:16px;height:16px}
+    #repeatBtn{margin-right:4px}
+    #shuffleBtn{margin-left:4px}
     .dropzone{width:120px;height:120px;bottom:80px}
     #miniPlayer{grid-template-columns:40px 1fr 36px;padding:8px 12px 8px 8px}
     .mini-cover{width:40px;height:40px}
-    .closeHint{font-size:8px;letter-spacing:.22em}
+    .ghostLabel{font-size:9px;letter-spacing:.16em;padding:6px 11px}
   }
 </style>
 </head>
@@ -511,9 +603,7 @@
   <span id="pageTotal">1</span>
 </div>
 
-<div class="notification" id="notification">
-  <span class="notification-text" id="notificationText">прокрутите небо · коснитесь звезды</span>
-</div>
+<div id="toastContainer" aria-live="polite"></div>
 
 <div class="dropzone" id="dropzone">
   <div class="dropzone-label">отпустите<br>здесь</div>
@@ -546,7 +636,7 @@
       <span class="timeTxt right" id="pDur">0:00</span>
     </div>
     <div class="controls">
-      <button class="ctrlBtn" id="repeatBtn" aria-label="Повтор">
+      <button class="ctrlBtn minor" id="repeatBtn" aria-label="Повтор">
         <svg viewBox="0 0 24 24"><path id="repeatIconPath" d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
       </button>
       <button class="ctrlBtn" id="prevBtn" aria-label="Назад">
@@ -558,15 +648,109 @@
       <button class="ctrlBtn" id="nextBtn" aria-label="Дальше">
         <svg viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z"/></svg>
       </button>
-      <button class="ctrlBtn" id="shuffleBtn" aria-label="Перемешать">
+      <button class="ctrlBtn minor" id="shuffleBtn" aria-label="Перемешать">
         <svg viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
       </button>
     </div>
-    <div class="closeHint">нажмите снаружи · чтобы свернуть</div>
   </div>
 </div>
 
 <script>
+/* ================= PWA ================= */
+(function setupPWA(){
+  try {
+    const mic =
+      '<g transform="translate(256 256)">' +
+        '<rect x="-34" y="-110" width="68" height="128" rx="34" fill="#fff"/>' +
+        '<g stroke="#0a0a0a" stroke-width="2.4" stroke-opacity="0.35">' +
+          '<line x1="-20" y1="-84" x2="20" y2="-84"/>' +
+          '<line x1="-20" y1="-64" x2="20" y2="-64"/>' +
+          '<line x1="-20" y1="-44" x2="20" y2="-44"/>' +
+          '<line x1="-20" y1="-24" x2="20" y2="-24"/>' +
+        '</g>' +
+        '<path d="M -70 -8 Q -70 84 0 84 Q 70 84 70 -8" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round"/>' +
+        '<line x1="0" y1="84" x2="0" y2="128" stroke="#fff" stroke-width="9" stroke-linecap="round"/>' +
+        '<line x1="-36" y1="128" x2="36" y2="128" stroke="#fff" stroke-width="9" stroke-linecap="round"/>' +
+      '</g>';
+
+    const iconSVG = (scale) =>
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">' +
+        '<rect width="512" height="512" fill="#050505"/>' +
+        '<g transform="translate(256 256) scale(' + scale + ') translate(-256 -256)">' + mic + '</g>' +
+      '</svg>';
+
+    const toURI = (svg) => 'data:image/svg+xml,' + encodeURIComponent(svg);
+    const iconAny = toURI(iconSVG(1));
+    const iconMask = toURI(iconSVG(0.68));
+
+    const base = location.href.split('#')[0];
+    const scope = base.replace(/[^/]*$/, '');
+
+    const manifest = {
+      name: 'Страшилки',
+      short_name: 'Страшилки',
+      description: 'Хоррор-подкасты в ночном небе',
+      start_url: base,
+      scope: scope,
+      display: 'standalone',
+      orientation: 'portrait',
+      background_color: '#000000',
+      theme_color: '#000000',
+      icons: [
+        { src: iconAny, sizes: '192x192', type: 'image/svg+xml', purpose: 'any' },
+        { src: iconAny, sizes: '512x512', type: 'image/svg+xml', purpose: 'any' },
+        { src: iconMask, sizes: '512x512', type: 'image/svg+xml', purpose: 'maskable' }
+      ]
+    };
+
+    const link = document.createElement('link');
+    link.rel = 'manifest';
+    link.href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest));
+    document.head.appendChild(link);
+
+    function rrect(g, x, y, w, h, r){
+      g.beginPath();
+      g.moveTo(x + r, y);
+      g.arcTo(x + w, y, x + w, y + h, r);
+      g.arcTo(x + w, y + h, x, y + h, r);
+      g.arcTo(x, y + h, x, y, r);
+      g.arcTo(x, y, x + w, y, r);
+      g.closePath();
+    }
+
+    try {
+      const c = document.createElement('canvas');
+      c.width = c.height = 180;
+      const g = c.getContext('2d');
+      g.fillStyle = '#050505';
+      g.fillRect(0, 0, 180, 180);
+      g.save();
+      g.translate(90, 90);
+      g.scale(0.34, 0.34);
+      g.fillStyle = '#fff';
+      rrect(g, -34, -110, 68, 128, 34);
+      g.fill();
+      g.strokeStyle = '#fff';
+      g.lineWidth = 9;
+      g.lineCap = 'round';
+      g.beginPath();
+      g.moveTo(-70, -8);
+      g.quadraticCurveTo(-70, 84, 0, 84);
+      g.quadraticCurveTo(70, 84, 70, -8);
+      g.stroke();
+      g.beginPath(); g.moveTo(0, 84); g.lineTo(0, 128); g.stroke();
+      g.beginPath(); g.moveTo(-36, 128); g.lineTo(36, 128); g.stroke();
+      g.restore();
+
+      const apple = document.createElement('link');
+      apple.rel = 'apple-touch-icon';
+      apple.href = c.toDataURL('image/png');
+      document.head.appendChild(apple);
+    } catch (e) {}
+  } catch (e) {}
+})();
+
+/* ================= DATA ================= */
 function fmt(s){
   s = Math.max(0, Math.floor(s));
   const m = Math.floor(s / 60);
@@ -618,14 +802,15 @@ const EPISODES = TITLES.map((title, i) => {
   };
 });
 
-const dpr = Math.min(window.devicePixelRatio || 1, 2);
+/* ================= SETUP ================= */
+const isMobile = innerWidth < 700;
+const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2);
 const canvas = document.getElementById('bg');
 const ctx = canvas.getContext('2d');
 const sky = document.getElementById('sky');
 const pageCurrentEl = document.getElementById('pageCurrent');
 const pageTotalEl = document.getElementById('pageTotal');
-const notification = document.getElementById('notification');
-const notificationText = document.getElementById('notificationText');
+const toastContainer = document.getElementById('toastContainer');
 const dropzone = document.getElementById('dropzone');
 const overlay = document.getElementById('playerOverlay');
 const playerCard = document.getElementById('playerCard');
@@ -656,8 +841,66 @@ function resize(){
   canvas.style.height = innerHeight + 'px';
 }
 
+/* ================= TOASTS ================= */
+function showToast(text, duration){
+  if (!text) return;
+  while (toastContainer.children.length >= 3) {
+    toastContainer.firstChild.remove();
+  }
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = text;
+  toastContainer.appendChild(el);
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
+
+  let timer = null;
+  const dismiss = () => {
+    clearTimeout(timer);
+    el.classList.remove('show');
+    setTimeout(() => el.remove(), 480);
+  };
+  if (duration) timer = setTimeout(dismiss, duration);
+
+  let sx = 0, sy = 0, dx = 0, dy = 0, dragging = false;
+  el.addEventListener('pointerdown', (e) => {
+    if (!e.isPrimary) return;
+    dragging = true;
+    sx = e.clientX;
+    sy = e.clientY;
+    dx = 0;
+    dy = 0;
+    el.style.transition = 'none';
+    try { el.setPointerCapture(e.pointerId); } catch (err) {}
+  });
+  el.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    dx = e.clientX - sx;
+    dy = e.clientY - sy;
+    const cy = Math.min(0, dy);
+    el.style.transform = 'translate3d(' + dx + 'px,' + cy + 'px,0)';
+    el.style.opacity = String(Math.max(0.1, 1 - (Math.abs(dx) / 200 + Math.abs(dy) / 140)));
+  });
+  const end = () => {
+    if (!dragging) return;
+    dragging = false;
+    el.style.transition = '';
+    if (Math.abs(dx) > 70 || dy < -40) {
+      dismiss();
+    } else {
+      el.style.transform = '';
+      el.style.opacity = '';
+    }
+    dx = dy = 0;
+  };
+  el.addEventListener('pointerup', end);
+  el.addEventListener('pointercancel', end);
+  return el;
+}
+
+/* ================= BACKGROUND ================= */
 const spheres = [];
-for (let i = 0; i < 7; i++) {
+const sphereCount = isMobile ? 4 : 7;
+for (let i = 0; i < sphereCount; i++) {
   const deep = i < 2;
   spheres.push({
     x: 0.1 + Math.random() * 0.8,
@@ -781,20 +1024,6 @@ for (let p = 0; p < totalPages; p++) {
 }
 pageTotalEl.textContent = totalPages;
 
-/* ================= NOTIFICATION ================= */
-let notifTimer = null;
-function showNotification(text, duration){
-  notificationText.textContent = text;
-  notification.classList.add('show');
-  clearTimeout(notifTimer);
-  if (duration) notifTimer = setTimeout(hideNotification, duration);
-}
-function hideNotification(){
-  notification.classList.remove('show');
-  clearTimeout(notifTimer);
-}
-setTimeout(() => showNotification('прокрутите небо · коснитесь звезды', 9000), 900);
-
 /* ================= AUDIO ================= */
 let audioCtx = null, master = null;
 let sceneBus = null, sceneNodes = [];
@@ -804,7 +1033,7 @@ let playing = false;
 let elapsed = 0;
 let lastTick = 0;
 let transitioning = false;
-let repeatMode = 'off'; // 'off' | 'all' | 'one'
+let repeatMode = 'off';
 let shuffleOn = false;
 let shuffleOrder = [];
 let shufflePosition = 0;
@@ -1071,7 +1300,7 @@ function onTrackEnd(){
   loadEpisode(next);
 }
 
-/* ================= COVER (микрофон) ================= */
+/* ================= COVER ================= */
 const coverCache = {};
 function makeCoverSVG(index){
   if (coverCache[index]) return coverCache[index];
@@ -1114,11 +1343,11 @@ function updateIcons(){
 }
 function updateProgress(){
   const d = current >= 0 ? EPISODES[current].dur : 0;
-  const p = d ? Math.min(100, (elapsed / d) * 100) : 0;
-  progressFill.style.width = p + '%';
-  progressKnob.style.left = p + '%';
+  const p = d ? Math.min(1, elapsed / d) : 0;
+  progressFill.style.transform = 'scaleX(' + p + ')';
+  progressKnob.style.left = (p * 100) + '%';
   pCur.textContent = fmt(elapsed);
-  miniFill.style.width = p + '%';
+  miniFill.style.transform = 'scaleX(' + p + ')';
 }
 function updateFullUI(){
   if (current < 0) {
@@ -1145,10 +1374,15 @@ function updateMiniUI(){
   updateProgress();
   updateIcons();
 }
+let overlayOpenCount = 0;
 function openOverlay(){
   overlay.classList.add('show');
   miniPlayer.classList.remove('show');
   updateFullUI();
+  if (overlayOpenCount < 3) {
+    showToast('нажмите снаружи · чтобы свернуть', 2600);
+    overlayOpenCount++;
+  }
 }
 function closeOverlay(){
   overlay.classList.remove('show');
@@ -1170,8 +1404,9 @@ function updateShuffleIcon(){
   shuffleBtn.classList.toggle('active', shuffleOn);
 }
 
-/* ================= DRAG INTERACTION ================= */
+/* ================= DRAG ================= */
 let dragState = null;
+let ghostLabel = null;
 
 function spawnTrail(x, y){
   const dot = document.createElement('div');
@@ -1186,10 +1421,27 @@ function spawnTrail(x, y){
   setTimeout(() => dot.remove(), 600);
 }
 
+function showGhostLabel(text){
+  ghostLabel = document.createElement('div');
+  ghostLabel.className = 'ghostLabel';
+  ghostLabel.textContent = text;
+  document.body.appendChild(ghostLabel);
+}
+function moveGhostLabel(x, y){
+  if (!ghostLabel) return;
+  ghostLabel.style.left = x + 'px';
+  ghostLabel.style.top = (y - 34) + 'px';
+}
+function removeGhostLabel(){
+  if (ghostLabel) {
+    ghostLabel.remove();
+    ghostLabel = null;
+  }
+}
+
 function startDrag(index, starEl, e){
   if (transitioning || dragState) return;
   e.preventDefault();
-  hideNotification();
   const rect = starEl.getBoundingClientRect();
   const cx = rect.left + rect.width / 2;
   const cy = rect.top + rect.height / 2;
@@ -1199,6 +1451,9 @@ function startDrag(index, starEl, e){
   ghost.style.left = cx + 'px';
   ghost.style.top = cy + 'px';
   document.body.appendChild(ghost);
+
+  showGhostLabel(EPISODES[index].title);
+  moveGhostLabel(cx, cy);
 
   starEl.classList.add('dragging');
   dropzone.classList.add('visible');
@@ -1225,6 +1480,7 @@ function onDragMove(e){
 
   dragState.ghost.style.left = e.clientX + 'px';
   dragState.ghost.style.top = e.clientY + 'px';
+  moveGhostLabel(e.clientX, e.clientY);
 
   const now = performance.now();
   if (now - dragState.lastTrail > 26) {
@@ -1246,6 +1502,7 @@ function onDragUp(e){
 
   const state = dragState;
   dragState = null;
+  removeGhostLabel();
 
   if (!state.moved) {
     transitioning = true;
@@ -1329,7 +1586,6 @@ function setCurrentTrack(n){
 let currentPage = 0;
 
 function goToPage(n){
-  hideNotification();
   const nn = Math.max(0, Math.min(totalPages - 1, n));
   if (nn === currentPage) return;
   currentPage = nn;
@@ -1383,22 +1639,20 @@ document.getElementById('nextBtn').addEventListener('click', () => {
   loadEpisode(next);
 });
 
-document.getElementById('repeatBtn').addEventListener('click', () => {
+repeatBtn.addEventListener('click', () => {
   const modes = ['off', 'all', 'one'];
   const idx = modes.indexOf(repeatMode);
   repeatMode = modes[(idx + 1) % 3];
   updateRepeatIcon();
-  if (current >= 0) {
-    const names = { off: 'повтор выключен', all: 'повтор всех', one: 'повтор трека' };
-    showNotification(names[repeatMode], 2000);
-  }
+  const names = { off: 'повтор выключен', all: 'повтор всех', one: 'повтор трека' };
+  showToast(names[repeatMode], 1800);
 });
 
-document.getElementById('shuffleBtn').addEventListener('click', () => {
+shuffleBtn.addEventListener('click', () => {
   shuffleOn = !shuffleOn;
   if (shuffleOn && current >= 0) buildShuffleOrder(current);
   updateShuffleIcon();
-  showNotification(shuffleOn ? 'случайный порядок' : 'по порядку', 2000);
+  showToast(shuffleOn ? 'случайный порядок' : 'по порядку', 1800);
 });
 
 progressBar.addEventListener('click', (e) => {
@@ -1499,6 +1753,8 @@ updateIcons();
 updateRepeatIcon();
 updateShuffleIcon();
 requestAnimationFrame(loop);
+
+setTimeout(() => showToast('прокрутите небо · коснитесь звезды', 6000), 700);
 </script>
 </body>
 </html>
