@@ -1601,7 +1601,7 @@ function generatePositions(count){
   for (const [c, r] of cells) {
     if (positions.length >= count) break;
     let tries = 0;
-    while (tries < 20) {
+    while (tries < 25) {
       tries++;
       const x = cw * (c + 0.2 + Math.random() * 0.6);
       const y = rh * (r + 0.22 + Math.random() * 0.56);
@@ -1623,13 +1623,39 @@ function generatePositions(count){
   return positions;
 }
 
-async function fileExists(url){
+async function headOk(url){
   try {
     const res = await fetch(url, { method: 'HEAD', cache: 'no-store' });
     return res.ok;
   } catch (e) {
     return false;
   }
+}
+
+async function findFirstExisting(candidates){
+  if (!candidates.length) return null;
+  const results = await Promise.all(candidates.map(headOk));
+  for (let i = 0; i < candidates.length; i++) {
+    if (results[i]) return candidates[i];
+  }
+  return null;
+}
+
+async function fetchFirstText(candidates){
+  for (const url of candidates) {
+    try {
+      const res = await fetch(url, { cache: 'no-store' });
+      if (!res.ok) continue;
+      const txt = await res.text();
+      const trimmed = txt.trim();
+      if (!trimmed) continue;
+      if (trimmed.length > 300) continue;
+      const lower = trimmed.toLowerCase();
+      if (lower.includes('<!doctype') || lower.includes('<html') || lower.includes('<body')) continue;
+      return trimmed;
+    } catch (e) {}
+  }
+  return null;
 }
 
 async function loadEpisodesFromJSON(){
@@ -1641,63 +1667,99 @@ async function loadEpisodesFromJSON(){
   } catch (e) {
     return [];
   }
+
   const map = (data && data.Episodes) || {};
   const entries = Object.entries(map);
   if (!entries.length) return [];
 
-  const audioNamesBase = ['audio.mp3', 'track.mp3', 'podcast.mp3', 'episode.mp3', '1.mp3'];
-  const coverNamesBase = ['cover.jpg', 'cover.png', 'cover.webp', 'image.jpg', 'image.png', 'image.webp', '1.jpg', '1.png', 'artwork.jpg', 'artwork.png'];
+  const audioNamesBase = [
+    'audio.mp3', 'Audio.mp3', 'AUDIO.MP3',
+    'track.mp3', 'Track.mp3', 'TRACK.MP3',
+    'podcast.mp3', 'Podcast.mp3', 'PODCAST.MP3',
+    'episode.mp3', 'Episode.mp3', 'EPISODE.MP3',
+    'sound.mp3', 'Sound.mp3',
+    'record.mp3', 'Record.mp3',
+    'file.mp3', 'File.mp3',
+    'main.mp3', 'Main.mp3',
+    '1.mp3'
+  ];
 
-  const results = await Promise.all(entries.map(async ([folderKey, displayName]) => {
+  const coverNamesBase = [
+    'Cover.jpg', 'Cover.JPG', 'Cover.Jpeg', 'Cover.JPEG', 'Cover.jpeg',
+    'cover.jpg', 'cover.JPG', 'cover.jpeg', 'cover.JPEG', 'cover.Jpeg',
+    'Cover.png', 'Cover.PNG', 'cover.png', 'cover.PNG',
+    'Cover.webp', 'Cover.WEBP', 'cover.webp', 'cover.WEBP',
+    'Cover.gif', 'cover.gif',
+    'Image.jpg', 'Image.JPG', 'image.jpg', 'image.JPG',
+    'Artwork.jpg', 'Artwork.JPG', 'artwork.jpg', 'artwork.JPG',
+    'Poster.jpg', 'Poster.JPG', 'poster.jpg', 'poster.JPG',
+    'Thumbnail.jpg', 'thumbnail.jpg',
+    'Picture.jpg', 'picture.jpg',
+    'Front.jpg', 'front.jpg',
+    '1.jpg', '1.JPG', '1.jpeg', '1.png', '1.PNG', '1.webp'
+  ];
+
+  return Promise.all(entries.map(async ([folderKey, displayName]) => {
     const ep = {
       folderKey,
-      title: displayName,
+      jsonValue: displayName,
+      title: displayName || folderKey,
       audioUrl: null,
       coverUrl: null,
       dur: 0
     };
 
-    const baseFolders = [
-      `Episodes/${folderKey}/`,
-      `Episodes/${displayName}/`
-    ];
+    const folderCandidates = [];
+    if (displayName && displayName !== folderKey) folderCandidates.push(displayName);
+    folderCandidates.push(folderKey);
 
-    const audioNames = audioNamesBase.concat([`${folderKey}.mp3`, `${displayName}.mp3`]);
-    const coverNames = coverNamesBase.concat([
-      `${folderKey}.jpg`, `${folderKey}.png`, `${folderKey}.webp`,
-      `${displayName}.jpg`, `${displayName}.png`, `${displayName}.webp`
-    ]);
+    const nameCandidates = [];
+    for (const folder of folderCandidates) {
+      nameCandidates.push('Episodes/' + folder + '/name.txt');
+      nameCandidates.push('Episodes/' + folder + '/Name.txt');
+      nameCandidates.push('Episodes/' + folder + '/NAME.txt');
+    }
+    const nameTxt = await fetchFirstText(nameCandidates);
+    if (nameTxt) ep.title = nameTxt;
 
-    const audioCandidates = [];
-    const coverCandidates = [];
-    for (const base of baseFolders) {
-      for (const n of audioNames) audioCandidates.push(base + n);
-      for (const n of coverNames) coverCandidates.push(base + n);
+    for (const folder of folderCandidates) {
+      const audioNames = audioNamesBase.concat([
+        folder + '.mp3',
+        folderKey + '.mp3'
+      ]);
+      if (displayName) audioNames.push(displayName + '.mp3');
+      const candidates = audioNames.map(n => 'Episodes/' + folder + '/' + n);
+      const found = await findFirstExisting(candidates);
+      if (found) { ep.audioUrl = found; break; }
     }
 
-    const [audioChecks, coverChecks] = await Promise.all([
-      Promise.all(audioCandidates.map(async u => ({ u, ok: await fileExists(u) }))),
-      Promise.all(coverCandidates.map(async u => ({ u, ok: await fileExists(u) })))
-    ]);
-
-    for (const c of audioChecks) {
-      if (c.ok) { ep.audioUrl = c.u; break; }
-    }
-    for (const c of coverChecks) {
-      if (c.ok) { ep.coverUrl = c.u; break; }
+    for (const folder of folderCandidates) {
+      const coverNames = coverNamesBase.concat([
+        folder + '.jpg', folder + '.png', folder + '.jpeg', folder + '.webp',
+        folderKey + '.jpg', folderKey + '.png'
+      ]);
+      if (displayName) {
+        coverNames.push(displayName + '.jpg');
+        coverNames.push(displayName + '.png');
+      }
+      const candidates = coverNames.map(n => 'Episodes/' + folder + '/' + n);
+      const found = await findFirstExisting(candidates);
+      if (found) { ep.coverUrl = found; break; }
     }
 
     return ep;
   }));
-
-  return results;
 }
 
 function buildSky(){
   sky.innerHTML = '';
   starEls = [];
+  const emptyMsg = document.getElementById('emptyMsg');
+  if (emptyMsg) emptyMsg.remove();
+
   if (EPISODES.length === 0) {
     const msg = document.createElement('div');
+    msg.id = 'emptyMsg';
     msg.style.cssText =
       'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);' +
       'color:rgba(255,255,255,.35);font-family:"Cormorant Garamond",serif;' +
@@ -1705,6 +1767,8 @@ function buildSky(){
       'text-transform:uppercase;pointer-events:none;';
     msg.textContent = 'выпуски не найдены';
     document.body.appendChild(msg);
+    pageTotalEl.textContent = '0';
+    pageCurrentEl.textContent = '0';
     return;
   }
 
@@ -1788,8 +1852,8 @@ function play(){
     a.src = ep.audioUrl;
 
     a.addEventListener('loadedmetadata', () => {
-      if (!EPISODES[idx].dur) {
-        EPISODES[idx].dur = a.duration || 0;
+      if (!EPISODES[idx].dur && isFinite(a.duration)) {
+        EPISODES[idx].dur = a.duration;
       }
       if (current === idx) {
         pDur.textContent = EPISODES[idx].dur ? fmt(EPISODES[idx].dur) : '0:00';
@@ -2427,11 +2491,6 @@ function loop(t){
 }
 
 window.addEventListener('resize', resize);
-document.addEventListener('pointerdown', () => {
-  if (episodeAudio && episodeAudio.paused) {
-    // audio play can start; nothing to resume here unless context
-  }
-}, { once: true });
 
 async function init(){
   resize();
