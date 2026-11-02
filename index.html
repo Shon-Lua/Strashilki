@@ -69,8 +69,9 @@
     -webkit-tap-highlight-color:transparent;
     touch-action:none;z-index:5;
     backface-visibility:hidden;
+    transition:opacity .25s ease;
   }
-  .star.dragging{opacity:0;pointer-events:none}
+  .star.dragging{opacity:0.15;pointer-events:none}
 
   .star-core{
     position:absolute;top:50%;left:50%;
@@ -157,7 +158,6 @@
     transition:opacity .6s ease;
   }
 
-  /* ===== TOP BAR ===== */
   #topBar{
     position:fixed;
     top:24px;
@@ -172,7 +172,7 @@
     padding:6px;
     width:34px;height:34px;
     display:grid;place-items:center;
-    color:rgba(255,255,255,.42);
+    color:rgba(255,255,255,.92);
     cursor:pointer;
     transition:color .3s ease, filter .3s ease;
     -webkit-tap-highlight-color:transparent;
@@ -180,7 +180,7 @@
   }
   #topBar button:hover{
     color:#fff;
-    filter:drop-shadow(0 0 8px rgba(255,255,255,.55));
+    filter:drop-shadow(0 0 8px rgba(255,255,255,.65));
   }
   #topBar button svg{
     width:20px;height:20px;display:block;
@@ -464,7 +464,6 @@
   .mini-btn:hover{background:rgba(255,255,255,.14)}
   .mini-btn svg{width:16px;height:16px;fill:currentColor}
 
-  /* ===== SEARCH BOX ===== */
   #searchBox{
     position:fixed;
     top:68px;
@@ -539,7 +538,6 @@
   }
   .suggestion.no-results:hover{background:none;color:rgba(255,255,255,.3)}
 
-  /* ===== INFO PANEL ===== */
   #infoPanel{
     position:fixed;inset:0;z-index:80;
     display:grid;place-items:center;
@@ -599,7 +597,6 @@
     text-shadow:0 0 14px rgba(255,255,255,.5);
   }
 
-  /* ===== EXTERNAL WARNING ===== */
   #externalWarning{
     position:fixed;inset:0;z-index:90;
     display:grid;place-items:center;
@@ -682,7 +679,7 @@
     flex-direction:column;
     align-items:center;
     text-align:center;
-    max-width:520px;
+    max-width:540px;
     margin:0 auto;
     min-height:100%;
     justify-content:center;
@@ -690,43 +687,45 @@
   }
   .ageBrand{
     font-family:'Cinzel', Georgia, serif;
-    font-weight:500;font-size:11px;
+    font-weight:500;
+    font-size:clamp(16px, 4vw, 21px);
     letter-spacing:.5em;text-indent:.5em;
     text-transform:uppercase;
-    color:#8a8496;margin-bottom:12px;
+    color:#f3eff8;margin-bottom:14px;
+    text-shadow:0 0 30px rgba(255,255,255,.18);
   }
   .ageTagline{
     font-family:'Cormorant Garamond', Georgia, serif;
     font-weight:500;
     font-style:italic;
-    font-size:14px;
+    font-size:clamp(15px, 3.8vw, 18px);
     letter-spacing:.04em;
-    color:#7c7688;
+    color:#b8b2c5;
     line-height:1.5;
-    margin-bottom:16px;
-    max-width:340px;
+    margin-bottom:18px;
+    max-width:400px;
   }
   .ageBig{
     font-family:'Cinzel', Georgia, serif;
     font-weight:500;
-    font-size:clamp(84px, 20vw, 128px);
-    line-height:.85;
+    font-size:clamp(52px, 11vw, 72px);
+    line-height:.9;
     color:#fff;
     letter-spacing:.02em;
-    margin-bottom:22px;
-    text-shadow:0 0 70px rgba(255,255,255,.22);
+    margin-bottom:24px;
+    text-shadow:0 0 60px rgba(255,255,255,.2);
     user-select:none;
   }
   .ageBody{
     font-family:'Cormorant Garamond', Georgia, serif;
     font-weight:500;
     font-size:clamp(13px, 3.3vw, 14.5px);
-    line-height:1.55;
+    line-height:1.6;
     color:#b8b2c5;
     display:flex;
     flex-direction:column;
-    gap:9px;
-    margin-bottom:20px;
+    gap:10px;
+    margin-bottom:26px;
     text-align:justify;
     text-align-last:center;
     hyphens:auto;
@@ -755,14 +754,6 @@
   }
   .ageEnter:active{
     box-shadow:0 0 30px rgba(255,255,255,.35), inset 0 0 26px rgba(255,255,255,.1);
-  }
-  .ageNote{
-    margin-top:14px;
-    font-family:'Cormorant Garamond', Georgia, serif;
-    font-weight:500;font-size:10px;
-    letter-spacing:.2em;text-transform:uppercase;
-    color:#4e4a5e;line-height:1.6;
-    max-width:340px;
   }
 
   @media (max-width:768px){
@@ -804,13 +795,12 @@
     .mini-title{font-size:13px}
     .ghostLabel{font-size:10px;letter-spacing:.16em}
     #ageGate{padding:18px 16px}
-    .ageBrand{font-size:10px;letter-spacing:.4em;text-indent:.4em;margin-bottom:10px}
-    .ageTagline{font-size:12.5px;margin-bottom:14px;max-width:300px}
+    .ageBrand{font-size:15px;letter-spacing:.4em;text-indent:.4em;margin-bottom:12px}
+    .ageTagline{font-size:13.5px;margin-bottom:16px;max-width:300px}
     .ageBig{margin-bottom:20px}
-    .ageBody{font-size:13px;gap:8px;margin-bottom:18px;line-height:1.5}
+    .ageBody{font-size:12.5px;gap:9px;margin-bottom:22px;line-height:1.55}
     .ageEnter{padding:13px 50px;font-size:11px;letter-spacing:.44em;text-indent:.44em}
     .ageEnter:hover{letter-spacing:.5em}
-    .ageNote{font-size:9.5px;letter-spacing:.18em;margin-top:12px}
     .infoCard{padding:38px 24px 30px}
     .infoHeading{font-size:14px;margin-bottom:22px}
     .info-line{font-size:14px}
@@ -927,11 +917,9 @@
     <div class="ageBody">
       <p>Подкаст «Страшилки» является произведением художественной литературы. Все персонажи, события и места вымышлены, любые совпадения случайны.</p>
       <p>Содержание может включать нецензурную лексику, сцены насилия и смерти, упоминания психических расстройств и иные тяжёлые темы. Прослушивание не рекомендовано лицам с повышенной чувствительностью.</p>
-      <p>Подкаст не является профессиональной консультацией. Авторы не несут ответственности за последствия восприятия содержания.</p>
       <p>Нажимая «Войти», вы подтверждаете, что вам есть 18 лет, и принимаете эти условия.</p>
     </div>
     <button class="ageEnter" id="ageEnterBtn">Войти</button>
-    <div class="ageNote">продолжая, вы подтверждаете, что вам есть 18 лет</div>
   </div>
 </div>
 
@@ -1420,6 +1408,12 @@ function removeMapArrow(){
   if (currentArrow) { currentArrow.remove(); currentArrow = null; }
 }
 
+function clearSearchedState(){
+  clearTimeout(searchArrowTimer);
+  removeMapArrow();
+  starEls.forEach(el => el.classList.remove('searched'));
+}
+
 function showMapArrow(starEl){
   removeMapArrow();
   if (!starEl) return;
@@ -1506,22 +1500,19 @@ function performSearch(rawQuery){
   const idx = findBestMatch(q);
   if (idx < 0) { showToast('выпуск не найден', 2200); return; }
 
-  clearTimeout(searchArrowTimer);
-  removeMapArrow();
+  clearSearchedState();
   closeSearch();
 
   const targetPage = Math.floor(idx / PER_PAGE);
   const needsNav = targetPage !== currentPage;
   if (needsNav) goToPage(targetPage);
 
-  starEls.forEach(el => el.classList.remove('searched'));
   const starEl = starEls[idx];
   starEl.classList.add('searched');
 
   const delay = needsNav ? 1100 : 60;
   searchArrowTimer = setTimeout(() => {
     showMapArrow(starEl);
-    showToast('найдено: ' + EPISODES[idx].title, 3200);
   }, delay);
 
   setTimeout(() => { starEl.classList.remove('searched'); }, 6000);
@@ -2019,6 +2010,11 @@ function removeGhostLabel(){
 function startDrag(index, starEl, e){
   if (transitioning || dragState) return;
   e.preventDefault();
+
+  if (starEl.classList.contains('searched')) {
+    clearSearchedState();
+  }
+
   closeSearch();
   const rect = starEl.getBoundingClientRect();
   const cx = rect.left + rect.width / 2;
@@ -2102,7 +2098,7 @@ function onDragUp(e){
     g.style.transition = 'left .5s cubic-bezier(.4,0,.3,1), top .5s cubic-bezier(.4,0,.3,1), opacity .4s ease, transform .5s ease';
     g.style.left = (rect.left + rect.width / 2) + 'px';
     g.style.top = (rect.top + rect.height / 2) + 'px';
-    g.style.transform = 'translate(-50%,-50%) scale(0.3)';
+    g.style.transform = 'translate(-50%,-50%) scale(0.6)';
     g.style.opacity = '0';
     setTimeout(() => {
       g.remove();
