@@ -314,7 +314,7 @@
       0 0 70px -10px rgba(255,255,255,.08);
     background:#050505;
   }
-  .cover svg{display:block;width:100%;height:100%}
+  .cover svg, .cover img{display:block;width:100%;height:100%;object-fit:cover}
 
   .titleBlock{width:100%;text-align:center}
   .titleBlock h2{
@@ -433,7 +433,7 @@
     box-shadow:0 0 0 1px rgba(255,255,255,.08);
     pointer-events:none;
   }
-  .mini-cover svg{display:block;width:100%;height:100%}
+  .mini-cover svg, .mini-cover img{display:block;width:100%;height:100%;object-fit:cover}
 
   .mini-info{
     min-width:0;display:flex;flex-direction:column;
@@ -964,49 +964,6 @@ function fmt(s){
   return m + ':' + (r < 10 ? '0' : '') + r;
 }
 
-const TITLES = [
-  'Тот, кто стучит в стену',
-  'Станция, которой нет на карте',
-  'Колыбельная для утонувших',
-  'Дом помнит своих гостей',
-  'Последняя запись',
-  'Голос из подвала',
-  'Ночной поезд в никуда',
-  'Шкаф с двойным дном',
-  'Человек за окном',
-  'Лес, который шепчет',
-  'Зеркало с трещиной',
-  'Гость на чердаке',
-  'Сигнал с пустой частоты',
-  'Кукла с закрытыми глазами',
-  'Погреб, которого не было',
-  'Сосед сверху',
-  'Фотография без лица',
-  'Тот, кто звонит в три',
-  'Комната с обоями',
-  'Дверь без ручки',
-  'Птицы, что не поют',
-  'Тень на потолке',
-  'Запись №9',
-  'Тот, кто ждёт в конце коридора'
-];
-const DURATIONS = [272,438,344,367,239,412,298,351,386,423,275,331,408,292,359,374,311,428,264,347,396,283,336,415];
-const PROFILES = [
-  { tones:[[55,-7,'sine',.34],[82.4,6,'sine',.16],[110,-4,'triangle',.08],[41.2,3,'sine',.3]], filter:420, noiseFreq:700, noiseGain:.05 },
-  { tones:[[110,-9,'sine',.24],[164.8,7,'sine',.15],[220,-5,'triangle',.06],[73.4,4,'sine',.2]], filter:880, noiseFreq:2400, noiseGain:.045 },
-  { tones:[[73.4,5,'sine',.28],[110,-6,'sine',.17],[146.8,9,'triangle',.08],[36.7,-3,'sine',.24]], filter:520, noiseFreq:420, noiseGain:.06 },
-  { tones:[[65.4,-8,'sine',.3],[98,6,'sine',.15],[130.8,-4,'triangle',.07],[43.7,2,'sine',.26]], filter:640, noiseFreq:1100, noiseGain:.05 },
-  { tones:[[49,-10,'sine',.35],[73.4,8,'sine',.16],[98,-3,'triangle',.09],[32.7,5,'sine',.22]], filter:350, noiseFreq:900, noiseGain:.055 }
-];
-const EPISODES = TITLES.map((title, i) => {
-  const prof = PROFILES[i % PROFILES.length];
-  const dur = DURATIONS[i % DURATIONS.length];
-  return {
-    title,
-    dur, tones: prof.tones, filter: prof.filter, noiseFreq: prof.noiseFreq, noiseGain: prof.noiseGain
-  };
-});
-
 const isMobile = innerWidth < 700;
 const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2);
 const canvas = document.getElementById('bg');
@@ -1048,6 +1005,11 @@ let ageGateActive = true;
 let searchOpen = false;
 let currentArrow = null;
 let searchArrowTimer = null;
+let EPISODES = [];
+let PER_PAGE = 12;
+let totalPages = 1;
+let starEls = [];
+let currentPage = 0;
 
 let W = 0, H = 0;
 function resize(){
@@ -1191,7 +1153,9 @@ document.getElementById('ageEnterBtn').addEventListener('click', () => {
   setTimeout(() => {
     g.remove();
     ageGateActive = false;
-    showToast('прокрутите небо, коснитесь звезды', 6000);
+    if (EPISODES.length > 0) {
+      showToast('прокрутите небо, коснитесь звезды', 6000);
+    }
   }, 600);
 });
 
@@ -1519,6 +1483,7 @@ function performSearch(rawQuery){
   const needsNav = targetPage !== currentPage;
   if (needsNav) goToPage(targetPage);
   const starEl = starEls[idx];
+  if (!starEl) return;
   starEl.classList.add('searched');
   const delay = needsNav ? 1100 : 60;
   searchArrowTimer = setTimeout(() => {
@@ -1590,7 +1555,7 @@ function getExclusionZones(){
   if (bar) {
     const r = bar.getBoundingClientRect();
     const vw = innerWidth, vh = innerHeight;
-    const pad = 0.05;
+    const pad = 0.04;
     zones.push({
       x1: Math.max(0, (r.left - 8) / vw - pad),
       y1: Math.max(0, (r.top - 8) / vh - pad),
@@ -1608,82 +1573,193 @@ function inZone(x, y, z){
 function generatePositions(count){
   const zones = getExclusionZones();
   const positions = [];
-  const minDist = 0.11;
-  let attempts = 0;
-  const maxAttempts = count * 300;
-  while (positions.length < count && attempts < maxAttempts) {
-    attempts++;
-    const x = 0.08 + Math.random() * 0.84;
-    const y = 0.1 + Math.random() * 0.8;
-    let ok = true;
-    for (const z of zones) {
-      if (inZone(x, y, z)) { ok = false; break; }
+  if (count === 0) return positions;
+
+  let cols, rows;
+  if (count <= 1) { cols = 1; rows = 1; }
+  else if (count === 2) { cols = 2; rows = 1; }
+  else if (count <= 4) { cols = 2; rows = 2; }
+  else if (count <= 6) { cols = 3; rows = 2; }
+  else if (count <= 9) { cols = 3; rows = 3; }
+  else if (count <= 12) { cols = 4; rows = 3; }
+  else { cols = 4; rows = Math.ceil(count / 4); }
+
+  const cells = [];
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      cells.push([c, r]);
     }
-    if (ok) {
-      for (const p of positions) {
-        const dx = p[0] - x;
-        const dy = p[1] - y;
-        if (Math.hypot(dx, dy) < minDist) { ok = false; break; }
+  }
+  for (let i = cells.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [cells[i], cells[j]] = [cells[j], cells[i]];
+  }
+
+  const cw = 1 / cols;
+  const rh = 1 / rows;
+
+  for (const [c, r] of cells) {
+    if (positions.length >= count) break;
+    let tries = 0;
+    while (tries < 20) {
+      tries++;
+      const x = cw * (c + 0.2 + Math.random() * 0.6);
+      const y = rh * (r + 0.22 + Math.random() * 0.56);
+      let ok = true;
+      for (const z of zones) {
+        if (inZone(x, y, z)) { ok = false; break; }
+      }
+      if (ok) {
+        positions.push([x, y]);
+        break;
       }
     }
-    if (ok) positions.push([x, y]);
   }
+
   while (positions.length < count) {
-    positions.push([0.1 + Math.random() * 0.8, 0.1 + Math.random() * 0.8]);
+    positions.push([0.15 + Math.random() * 0.7, 0.2 + Math.random() * 0.6]);
   }
+
   return positions;
 }
 
-const PER_PAGE = 12;
-const totalPages = Math.ceil(EPISODES.length / PER_PAGE);
-const starEls = [];
-
-for (let p = 0; p < totalPages; p++) {
-  const page = document.createElement('div');
-  page.className = 'page';
-  page.style.top = (p * 100) + 'vh';
-  const skyLayer = document.createElement('div');
-  skyLayer.className = 'page-sky';
-  skyLayer.innerHTML = makeSkySVG(260 + Math.floor(Math.random() * 160));
-  page.appendChild(skyLayer);
-  const start = p * PER_PAGE;
-  const end = Math.min(start + PER_PAGE, EPISODES.length);
-  const positions = generatePositions(end - start);
-  for (let i = start; i < end; i++) {
-    const pos = positions[i - start];
-    const ep = EPISODES[i];
-    const star = document.createElement('button');
-    star.className = 'star';
-    star.dataset.index = i;
-    star.style.left = (pos[0] * 100) + '%';
-    star.style.top = (pos[1] * 100) + '%';
-    star.style.setProperty('--pulse-dur', (2.4 + Math.random() * 3.2).toFixed(2) + 's');
-    star.style.setProperty('--pulse-delay', (Math.random() * 4).toFixed(2) + 's');
-    star.style.setProperty('--core-size', (6 + Math.random() * 4.5).toFixed(1) + 'px');
-    star.style.setProperty('--flare-w', (36 + Math.random() * 22).toFixed(0) + 'px');
-    star.innerHTML =
-      '<span class="star-flare h"></span>' +
-      '<span class="star-flare v"></span>' +
-      '<span class="star-core"></span>' +
-      '<span class="star-label">' + ep.title + '</span>';
-    star.addEventListener('pointerdown', (e) => {
-      if (!e.isPrimary) return;
-      startDrag(i, star, e);
-    });
-    page.appendChild(star);
-    starEls.push(star);
+async function fileExists(url){
+  try {
+    const res = await fetch(url, { method: 'HEAD', cache: 'no-store' });
+    return res.ok;
+  } catch (e) {
+    return false;
   }
-  sky.appendChild(page);
 }
-pageTotalEl.textContent = totalPages;
 
-let audioCtx = null, master = null;
-let sceneBus = null, sceneNodes = [];
-let timers = [];
+async function loadEpisodesFromJSON(){
+  let data;
+  try {
+    const res = await fetch('Track_Instruction.json', { cache: 'no-store' });
+    if (!res.ok) return [];
+    data = await res.json();
+  } catch (e) {
+    return [];
+  }
+  const map = (data && data.Episodes) || {};
+  const entries = Object.entries(map);
+  if (!entries.length) return [];
+
+  const audioNamesBase = ['audio.mp3', 'track.mp3', 'podcast.mp3', 'episode.mp3', '1.mp3'];
+  const coverNamesBase = ['cover.jpg', 'cover.png', 'cover.webp', 'image.jpg', 'image.png', 'image.webp', '1.jpg', '1.png', 'artwork.jpg', 'artwork.png'];
+
+  const results = await Promise.all(entries.map(async ([folderKey, displayName]) => {
+    const ep = {
+      folderKey,
+      title: displayName,
+      audioUrl: null,
+      coverUrl: null,
+      dur: 0
+    };
+
+    const baseFolders = [
+      `Episodes/${folderKey}/`,
+      `Episodes/${displayName}/`
+    ];
+
+    const audioNames = audioNamesBase.concat([`${folderKey}.mp3`, `${displayName}.mp3`]);
+    const coverNames = coverNamesBase.concat([
+      `${folderKey}.jpg`, `${folderKey}.png`, `${folderKey}.webp`,
+      `${displayName}.jpg`, `${displayName}.png`, `${displayName}.webp`
+    ]);
+
+    const audioCandidates = [];
+    const coverCandidates = [];
+    for (const base of baseFolders) {
+      for (const n of audioNames) audioCandidates.push(base + n);
+      for (const n of coverNames) coverCandidates.push(base + n);
+    }
+
+    const [audioChecks, coverChecks] = await Promise.all([
+      Promise.all(audioCandidates.map(async u => ({ u, ok: await fileExists(u) }))),
+      Promise.all(coverCandidates.map(async u => ({ u, ok: await fileExists(u) })))
+    ]);
+
+    for (const c of audioChecks) {
+      if (c.ok) { ep.audioUrl = c.u; break; }
+    }
+    for (const c of coverChecks) {
+      if (c.ok) { ep.coverUrl = c.u; break; }
+    }
+
+    return ep;
+  }));
+
+  return results;
+}
+
+function buildSky(){
+  sky.innerHTML = '';
+  starEls = [];
+  if (EPISODES.length === 0) {
+    const msg = document.createElement('div');
+    msg.style.cssText =
+      'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'color:rgba(255,255,255,.35);font-family:"Cormorant Garamond",serif;' +
+      'font-size:14px;letter-spacing:.2em;text-align:center;z-index:5;' +
+      'text-transform:uppercase;pointer-events:none;';
+    msg.textContent = 'выпуски не найдены';
+    document.body.appendChild(msg);
+    return;
+  }
+
+  PER_PAGE = Math.min(12, Math.max(1, EPISODES.length));
+  totalPages = Math.max(1, Math.ceil(EPISODES.length / PER_PAGE));
+  pageTotalEl.textContent = totalPages;
+  pageCurrentEl.textContent = 1;
+  currentPage = 0;
+  sky.style.transform = 'translateY(0)';
+
+  for (let p = 0; p < totalPages; p++) {
+    const page = document.createElement('div');
+    page.className = 'page';
+    page.style.top = (p * 100) + 'vh';
+    const skyLayer = document.createElement('div');
+    skyLayer.className = 'page-sky';
+    skyLayer.innerHTML = makeSkySVG(260 + Math.floor(Math.random() * 160));
+    page.appendChild(skyLayer);
+    const start = p * PER_PAGE;
+    const end = Math.min(start + PER_PAGE, EPISODES.length);
+    const positions = generatePositions(end - start);
+    for (let i = start; i < end; i++) {
+      const pos = positions[i - start];
+      const ep = EPISODES[i];
+      const star = document.createElement('button');
+      star.className = 'star';
+      star.dataset.index = i;
+      star.style.left = (pos[0] * 100) + '%';
+      star.style.top = (pos[1] * 100) + '%';
+      star.style.setProperty('--pulse-dur', (2.4 + Math.random() * 3.2).toFixed(2) + 's');
+      star.style.setProperty('--pulse-delay', (Math.random() * 4).toFixed(2) + 's');
+      star.style.setProperty('--core-size', (6 + Math.random() * 4.5).toFixed(1) + 'px');
+      star.style.setProperty('--flare-w', (36 + Math.random() * 22).toFixed(0) + 'px');
+      star.innerHTML =
+        '<span class="star-flare h"></span>' +
+        '<span class="star-flare v"></span>' +
+        '<span class="star-core"></span>' +
+        '<span class="star-label">' + ep.title + '</span>';
+      star.addEventListener('pointerdown', (e) => {
+        if (!e.isPrimary) return;
+        startDrag(i, star, e);
+      });
+      page.appendChild(star);
+      starEls.push(star);
+    }
+    sky.appendChild(page);
+  }
+  updateActiveStars();
+}
+
+let episodeAudio = null;
+let loadedIndex = -1;
 let current = -1;
 let playing = false;
 let elapsed = 0;
-let lastTick = 0;
 let transitioning = false;
 let repeatMode = 'off';
 let shuffleOn = false;
@@ -1691,175 +1767,79 @@ let shuffleOrder = [];
 let shufflePosition = 0;
 let overlayHintShown = false;
 
-function initAudio(){
-  if (audioCtx) return;
-  const AC = window.AudioContext || window.webkitAudioContext;
-  audioCtx = new AC();
-  master = audioCtx.createGain();
-  master.gain.value = 0.55;
-  master.connect(audioCtx.destination);
-}
-function makeNoise(dur){
-  const len = Math.floor(audioCtx.sampleRate * dur);
-  const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
-  const d = buf.getChannelData(0);
-  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
-  return buf;
-}
-function buildScene(ep){
-  const t0 = audioCtx.currentTime;
-  const bus = audioCtx.createGain();
-  bus.gain.setValueAtTime(0.0001, t0);
-  bus.gain.exponentialRampToValueAtTime(0.85, t0 + 2.4);
-  bus.connect(master);
-  sceneBus = bus;
-  const nodes = [bus];
-  const droneFilter = audioCtx.createBiquadFilter();
-  droneFilter.type = 'lowpass';
-  droneFilter.frequency.value = ep.filter;
-  droneFilter.Q.value = 5;
-  droneFilter.connect(bus);
-  const lfo = audioCtx.createOscillator();
-  lfo.frequency.value = 0.06 + Math.random() * 0.05;
-  const lfoGain = audioCtx.createGain();
-  lfoGain.gain.value = ep.filter * 0.55;
-  lfo.connect(lfoGain);
-  lfoGain.connect(droneFilter.frequency);
-  lfo.start(t0);
-  nodes.push(lfo, lfoGain, droneFilter);
-  ep.tones.forEach(([f, det, type, g]) => {
-    const o = audioCtx.createOscillator();
-    o.type = type; o.frequency.value = f; o.detune.value = det;
-    const gain = audioCtx.createGain();
-    gain.gain.value = g;
-    o.connect(gain); gain.connect(droneFilter); o.start(t0);
-    nodes.push(o, gain);
-  });
-  const noise = audioCtx.createBufferSource();
-  noise.buffer = makeNoise(3); noise.loop = true;
-  const nf = audioCtx.createBiquadFilter();
-  nf.type = 'bandpass'; nf.frequency.value = ep.noiseFreq; nf.Q.value = 0.9;
-  const ng = audioCtx.createGain();
-  ng.gain.value = ep.noiseGain;
-  noise.connect(nf); nf.connect(ng); ng.connect(bus);
-  noise.start(t0);
-  nodes.push(noise, nf, ng);
-  const tl = audioCtx.createOscillator();
-  tl.frequency.value = 0.11 + Math.random() * 0.08;
-  const tlg = audioCtx.createGain();
-  tlg.gain.value = ep.noiseGain * 0.75;
-  tl.connect(tlg); tlg.connect(ng.gain); tl.start(t0);
-  nodes.push(tl, tlg);
-  sceneNodes = nodes;
-}
-function stopScene(){
-  timers.forEach(clearTimeout);
-  timers = [];
-  const nodes = sceneNodes;
-  sceneNodes = [];
-  sceneBus = null;
-  if (!audioCtx || !nodes.length) return;
-  const t = audioCtx.currentTime;
-  const bus = nodes[0];
-  try {
-    bus.gain.cancelScheduledValues(t);
-    bus.gain.setValueAtTime(Math.max(bus.gain.value, 0.0001), t);
-    bus.gain.exponentialRampToValueAtTime(0.0001, t + 1.1);
-  } catch (e) {}
-  setTimeout(() => {
-    nodes.forEach(n => {
-      try { if (n.stop) n.stop(); } catch (e) {}
-      try { n.disconnect(); } catch (e) {}
-    });
-  }, 1300);
-}
-function triggerEvent(){
-  if (!audioCtx || !sceneBus) return;
-  const t = audioCtx.currentTime;
-  const k = Math.random();
-  if (k < 0.3) {
-    const o = audioCtx.createOscillator();
-    o.type = 'sine';
-    o.frequency.setValueAtTime(95, t);
-    o.frequency.exponentialRampToValueAtTime(26, t + 0.75);
-    const g = audioCtx.createGain();
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(0.45, t + 0.02);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.95);
-    o.connect(g); g.connect(sceneBus); o.start(t); o.stop(t + 1);
-  } else if (k < 0.6) {
-    const src = audioCtx.createBufferSource();
-    src.buffer = makeNoise(1);
-    const f = audioCtx.createBiquadFilter();
-    f.type = 'bandpass'; f.Q.value = 9;
-    f.frequency.setValueAtTime(900 + Math.random() * 1300, t);
-    f.frequency.linearRampToValueAtTime(600 + Math.random() * 700, t + 0.9);
-    const g = audioCtx.createGain();
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.linearRampToValueAtTime(0.2, t + 0.25);
-    g.gain.linearRampToValueAtTime(0.0001, t + 0.95);
-    const pan = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
-    src.connect(f); f.connect(g);
-    if (pan) { pan.pan.value = Math.random() * 2 - 1; g.connect(pan); pan.connect(sceneBus); }
-    else g.connect(sceneBus);
-    src.start(t); src.stop(t + 1);
-  } else if (k < 0.8) {
-    const o = audioCtx.createOscillator();
-    o.type = 'sawtooth';
-    o.frequency.setValueAtTime(150, t);
-    o.frequency.linearRampToValueAtTime(65 + Math.random() * 45, t + 1.2);
-    const f = audioCtx.createBiquadFilter();
-    f.type = 'bandpass'; f.frequency.value = 520; f.Q.value = 13;
-    const g = audioCtx.createGain();
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.linearRampToValueAtTime(0.1, t + 0.3);
-    g.gain.linearRampToValueAtTime(0.0001, t + 1.2);
-    o.connect(f); f.connect(g); g.connect(sceneBus); o.start(t); o.stop(t + 1.3);
-  } else {
-    for (let i = 0; i < 3; i++) {
-      const tt = t + i * 0.29 + Math.random() * 0.05;
-      const o = audioCtx.createOscillator();
-      o.type = 'square';
-      o.frequency.setValueAtTime(180, tt);
-      o.frequency.exponentialRampToValueAtTime(58, tt + 0.13);
-      const f = audioCtx.createBiquadFilter();
-      f.type = 'lowpass'; f.frequency.value = 850;
-      const g = audioCtx.createGain();
-      g.gain.setValueAtTime(0.0001, tt);
-      g.gain.exponentialRampToValueAtTime(0.24, tt + 0.012);
-      g.gain.exponentialRampToValueAtTime(0.0001, tt + 0.19);
-      o.connect(f); f.connect(g); g.connect(sceneBus); o.start(tt); o.stop(tt + 0.22);
-    }
-  }
-}
-function scheduleEvent(){
-  const id = setTimeout(() => {
-    if (!playing) return;
-    triggerEvent();
-    scheduleEvent();
-  }, 1200 + Math.random() * 3400);
-  timers.push(id);
-}
 function play(){
   if (current < 0) return;
+  const ep = EPISODES[current];
+  if (!ep || !ep.audioUrl) {
+    showToast('аудио не найдено', 2200);
+    return;
+  }
+
   stopAmbient(true);
-  initAudio();
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-  buildScene(EPISODES[current]);
-  playing = true;
-  lastTick = performance.now();
-  scheduleEvent();
-  updateIcons();
+
+  if (!episodeAudio || loadedIndex !== current) {
+    if (episodeAudio) {
+      try { episodeAudio.pause(); } catch (e) {}
+      try { episodeAudio.src = ''; } catch (e) {}
+    }
+    const idx = current;
+    const a = new Audio();
+    a.preload = 'metadata';
+    a.src = ep.audioUrl;
+
+    a.addEventListener('loadedmetadata', () => {
+      if (!EPISODES[idx].dur) {
+        EPISODES[idx].dur = a.duration || 0;
+      }
+      if (current === idx) {
+        pDur.textContent = EPISODES[idx].dur ? fmt(EPISODES[idx].dur) : '0:00';
+      }
+    });
+    a.addEventListener('timeupdate', () => {
+      if (loadedIndex === idx) {
+        elapsed = a.currentTime;
+        updateProgress();
+      }
+    });
+    a.addEventListener('ended', () => {
+      if (loadedIndex === idx) onTrackEnd();
+    });
+    a.addEventListener('error', () => {
+      if (loadedIndex === idx) {
+        playing = false;
+        updateIcons();
+        showToast('ошибка воспроизведения', 2500);
+      }
+    });
+
+    episodeAudio = a;
+    loadedIndex = idx;
+  }
+
+  episodeAudio.play().then(() => {
+    if (loadedIndex === current) {
+      playing = true;
+      updateIcons();
+    }
+  }).catch(() => {
+    playing = false;
+    updateIcons();
+  });
 }
+
 function pause(){
-  if (!playing) return;
+  if (episodeAudio) {
+    try { episodeAudio.pause(); } catch (e) {}
+  }
   playing = false;
-  stopScene();
   updateIcons();
 }
+
 function finish(){
   playing = false;
-  stopScene();
+  if (episodeAudio) {
+    try { episodeAudio.pause(); } catch (e) {}
+  }
   elapsed = 0;
   updateProgress();
   updateIcons();
@@ -1880,7 +1860,9 @@ function buildShuffleOrder(startIndex){
   }
   shufflePosition = 0;
 }
+
 function getNextIndex(){
+  if (EPISODES.length === 0) return -1;
   if (shuffleOn) {
     if (shufflePosition >= shuffleOrder.length - 1) {
       if (repeatMode === 'all') { buildShuffleOrder(-1); return shuffleOrder[0]; }
@@ -1896,7 +1878,9 @@ function getNextIndex(){
   }
   return next;
 }
+
 function getPrevIndex(){
+  if (EPISODES.length === 0) return -1;
   if (shuffleOn) {
     if (shufflePosition <= 0) return -1;
     shufflePosition--;
@@ -1904,9 +1888,21 @@ function getPrevIndex(){
   }
   return (current - 1 + EPISODES.length) % EPISODES.length;
 }
+
 function onTrackEnd(){
   if (repeatMode === 'one') {
-    elapsed = 0; updateProgress(); play(); return;
+    elapsed = 0;
+    updateProgress();
+    if (episodeAudio) {
+      try {
+        episodeAudio.currentTime = 0;
+        episodeAudio.play().then(() => {
+          playing = true;
+          updateIcons();
+        }).catch(() => {});
+      } catch (e) {}
+    }
+    return;
   }
   const next = getNextIndex();
   if (next < 0) { finish(); return; }
@@ -1943,25 +1939,43 @@ function makeCoverSVG(index){
   return svg;
 }
 
+function setCoverTo(container, ep, idx){
+  container.innerHTML = '';
+  if (ep && ep.coverUrl) {
+    const img = document.createElement('img');
+    img.alt = '';
+    img.src = ep.coverUrl;
+    img.onerror = () => {
+      container.innerHTML = makeCoverSVG(idx);
+    };
+    container.appendChild(img);
+  } else {
+    container.innerHTML = makeCoverSVG(idx);
+  }
+}
+
 function updateActiveStars(){
   starEls.forEach(el => el.classList.toggle('active', +el.dataset.index === current));
 }
+
 function updateIcons(){
   const playingPath = '<path d="M6 5h4v14H6zm8 0h4v14h-4z"/>';
   const pausedPath = '<path d="M8 5v14l11-7z"/>';
   ppIcon.innerHTML = playing ? playingPath : pausedPath;
   miniPlayIcon.innerHTML = playing ? playingPath : pausedPath;
 }
+
 function updateProgress(){
-  const d = current >= 0 ? EPISODES[current].dur : 0;
+  const d = current >= 0 && EPISODES[current] ? EPISODES[current].dur : 0;
   const p = d ? Math.min(1, elapsed / d) : 0;
   progressFill.style.transform = 'scaleX(' + p + ')';
   progressKnob.style.left = (p * 100) + '%';
   pCur.textContent = fmt(elapsed);
   miniFill.style.transform = 'scaleX(' + p + ')';
 }
+
 function updateFullUI(){
-  if (current < 0) {
+  if (current < 0 || !EPISODES[current]) {
     pTitle.textContent = '—';
     pDur.textContent = '0:00';
     cover.innerHTML = '';
@@ -1969,20 +1983,25 @@ function updateFullUI(){
   }
   const ep = EPISODES[current];
   pTitle.textContent = ep.title;
-  pDur.textContent = fmt(ep.dur);
-  cover.innerHTML = makeCoverSVG(current);
+  pDur.textContent = ep.dur ? fmt(ep.dur) : '0:00';
+  setCoverTo(cover, ep, current);
   updateProgress();
   updateIcons();
   updateActiveStars();
 }
+
 function updateMiniUI(){
-  if (current < 0) { miniPlayer.classList.remove('show'); return; }
+  if (current < 0 || !EPISODES[current]) {
+    miniPlayer.classList.remove('show');
+    return;
+  }
   const ep = EPISODES[current];
   miniTitle.textContent = ep.title;
-  miniCover.innerHTML = makeCoverSVG(current);
+  setCoverTo(miniCover, ep, current);
   updateProgress();
   updateIcons();
 }
+
 function openOverlay(){
   closeSearch();
   overlay.classList.add('show');
@@ -1993,6 +2012,7 @@ function openOverlay(){
     overlayHintShown = true;
   }
 }
+
 function closeOverlay(){
   overlay.classList.remove('show');
   if (current >= 0) {
@@ -2000,6 +2020,7 @@ function closeOverlay(){
     setTimeout(() => miniPlayer.classList.add('show'), 200);
   }
 }
+
 function updateRepeatIcon(){
   repeatBtn.classList.toggle('active', repeatMode !== 'off');
   if (repeatMode === 'one') {
@@ -2008,6 +2029,7 @@ function updateRepeatIcon(){
     repeatIconPath.setAttribute('d', 'M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z');
   }
 }
+
 function updateShuffleIcon(){ shuffleBtn.classList.toggle('active', shuffleOn); }
 
 let dragState = null;
@@ -2025,17 +2047,20 @@ function spawnTrail(x, y){
   });
   setTimeout(() => dot.remove(), 600);
 }
+
 function showGhostLabel(text){
   ghostLabel = document.createElement('div');
   ghostLabel.className = 'ghostLabel';
   ghostLabel.textContent = text;
   document.body.appendChild(ghostLabel);
 }
+
 function moveGhostLabel(x, y){
   if (!ghostLabel) return;
   ghostLabel.style.left = x + 'px';
   ghostLabel.style.top = (y + 24) + 'px';
 }
+
 function removeGhostLabel(){
   if (ghostLabel) { ghostLabel.remove(); ghostLabel = null; }
 }
@@ -2069,6 +2094,7 @@ function startDrag(index, starEl, e){
   window.addEventListener('pointerup', onDragUp);
   window.addEventListener('pointercancel', onDragUp);
 }
+
 function onDragMove(e){
   if (!dragState || e.pointerId !== dragState.pid) return;
   const dx = e.clientX - dragState.startX;
@@ -2087,6 +2113,7 @@ function onDragMove(e){
                e.clientY > r.top && e.clientY < r.bottom;
   dropzone.classList.toggle('hover', over);
 }
+
 function onDragUp(e){
   if (!dragState || e.pointerId !== dragState.pid) return;
   window.removeEventListener('pointermove', onDragMove);
@@ -2122,6 +2149,7 @@ function onDragUp(e){
   const r = dropzone.getBoundingClientRect();
   const over = e.clientX > r.left && e.clientX < r.right &&
                e.clientY > r.top && e.clientY < r.bottom;
+
   if (!over) {
     dropzone.classList.remove('visible', 'hover');
     const rect = state.starEl.getBoundingClientRect();
@@ -2163,7 +2191,21 @@ function onDragUp(e){
     }, 280);
   }, 480);
 }
+
 function setCurrentTrack(n){
+  if (EPISODES.length === 0) return;
+  if (n === current && episodeAudio) {
+    updateFullUI();
+    updateMiniUI();
+    return;
+  }
+  pause();
+  if (episodeAudio) {
+    try { episodeAudio.pause(); } catch (e) {}
+    try { episodeAudio.src = ''; } catch (e) {}
+    episodeAudio = null;
+    loadedIndex = -1;
+  }
   current = n;
   elapsed = 0;
   if (shuffleOn) buildShuffleOrder(n);
@@ -2171,7 +2213,6 @@ function setCurrentTrack(n){
   updateMiniUI();
 }
 
-let currentPage = 0;
 function goToPage(n){
   removeMapArrow();
   const nn = Math.max(0, Math.min(totalPages - 1, n));
@@ -2180,7 +2221,9 @@ function goToPage(n){
   sky.style.transform = 'translateY(-' + (nn * 100) + 'vh)';
   pageCurrentEl.textContent = nn + 1;
 }
+
 function loadEpisode(n){
+  if (EPISODES.length === 0) return;
   pause();
   setCurrentTrack(n);
   const page = Math.floor(n / PER_PAGE);
@@ -2248,16 +2291,22 @@ overlay.addEventListener('click', (e) => { if (e.target === overlay) closeOverla
 document.getElementById('playPauseBtn').addEventListener('click', () => {
   if (current < 0) return;
   if (playing) pause();
-  else { if (elapsed >= EPISODES[current].dur) elapsed = 0; play(); }
+  else play();
 });
 
 document.getElementById('prevBtn').addEventListener('click', () => {
   if (current < 0) return;
-  if (elapsed > 3) { elapsed = 0; updateProgress(); return; }
+  if (elapsed > 3 && episodeAudio) {
+    episodeAudio.currentTime = 0;
+    elapsed = 0;
+    updateProgress();
+    return;
+  }
   if (shuffleOn) {
     const prev = getPrevIndex();
     if (prev < 0) return;
-    loadEpisode(prev); return;
+    loadEpisode(prev);
+    return;
   }
   const n = (current - 1 + EPISODES.length) % EPISODES.length;
   loadEpisode(n);
@@ -2287,10 +2336,11 @@ shuffleBtn.addEventListener('click', () => {
 });
 
 progressBar.addEventListener('click', (e) => {
-  if (current < 0) return;
+  if (current < 0 || !episodeAudio || !episodeAudio.duration || isNaN(episodeAudio.duration)) return;
   const rect = progressBar.getBoundingClientRect();
   const p = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-  elapsed = p * EPISODES[current].dur;
+  episodeAudio.currentTime = p * episodeAudio.duration;
+  elapsed = episodeAudio.currentTime;
   updateProgress();
 });
 
@@ -2300,11 +2350,12 @@ miniPlayer.addEventListener('click', (e) => {
   if (current < 0) return;
   openOverlay();
 });
+
 miniPlayBtn.addEventListener('click', (e) => {
   e.stopPropagation();
   if (current < 0) return;
   if (playing) pause();
-  else { if (elapsed >= EPISODES[current].dur) elapsed = 0; play(); }
+  else play();
 });
 
 document.addEventListener('keydown', (e) => {
@@ -2326,15 +2377,6 @@ document.addEventListener('keydown', (e) => {
     e.preventDefault(); goToPage(currentPage - 1);
   }
 });
-
-setInterval(() => {
-  if (!playing || current < 0) return;
-  const now = performance.now();
-  elapsed += (now - lastTick) / 1000;
-  lastTick = now;
-  if (elapsed >= EPISODES[current].dur) { onTrackEnd(); return; }
-  updateProgress();
-}, 200);
 
 let wheelAccum = 0;
 let wheelTimer = null;
@@ -2386,16 +2428,23 @@ function loop(t){
 
 window.addEventListener('resize', resize);
 document.addEventListener('pointerdown', () => {
-  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  if (episodeAudio && episodeAudio.paused) {
+    // audio play can start; nothing to resume here unless context
+  }
 }, { once: true });
 
-resize();
-updateActiveStars();
-updateIcons();
-updateRepeatIcon();
-updateShuffleIcon();
-loadPodcastInfo();
-requestAnimationFrame(loop);
+async function init(){
+  resize();
+  updateIcons();
+  updateRepeatIcon();
+  updateShuffleIcon();
+  requestAnimationFrame(loop);
+  loadPodcastInfo();
+  EPISODES = await loadEpisodesFromJSON();
+  buildSky();
+}
+
+init();
 </script>
 </body>
 </html>
