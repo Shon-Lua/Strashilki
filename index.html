@@ -36,8 +36,9 @@
   .page{position:absolute;left:0;width:100%;height:100vh;overflow:hidden;backface-visibility:hidden}
   .page-sky{position:absolute;inset:0;pointer-events:none}
   .page-sky svg{display:block;width:100%;height:100%}
-  .star{position:absolute;width:78px;height:78px;transform:translate(-50%,-50%);background:none;border:none;padding:0;cursor:grab;display:grid;place-items:center;-webkit-tap-highlight-color:transparent;touch-action:none;z-index:5;backface-visibility:hidden;transition:opacity .25s ease}
-  .star.dragging{opacity:0.15;pointer-events:none}
+  .star{position:absolute;width:78px;height:78px;transform:translate(-50%,-50%);background:none;border:none;padding:0;cursor:grab;display:grid;place-items:center;-webkit-tap-highlight-color:transparent;touch-action:none;z-index:5;backface-visibility:hidden}
+  .star.revealing{pointer-events:none}
+  .star.dragging{opacity:0.15 !important;pointer-events:none}
   .star-core{position:absolute;top:50%;left:50%;width:var(--core-size,8px);height:var(--core-size,8px);border-radius:50%;background:#fff;transform:translate(-50%,-50%);box-shadow:0 0 10px 3px rgba(255,255,255,.95), 0 0 32px 10px rgba(255,255,255,.28);animation:twinkle var(--pulse-dur,3s) ease-in-out infinite;animation-delay:var(--pulse-delay,0s);transition:transform .35s ease, box-shadow .35s ease;backface-visibility:hidden}
   @keyframes twinkle{0%,100%{opacity:.45}50%{opacity:1}}
   .star:hover .star-core{transform:translate(-50%,-50%) scale(1.7);box-shadow:0 0 16px 6px rgba(255,255,255,1), 0 0 52px 18px rgba(255,255,255,.5)}
@@ -53,8 +54,7 @@
     overflow:hidden;text-overflow:ellipsis;
     font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
     font-weight:500;color:#c8c3d6;
-    opacity:1;
-    transition:color .25s ease;
+    opacity:1;transition:color .25s ease;
     pointer-events:none;
     text-shadow:0 0 14px #000, 0 0 6px #000, 0 0 2px #000;
     text-align:center;
@@ -264,6 +264,19 @@
     letter-spacing:.54em;
   }
 
+  #skyLoader{
+    position:fixed;left:50%;top:50%;
+    transform:translate(-50%,-50%);
+    z-index:5;pointer-events:none;
+    color:rgba(255,255,255,.35);
+    font-family:'Cormorant Garamond', Georgia, serif;
+    font-weight:500;font-size:12px;
+    letter-spacing:.32em;text-transform:uppercase;
+    text-align:center;line-height:2;
+    text-shadow:0 0 14px #000, 0 0 6px #000;
+  }
+  #skyLoader.hidden{display:none}
+
   @media (max-width:768px){
     .grain{animation:none}
     #playerOverlay{backdrop-filter:none;-webkit-backdrop-filter:none;background:radial-gradient(circle at 50% 42%, rgba(16,16,20,.94) 0%, rgba(0,0,0,.985) 72%)}
@@ -322,6 +335,7 @@
 <div class="grain"></div>
 <div class="vignette"></div>
 <div id="skyWrap"><div id="sky"></div></div>
+<div id="skyLoader">загрузка звёзд<br><span style="opacity:.5;font-size:10px;letter-spacing:.4em">· · ·</span></div>
 <div id="topBar">
   <button id="muteBtn" aria-label="Mute"></button>
   <button id="searchBtn" aria-label="Поиск">
@@ -498,6 +512,7 @@ const muteBtn = document.getElementById('muteBtn');
 const skyHintBanner = document.getElementById('skyHintBanner');
 const skyHintCheck = document.getElementById('skyHintCheck');
 const skyHintOk = document.getElementById('skyHintOk');
+const skyLoader = document.getElementById('skyLoader');
 
 const ICON_PLAY = '<path d="M8 5v14l11-7z"/>';
 const ICON_PAUSE = '<path d="M6 5h4v14H6zm8 0h4v14h-4z"/>';
@@ -510,11 +525,13 @@ let searchOpen = false;
 let currentArrow = null;
 let searchArrowTimer = null;
 let EPISODES = [];
-let PER_PAGE = 8;
 let totalPages = 1;
 let starEls = [];
 let currentPage = 0;
 let loadingSpinner = false;
+
+let pageSizes = [];
+let pageStarts = [];
 
 const POSITIONS_KEY = 'episodePositions_v1';
 let savedPositions = {};
@@ -580,9 +597,7 @@ skyHintCheck.addEventListener('click', () => {
   skyHintChecked = !skyHintChecked;
   skyHintCheck.classList.toggle('checked', skyHintChecked);
 });
-function openSkyHint(){
-  skyHintBanner.classList.add('show');
-}
+function openSkyHint(){ skyHintBanner.classList.add('show'); }
 function closeSkyHint(){
   if (skyHintChecked) {
     try { localStorage.setItem(SKY_HINT_KEY, '1'); } catch (e) {}
@@ -590,6 +605,7 @@ function closeSkyHint(){
   skyHintBanner.classList.remove('show');
 }
 skyHintOk.addEventListener('click', closeSkyHint);
+skyHintBanner.addEventListener('click', (e) => { if (e.target === skyHintBanner) closeSkyHint(); });
 
 let W = 0, H = 0;
 function resize(){
@@ -619,7 +635,7 @@ function detectGitHubRepo(){
   } catch (e) { return null; }
 }
 
-const GH_TREE_KEY = 'ghTreeCache_v9';
+const GH_TREE_KEY = 'ghTreeCache_v10';
 const GH_TREE_TTL = 5 * 60 * 1000;
 
 let ghTreeCache = null;
@@ -763,9 +779,7 @@ async function probeDataFile(num){
     const cl = parseInt(res.headers.get('content-length') || '0', 10);
     if (cl > 30000) return true;
     return false;
-  } catch (e) {
-    return false;
-  }
+  } catch (e) { return false; }
 }
 
 async function fetchText(url){
@@ -802,13 +816,178 @@ function extractNumber(str){
   return m ? parseInt(m[1], 10) : -1;
 }
 
-async function loadEpisodeList(){
+async function resolveOneEpisode(key, val, episodeFolders, tree){
+  const p = parseJsonEntry(key, val);
+  const candidates = [...new Set([p.folderName, key, p.title].filter(Boolean))];
+  const folder = findEpisodeFolder(episodeFolders, candidates);
+  if (!folder) return null;
+  const files = listFilesInFolder(tree, 'Episodes/' + folder);
+  let mp3 = null;
+  for (const f of files) { if (/\.mp3$/i.test(f)) { mp3 = f; break; } }
+  if (!mp3) return null;
+  let coverFile = null;
+  for (const f of files) { if (/^cover\.(jpe?g|png|webp|gif)$/i.test(f)) { coverFile = f; break; } }
+  let nameFile = null;
+  for (const f of files) { if (f.toLowerCase() === 'name.txt') { nameFile = f; break; } }
+  let title = p.title;
+  if (nameFile) {
+    const txt = await fetchText(buildUrl(['Episodes', folder, nameFile]));
+    if (txt) title = txt;
+  }
+  return {
+    folderKey: key,
+    folderName: folder,
+    title,
+    audioUrl: buildUrl(['Episodes', folder, mp3]),
+    coverUrl: coverFile ? buildUrl(['Episodes', folder, coverFile]) : null,
+    actualFolder: folder,
+    dur: 0,
+    resolved: true
+  };
+}
+
+function computePageSizes(total){
+  pageSizes = [];
+  pageStarts = [0];
+  let remaining = total;
+  while (remaining > 0) {
+    const size = Math.min(remaining, 4 + Math.floor(Math.random() * 5));
+    pageSizes.push(size);
+    remaining -= size;
+  }
+  let cum = 0;
+  pageStarts = [0];
+  for (const s of pageSizes) { cum += s; pageStarts.push(cum); }
+}
+
+function getPageForIndex(idx){
+  for (let p = 0; p < pageSizes.length; p++) {
+    if (idx >= pageStarts[p] && idx < pageStarts[p] + pageSizes[p]) return p;
+  }
+  return 0;
+}
+
+function getExclusionZones(){
+  const zones = [];
+  const bar = document.getElementById('topBar');
+  if (bar) {
+    const r = bar.getBoundingClientRect();
+    const vw = innerWidth, vh = innerHeight;
+    const pad = 0.04;
+    zones.push({
+      x1: Math.max(0, (r.left - 8) / vw - pad),
+      y1: Math.max(0, (r.top - 8) / vh - pad),
+      x2: Math.min(1, (r.right + 8) / vw + pad),
+      y2: Math.min(1, (r.bottom + 8) / vh + pad)
+    });
+  }
+  return zones;
+}
+function inZone(x, y, z){ return x >= z.x1 && x <= z.x2 && y >= z.y1 && y <= z.y2; }
+
+function generateChaoticPositions(count){
+  const positions = [];
+  if (count === 0) return positions;
+  const zones = getExclusionZones();
+  const vw = innerWidth;
+
+  const labelW = Math.min(180, vw * 0.55);
+  const minDx = (labelW / vw) * 1.05;
+  const minDy = 0.26;
+
+  let attempts = 0;
+  const maxAttempts = count * 300;
+
+  while (positions.length < count && attempts < maxAttempts) {
+    attempts++;
+    const x = 0.06 + Math.random() * 0.88;
+    const y = 0.13 + Math.random() * 0.74;
+
+    let ok = true;
+    for (const z of zones) if (inZone(x, y, z)) { ok = false; break; }
+    if (!ok) continue;
+
+    for (const p of positions) {
+      const dx = Math.abs(p[0] - x) / minDx;
+      const dy = Math.abs(p[1] - y) / minDy;
+      if (dx * dx + dy * dy < 1) { ok = false; break; }
+    }
+    if (ok) positions.push([x, y]);
+  }
+
+  while (positions.length < count) {
+    positions.push([0.08 + Math.random() * 0.84, 0.15 + Math.random() * 0.7]);
+  }
+
+  return positions;
+}
+
+function makeSkySVG(count){
+  const SW = 1000, SH = 1000;
+  let out = '';
+  for (let i = 0; i < count; i++) {
+    const x = (Math.random() * SW).toFixed(1);
+    const y = (Math.random() * SH).toFixed(1);
+    const r = (Math.random() * 1.3 + 0.25).toFixed(2);
+    const o = (Math.random() * 0.38 + 0.05).toFixed(3);
+    out += '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" fill="#fff" opacity="' + o + '"/>';
+  }
+  for (let i = 0; i < 6; i++) {
+    const x = (Math.random() * SW).toFixed(1);
+    const y = (Math.random() * SH).toFixed(1);
+    const r = (Math.random() * 1.3 + 0.6).toFixed(2);
+    const o = (Math.random() * 0.2 + 0.05).toFixed(3);
+    out += '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" fill="#fff" opacity="' + o + '"/>';
+  }
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + SW + ' ' + SH + '" preserveAspectRatio="xMidYMid slice">' + out + '</svg>';
+}
+
+function showSkyError(msg){
+  skyLoader.classList.remove('hidden');
+  skyLoader.innerHTML = msg + '<br><span style="opacity:.5;font-size:10px;letter-spacing:.4em">попробуйте обновить</span>';
+}
+
+function createStarEl(ep, idx, pos){
+  const star = document.createElement('button');
+  star.className = 'star';
+  star.dataset.index = idx;
+  star.dataset.key = ep.folderKey;
+  star.style.left = (pos[0] * 100) + '%';
+  star.style.top = (pos[1] * 100) + '%';
+  star.style.setProperty('--label-max', Math.min(180, innerWidth * 0.55) + 'px');
+  star.style.setProperty('--pulse-dur', (2.4 + Math.random() * 3.2).toFixed(2) + 's');
+  star.style.setProperty('--pulse-delay', (Math.random() * 4).toFixed(2) + 's');
+  star.style.setProperty('--core-size', (6 + Math.random() * 4.5).toFixed(1) + 'px');
+  star.style.setProperty('--flare-w', (36 + Math.random() * 22).toFixed(0) + 'px');
+  if (!playedSet.has(ep.folderKey)) star.classList.add('unplayed');
+  star.innerHTML =
+    '<span class="star-flare h"></span>' +
+    '<span class="star-flare v"></span>' +
+    '<span class="star-core"></span>' +
+    '<span class="star-label">' + ep.title + '</span>';
+  star.addEventListener('pointerdown', (e) => {
+    if (!e.isPrimary) return;
+    startDrag(idx, star, e);
+  });
+  return star;
+}
+
+async function buildSkyProgressively(){
+  sky.innerHTML = '';
+  starEls = [];
+  EPISODES = [];
+  skyLoader.classList.remove('hidden');
+  skyLoader.innerHTML = 'загрузка звёзд<br><span style="opacity:.5;font-size:10px;letter-spacing:.4em">· · ·</span>';
+
   let data;
   try {
     const res = await fetch('Track_Instruction.json', { cache: 'no-store' });
-    if (!res.ok) return { episodes: [], treeError: true };
+    if (!res.ok) throw new Error('json');
     data = await res.json();
-  } catch (e) { return { episodes: [], treeError: true }; }
+  } catch (e) {
+    showSkyError('не удалось загрузить');
+    return;
+  }
 
   const map = (data && data.Episodes) || {};
   const entries = Object.entries(map);
@@ -819,56 +998,83 @@ async function loadEpisodeList(){
     return 0;
   });
 
+  if (!entries.length) {
+    showSkyError('выпуски не найдены');
+    return;
+  }
+
   const tree = await getFullTree();
   if (!tree) {
-    return { episodes: [], treeError: true };
+    showSkyError('файлы недоступны');
+    return;
   }
 
   const episodeFolders = getEpisodeFolders(tree);
 
-  const episodes = [];
+  const resolved = [];
   for (const [key, val] of entries) {
-    const p = parseJsonEntry(key, val);
-    const candidates = [...new Set([p.folderName, key, p.title].filter(Boolean))];
-    const folder = findEpisodeFolder(episodeFolders, candidates);
-    if (!folder) continue;
-
-    const files = listFilesInFolder(tree, 'Episodes/' + folder);
-
-    let mp3 = null;
-    for (const f of files) {
-      if (/\.mp3$/i.test(f)) { mp3 = f; break; }
-    }
-    if (!mp3) continue;
-
-    let coverFile = null;
-    for (const f of files) {
-      if (/^cover\.(jpe?g|png|webp|gif)$/i.test(f)) { coverFile = f; break; }
-    }
-    let nameFile = null;
-    for (const f of files) {
-      if (f.toLowerCase() === 'name.txt') { nameFile = f; break; }
-    }
-
-    let title = p.title;
-    if (nameFile) {
-      const txt = await fetchText(buildUrl(['Episodes', folder, nameFile]));
-      if (txt) title = txt;
-    }
-
-    episodes.push({
-      folderKey: key,
-      folderName: folder,
-      title,
-      audioUrl: buildUrl(['Episodes', folder, mp3]),
-      coverUrl: coverFile ? buildUrl(['Episodes', folder, coverFile]) : null,
-      actualFolder: folder,
-      dur: 0,
-      resolved: true
-    });
+    const ep = await resolveOneEpisode(key, val, episodeFolders, tree);
+    if (ep) resolved.push(ep);
   }
 
-  return { episodes, treeError: false };
+  if (!resolved.length) {
+    showSkyError('выпуски не найдены');
+    return;
+  }
+
+  EPISODES = resolved;
+  computePageSizes(EPISODES.length);
+  totalPages = pageSizes.length;
+  pageTotalEl.textContent = totalPages;
+  pageCurrentEl.textContent = 1;
+  currentPage = 0;
+  sky.style.transform = 'translateY(0)';
+
+  const pages = [];
+  const positionsPerPage = [];
+  for (let p = 0; p < totalPages; p++) {
+    const page = document.createElement('div');
+    page.className = 'page';
+    page.style.top = (p * 100) + 'vh';
+    const skyLayer = document.createElement('div');
+    skyLayer.className = 'page-sky';
+    skyLayer.innerHTML = makeSkySVG(260 + Math.floor(Math.random() * 160));
+    page.appendChild(skyLayer);
+    sky.appendChild(page);
+    pages.push(page);
+    positionsPerPage.push(generateChaoticPositions(pageSizes[p]));
+  }
+
+  skyLoader.classList.add('hidden');
+
+  let globalIdx = 0;
+  for (let p = 0; p < totalPages; p++) {
+    const positions = positionsPerPage[p];
+    for (let i = 0; i < pageSizes[p] && globalIdx < EPISODES.length; i++) {
+      const ep = EPISODES[globalIdx];
+      const pos = positions[i];
+      const star = createStarEl(ep, globalIdx, pos);
+      star.classList.add('revealing');
+      star.style.opacity = '0';
+      star.style.transform = 'translate(-50%,-50%) scale(0.15)';
+      star.style.transition = 'opacity .8s ease, transform .8s cubic-bezier(.2,.9,.3,1.4)';
+      pages[p].appendChild(star);
+      starEls.push(star);
+      const thisStar = star;
+      const delay = Math.min(globalIdx * 70, 900);
+      setTimeout(() => {
+        thisStar.style.opacity = '1';
+        thisStar.style.transform = 'translate(-50%,-50%) scale(1)';
+        setTimeout(() => {
+          thisStar.classList.remove('revealing');
+          thisStar.style.transition = '';
+        }, 850);
+      }, delay);
+      globalIdx++;
+    }
+  }
+
+  updateActiveStars();
 }
 
 let ambientActive = false;
@@ -877,6 +1083,7 @@ let ambientGen = 0;
 let ambientQueue = [];
 let ambientQueuePos = 0;
 let ambientTracksLoaded = false;
+let lastAmbientNum = -1;
 let ambientMuted = (function(){
   try { return localStorage.getItem('ambientMuted') === '1'; } catch(e){ return false; }
 })();
@@ -990,11 +1197,18 @@ function playAmbientTrack(num){
 function playAmbientFromQueue(){
   if (!ambientActive) return;
   if (!ambientQueue.length) { ambientActive = false; return; }
+
   if (ambientQueuePos >= ambientQueue.length) {
     shuffleArray(ambientQueue);
+    if (ambientQueue.length > 1 && ambientQueue[0] === lastAmbientNum) {
+      const swap = 1 + Math.floor(Math.random() * (ambientQueue.length - 1));
+      [ambientQueue[0], ambientQueue[swap]] = [ambientQueue[swap], ambientQueue[0]];
+    }
     ambientQueuePos = 0;
   }
+
   const num = ambientQueue[ambientQueuePos++];
+  lastAmbientNum = num;
   playAmbientTrack(num);
 }
 
@@ -1092,12 +1306,12 @@ document.getElementById('ageEnterBtn').addEventListener('click', () => {
   startAmbient();
   const g = document.getElementById('ageGate');
   g.classList.add('hide');
+  if (shouldShowSkyHint()) {
+    setTimeout(() => openSkyHint(), 300);
+  }
   setTimeout(() => {
     g.remove();
     ageGateActive = false;
-    if (EPISODES.length > 0 && shouldShowSkyHint()) {
-      setTimeout(() => openSkyHint(), 500);
-    }
   }, 600);
 });
 
@@ -1278,7 +1492,7 @@ searchInput.addEventListener('keydown', (e) => {
 searchSuggestions.addEventListener('click', (e) => {
   const el = e.target.closest('.suggestion');
   if (!el || el.classList.contains('no-results')) return;
-  const idx = parseInt(el.getAttribute('data-index'), 10);
+  const idx = parseInt(el.dataset.index, 10);
   if (isNaN(idx)) return;
   searchInput.value = EPISODES[idx].title;
   performSearch(EPISODES[idx].title);
@@ -1293,7 +1507,7 @@ function removeMapArrow(){ if (currentArrow) { currentArrow.remove(); currentArr
 function clearSearchedState(){
   clearTimeout(searchArrowTimer);
   removeMapArrow();
-  starEls.forEach(el => el.classList.remove('searched'));
+  starEls.forEach(el => { if (el) el.classList.remove('searched'); });
 }
 function showMapArrow(starEl){
   removeMapArrow();
@@ -1370,7 +1584,7 @@ function performSearch(rawQuery){
   if (idx < 0) { showToast('выпуск не найден', 2200); return; }
   clearSearchedState();
   closeSearch();
-  const targetPage = Math.floor(idx / PER_PAGE);
+  const targetPage = getPageForIndex(idx);
   const needsNav = targetPage !== currentPage;
   if (needsNav) goToPage(targetPage);
   const starEl = starEls[idx];
@@ -1415,173 +1629,6 @@ function drawBg(t){
     ctx.fill();
   });
   ctx.globalCompositeOperation = 'source-over';
-}
-
-function makeSkySVG(count){
-  const SW = 1000, SH = 1000;
-  let out = '';
-  for (let i = 0; i < count; i++) {
-    const x = (Math.random() * SW).toFixed(1);
-    const y = (Math.random() * SH).toFixed(1);
-    const r = (Math.random() * 1.3 + 0.25).toFixed(2);
-    const o = (Math.random() * 0.38 + 0.05).toFixed(3);
-    out += '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" fill="#fff" opacity="' + o + '"/>';
-  }
-  for (let i = 0; i < 6; i++) {
-    const x = (Math.random() * SW).toFixed(1);
-    const y = (Math.random() * SH).toFixed(1);
-    const r = (Math.random() * 1.3 + 0.6).toFixed(2);
-    const o = (Math.random() * 0.2 + 0.05).toFixed(3);
-    out += '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" fill="#fff" opacity="' + o + '"/>';
-  }
-  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + SW + ' ' + SH + '" preserveAspectRatio="xMidYMid slice">' + out + '</svg>';
-}
-
-function getExclusionZones(){
-  const zones = [];
-  const bar = document.getElementById('topBar');
-  if (bar) {
-    const r = bar.getBoundingClientRect();
-    const vw = innerWidth, vh = innerHeight;
-    const pad = 0.04;
-    zones.push({
-      x1: Math.max(0, (r.left - 8) / vw - pad),
-      y1: Math.max(0, (r.top - 8) / vh - pad),
-      x2: Math.min(1, (r.right + 8) / vw + pad),
-      y2: Math.min(1, (r.bottom + 8) / vh + pad)
-    });
-  }
-  return zones;
-}
-function inZone(x, y, z){ return x >= z.x1 && x <= z.x2 && y >= z.y1 && y <= z.y2; }
-
-function getGridCols(count){
-  if (innerWidth < 700) return 2;
-  if (count <= 4) return 2;
-  if (count <= 9) return 3;
-  return 4;
-}
-
-function generatePositions(count){
-  const positions = [];
-  if (count === 0) return positions;
-  const zones = getExclusionZones();
-
-  const cols = getGridCols(count);
-  const rows = Math.ceil(count / cols);
-  const cellW = 1 / cols;
-  const cellH = 1 / rows;
-
-  const cells = [];
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) cells.push([c, r]);
-  }
-  for (let i = cells.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [cells[i], cells[j]] = [cells[j], cells[i]];
-  }
-
-  for (const [c, r] of cells) {
-    if (positions.length >= count) break;
-    let tries = 0;
-    let placed = false;
-    while (tries < 30 && !placed) {
-      tries++;
-      const x = cellW * (c + 0.5) + (Math.random() - 0.5) * cellW * 0.18;
-      const y = cellH * (r + 0.28) + Math.random() * cellH * 0.15;
-      let ok = true;
-      for (const z of zones) if (inZone(x, y, z)) { ok = false; break; }
-      if (!ok) continue;
-      for (const p of positions) {
-        if (Math.abs(p[0] - x) < cellW * 0.55 && Math.abs(p[1] - y) < cellH * 0.6) {
-          ok = false;
-          break;
-        }
-      }
-      if (ok) {
-        positions.push([x, y]);
-        placed = true;
-      }
-    }
-    if (!placed) {
-      positions.push([cellW * (c + 0.5), cellH * (r + 0.28)]);
-    }
-  }
-
-  return positions;
-}
-
-function buildSky(){
-  sky.innerHTML = '';
-  starEls = [];
-  const emptyMsg = document.getElementById('emptyMsg');
-  if (emptyMsg) emptyMsg.remove();
-  if (EPISODES.length === 0) {
-    const msg = document.createElement('div');
-    msg.id = 'emptyMsg';
-    msg.style.cssText =
-      'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);' +
-      'color:rgba(255,255,255,.35);font-family:"Cormorant Garamond",serif;' +
-      'font-size:14px;letter-spacing:.2em;text-align:center;z-index:5;' +
-      'text-transform:uppercase;pointer-events:none;';
-    msg.textContent = 'выпуски не найдены';
-    document.body.appendChild(msg);
-    pageTotalEl.textContent = '0';
-    pageCurrentEl.textContent = '0';
-    return;
-  }
-  PER_PAGE = innerWidth < 700 ? 6 : 8;
-  totalPages = Math.max(1, Math.ceil(EPISODES.length / PER_PAGE));
-  pageTotalEl.textContent = totalPages;
-  pageCurrentEl.textContent = 1;
-  currentPage = 0;
-  sky.style.transform = 'translateY(0)';
-
-  for (let p = 0; p < totalPages; p++) {
-    const page = document.createElement('div');
-    page.className = 'page';
-    page.style.top = (p * 100) + 'vh';
-    const skyLayer = document.createElement('div');
-    skyLayer.className = 'page-sky';
-    skyLayer.innerHTML = makeSkySVG(260 + Math.floor(Math.random() * 160));
-    page.appendChild(skyLayer);
-    const start = p * PER_PAGE;
-    const end = Math.min(start + PER_PAGE, EPISODES.length);
-    const pageCount = end - start;
-    const positions = generatePositions(pageCount);
-    const cols = getGridCols(pageCount);
-    const labelMax = Math.floor((innerWidth / cols) * 0.72);
-
-    for (let i = start; i < end; i++) {
-      const pos = positions[i - start];
-      const ep = EPISODES[i];
-      const star = document.createElement('button');
-      star.className = 'star';
-      star.dataset.index = i;
-      star.dataset.key = ep.folderKey;
-      star.style.left = (pos[0] * 100) + '%';
-      star.style.top = (pos[1] * 100) + '%';
-      star.style.setProperty('--label-max', labelMax + 'px');
-      star.style.setProperty('--pulse-dur', (2.4 + Math.random() * 3.2).toFixed(2) + 's');
-      star.style.setProperty('--pulse-delay', (Math.random() * 4).toFixed(2) + 's');
-      star.style.setProperty('--core-size', (6 + Math.random() * 4.5).toFixed(1) + 'px');
-      star.style.setProperty('--flare-w', (36 + Math.random() * 22).toFixed(0) + 'px');
-      if (!playedSet.has(ep.folderKey)) star.classList.add('unplayed');
-      star.innerHTML =
-        '<span class="star-flare h"></span>' +
-        '<span class="star-flare v"></span>' +
-        '<span class="star-core"></span>' +
-        '<span class="star-label">' + ep.title + '</span>';
-      star.addEventListener('pointerdown', (e) => {
-        if (!e.isPrimary) return;
-        startDrag(i, star, e);
-      });
-      page.appendChild(star);
-      starEls.push(star);
-    }
-    sky.appendChild(page);
-  }
-  updateActiveStars();
 }
 
 let episodeAudio = null;
@@ -1664,7 +1711,7 @@ function switchToEpisode(n, autoPlay){
   setLoading(false);
   fadeOutEpisode(() => {
     setCurrentTrack(n);
-    const page = Math.floor(n / PER_PAGE);
+    const page = getPageForIndex(n);
     if (page !== currentPage) goToPage(page);
     if (autoPlay) play();
     else { updateIcons(); applyAmbientState(); }
@@ -1986,7 +2033,7 @@ function applyMarquee(el, text){
 }
 
 function updateActiveStars(){
-  starEls.forEach(el => el.classList.toggle('active', +el.dataset.index === current));
+  starEls.forEach(el => { if (el) el.classList.toggle('active', +el.dataset.index === current); });
 }
 function updateProgress(){
   const d = current >= 0 && EPISODES[current] ? EPISODES[current].dur : 0;
@@ -2409,14 +2456,7 @@ async function init(){
   loadPositions();
   requestAnimationFrame(loop);
   loadPodcastInfo();
-  const result = await loadEpisodeList();
-  EPISODES = result.episodes || [];
-  buildSky();
-  if (result.treeError && EPISODES.length === 0) {
-    setTimeout(() => {
-      showToast('файлы недоступны · репозиторий должен быть публичным', 5500);
-    }, 800);
-  }
+  buildSkyProgressively();
 }
 
 init();
