@@ -174,12 +174,103 @@
   .ageEnter{padding:14px 60px;background:transparent;border:1px solid rgba(255,255,255,.4);color:#eae6f2;font-family:'Cinzel', Georgia, serif;font-weight:500;font-size:12px;letter-spacing:.48em;text-indent:.48em;text-transform:uppercase;cursor:pointer;transition:color .3s ease, border-color .3s ease, box-shadow .3s ease, letter-spacing .3s ease;border-radius:2px;-webkit-tap-highlight-color:transparent}
   .ageEnter:hover{color:#fff;border-color:#fff;box-shadow:0 0 50px rgba(255,255,255,.24);letter-spacing:.56em}
   .ageEnter:active{box-shadow:0 0 30px rgba(255,255,255,.35), inset 0 0 26px rgba(255,255,255,.1)}
+
+  #skyHintBanner{
+    position:fixed;inset:0;z-index:70;
+    display:grid;place-items:center;
+    background:rgba(0,0,0,.72);
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    opacity:0;pointer-events:none;
+    transition:opacity .45s ease;
+    padding:24px;
+  }
+  #skyHintBanner.show{opacity:1;pointer-events:auto}
+  .skyHintCard{
+    width:min(420px, 100%);
+    padding:36px 32px 32px;
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:4px;
+    background:rgba(8,6,10,.94);
+    box-shadow:0 20px 60px rgba(0,0,0,.85), 0 0 60px -10px rgba(255,255,255,.1);
+    text-align:center;
+  }
+  .skyHintText{
+    font-family:'Cormorant Garamond', Georgia, serif;
+    font-weight:500;
+    font-size:clamp(15px, 3.6vw, 17px);
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:#ded9ea;
+    line-height:1.55;
+    margin-bottom:24px;
+  }
+  .skyHintCheck{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    cursor:pointer;
+    margin-bottom:22px;
+    font-family:'Cormorant Garamond', Georgia, serif;
+    font-weight:500;
+    font-size:11px;
+    letter-spacing:.2em;
+    text-transform:uppercase;
+    color:rgba(255,255,255,.5);
+    user-select:none;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .skyHintCheck:hover{color:rgba(255,255,255,.8)}
+  .skyHintCheckBox{
+    position:relative;
+    width:16px;height:16px;
+    border:1px solid rgba(255,255,255,.4);
+    border-radius:2px;
+    flex-shrink:0;
+    transition:border-color .2s ease, background .2s ease;
+  }
+  .skyHintCheck.checked .skyHintCheckBox{
+    border-color:#fff;
+    background:rgba(255,255,255,.12);
+  }
+  .skyHintCheck.checked .skyHintCheckBox::after{
+    content:'';
+    position:absolute;
+    left:50%;top:46%;
+    width:9px;height:5px;
+    border-left:1.6px solid #fff;
+    border-bottom:1.6px solid #fff;
+    transform:translate(-50%,-50%) rotate(-45deg);
+  }
+  .skyHintBtn{
+    padding:13px 56px;
+    background:transparent;
+    border:1px solid rgba(255,255,255,.42);
+    color:#eae6f2;
+    font-family:'Cinzel', Georgia, serif;
+    font-weight:500;
+    font-size:11px;
+    letter-spacing:.46em;
+    text-indent:.46em;
+    text-transform:uppercase;
+    cursor:pointer;
+    border-radius:2px;
+    transition:color .3s ease, border-color .3s ease, box-shadow .3s ease, letter-spacing .3s ease;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .skyHintBtn:hover{
+    color:#fff;border-color:#fff;
+    box-shadow:0 0 40px rgba(255,255,255,.22);
+    letter-spacing:.54em;
+  }
+
   @media (max-width:768px){
     .grain{animation:none}
     #playerOverlay{backdrop-filter:none;-webkit-backdrop-filter:none;background:radial-gradient(circle at 50% 42%, rgba(16,16,20,.94) 0%, rgba(0,0,0,.985) 72%)}
     #miniPlayer{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(8,8,10,.97)}
     .toast{backdrop-filter:none;-webkit-backdrop-filter:none}
     #sky{transition:transform .8s cubic-bezier(.7,0,.28,1)}
+    #skyHintBanner{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(0,0,0,.85)}
   }
   @media (max-width:640px){
     #topBar{top:16px;right:12px;gap:0}
@@ -219,6 +310,10 @@
     .extGo{padding:14px 44px;font-size:11px}
     #searchInput{padding:11px 15px;font-size:14px}
     .suggestion{padding:10px 14px;font-size:13.5px}
+    .skyHintCard{padding:30px 24px 26px}
+    .skyHintText{font-size:14px;letter-spacing:.14em;margin-bottom:22px}
+    .skyHintCheck{font-size:10px;letter-spacing:.18em;margin-bottom:20px}
+    .skyHintBtn{padding:12px 48px;font-size:10.5px;letter-spacing:.42em;text-indent:.42em}
   }
 </style>
 </head>
@@ -308,6 +403,16 @@
     <div class="extCancel" id="extCancelBtn">отмена</div>
   </div>
 </div>
+<div id="skyHintBanner">
+  <div class="skyHintCard">
+    <div class="skyHintText">Прокрутите небо<br>и коснитесь звезды</div>
+    <div class="skyHintCheck" id="skyHintCheck">
+      <span class="skyHintCheckBox"></span>
+      <span>больше не показывать</span>
+    </div>
+    <button class="skyHintBtn" id="skyHintOk">Понятно</button>
+  </div>
+</div>
 <div id="ageGate" role="dialog" aria-modal="true">
   <div class="ageInner">
     <div class="ageBrand">Страшилки</div>
@@ -390,6 +495,9 @@ const searchBtn = document.getElementById('searchBtn');
 const infoBtn = document.getElementById('infoBtn');
 const searchSuggestions = document.getElementById('searchSuggestions');
 const muteBtn = document.getElementById('muteBtn');
+const skyHintBanner = document.getElementById('skyHintBanner');
+const skyHintCheck = document.getElementById('skyHintCheck');
+const skyHintOk = document.getElementById('skyHintOk');
 
 const ICON_PLAY = '<path d="M8 5v14l11-7z"/>';
 const ICON_PAUSE = '<path d="M6 5h4v14H6zm8 0h4v14h-4z"/>';
@@ -407,6 +515,39 @@ let totalPages = 1;
 let starEls = [];
 let currentPage = 0;
 let loadingSpinner = false;
+
+const POSITIONS_KEY = 'episodePositions_v1';
+let savedPositions = {};
+let lastPositionSave = 0;
+
+function loadPositions(){
+  try {
+    const s = localStorage.getItem(POSITIONS_KEY);
+    if (s) {
+      const obj = JSON.parse(s);
+      if (obj && typeof obj === 'object' && !Array.isArray(obj)) savedPositions = obj;
+    }
+  } catch (e) {}
+}
+function persistPositions(){
+  try { localStorage.setItem(POSITIONS_KEY, JSON.stringify(savedPositions)); } catch (e) {}
+}
+function savePositionForCurrent(){
+  if (!episodeAudio || current < 0 || !EPISODES[current]) return;
+  try {
+    const t = episodeAudio.currentTime;
+    const key = EPISODES[current].folderKey;
+    if (!key) return;
+    if (t > 2) savedPositions[key] = t;
+    else delete savedPositions[key];
+    persistPositions();
+  } catch (e) {}
+}
+function clearPosition(folderKey){
+  if (!folderKey) return;
+  delete savedPositions[folderKey];
+  persistPositions();
+}
 
 let playedSet = new Set();
 function loadPlayedState(){
@@ -429,6 +570,26 @@ function markPlayed(folderKey){
   const idx = EPISODES.findIndex(e => e.folderKey === folderKey);
   if (idx >= 0 && starEls[idx]) starEls[idx].classList.remove('unplayed');
 }
+
+const SKY_HINT_KEY = 'hideSkyHint_v1';
+function shouldShowSkyHint(){
+  try { return localStorage.getItem(SKY_HINT_KEY) !== '1'; } catch (e) { return true; }
+}
+let skyHintChecked = false;
+skyHintCheck.addEventListener('click', () => {
+  skyHintChecked = !skyHintChecked;
+  skyHintCheck.classList.toggle('checked', skyHintChecked);
+});
+function openSkyHint(){
+  skyHintBanner.classList.add('show');
+}
+function closeSkyHint(){
+  if (skyHintChecked) {
+    try { localStorage.setItem(SKY_HINT_KEY, '1'); } catch (e) {}
+  }
+  skyHintBanner.classList.remove('show');
+}
+skyHintOk.addEventListener('click', closeSkyHint);
 
 let W = 0, H = 0;
 function resize(){
@@ -458,7 +619,7 @@ function detectGitHubRepo(){
   } catch (e) { return null; }
 }
 
-const GH_TREE_KEY = 'ghTreeCache_v8';
+const GH_TREE_KEY = 'ghTreeCache_v9';
 const GH_TREE_TTL = 5 * 60 * 1000;
 
 let ghTreeCache = null;
@@ -934,7 +1095,9 @@ document.getElementById('ageEnterBtn').addEventListener('click', () => {
   setTimeout(() => {
     g.remove();
     ageGateActive = false;
-    if (EPISODES.length > 0) showToast('прокрутите небо, коснитесь звезды', 6000);
+    if (EPISODES.length > 0 && shouldShowSkyHint()) {
+      setTimeout(() => openSkyHint(), 500);
+    }
   }, 600);
 });
 
@@ -1478,6 +1641,7 @@ function fadeOutEpisode(callback){
 
 function setCurrentTrack(n){
   if (EPISODES.length === 0) return;
+  savePositionForCurrent();
   if (episodeAudio) {
     try { episodeAudio.pause(); } catch (e) {}
     episodeAudio = null;
@@ -1542,9 +1706,30 @@ async function play(){
     a.addEventListener('loadedmetadata', () => {
       if (!EPISODES[idx].dur && isFinite(a.duration)) EPISODES[idx].dur = a.duration;
       if (current === idx) pDur.textContent = EPISODES[idx].dur ? fmt(EPISODES[idx].dur) : '0:00';
+      const key = EPISODES[idx].folderKey;
+      const savedPos = savedPositions[key];
+      if (savedPos && savedPos > 2 && isFinite(a.duration) && savedPos < a.duration - 5) {
+        try {
+          a.currentTime = savedPos;
+          if (current === idx) { elapsed = savedPos; updateProgress(); }
+        } catch (e) {}
+      }
     });
     a.addEventListener('timeupdate', () => {
-      if (loadedIndex === idx) { elapsed = a.currentTime; updateProgress(); }
+      if (loadedIndex === idx) {
+        elapsed = a.currentTime;
+        updateProgress();
+        const now = Date.now();
+        if (now - lastPositionSave > 3000 && current === idx) {
+          lastPositionSave = now;
+          const key = EPISODES[idx].folderKey;
+          if (key) {
+            if (a.currentTime > 2) savedPositions[key] = a.currentTime;
+            else delete savedPositions[key];
+            persistPositions();
+          }
+        }
+      }
     });
     a.addEventListener('ended', () => { if (loadedIndex === idx) onTrackEnd(); });
     a.addEventListener('error', () => {
@@ -1583,10 +1768,11 @@ async function play(){
     applyAmbientState();
     const t0 = performance.now();
     const dur = 600;
+    const startVol = audio.volume;
     const step = (now) => {
       if (episodeAudio !== audio) return;
       const p = Math.min(1, (now - t0) / dur);
-      try { audio.volume = Math.min(1, p); } catch(e){ return; }
+      try { audio.volume = Math.min(1, startVol + (1 - startVol) * p); } catch(e){ return; }
       if (p < 1) requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
@@ -1606,6 +1792,7 @@ function pause(){
   wantsToPlay = false;
   setLoading(false);
   if (episodeAudio) { try { episodeAudio.pause(); } catch (e) {} }
+  savePositionForCurrent();
   playing = false;
   updateIcons();
   applyAmbientState();
@@ -1616,6 +1803,7 @@ function finish(){
   wantsToPlay = false;
   setLoading(false);
   if (episodeAudio) { try { episodeAudio.pause(); } catch (e) {} }
+  if (current >= 0 && EPISODES[current]) clearPosition(EPISODES[current].folderKey);
   elapsed = 0;
   updateProgress();
   updateIcons();
@@ -1678,6 +1866,7 @@ function getPrevIndexManual(){
   return (current - 1 + EPISODES.length) % EPISODES.length;
 }
 function onTrackEnd(){
+  if (current >= 0 && EPISODES[current]) clearPosition(EPISODES[current].folderKey);
   if (repeatMode === 'one') {
     const audio = episodeAudio;
     if (audio) {
@@ -2072,6 +2261,7 @@ document.getElementById('prevBtn').addEventListener('click', () => {
   if (elapsed > 3 && episodeAudio) {
     episodeAudio.currentTime = 0;
     elapsed = 0;
+    if (EPISODES[current]) clearPosition(EPISODES[current].folderKey);
     updateProgress();
     return;
   }
@@ -2110,6 +2300,12 @@ progressBar.addEventListener('click', (e) => {
   episodeAudio.currentTime = p * episodeAudio.duration;
   elapsed = episodeAudio.currentTime;
   updateProgress();
+  if (EPISODES[current]) {
+    const key = EPISODES[current].folderKey;
+    if (elapsed > 2) savedPositions[key] = elapsed;
+    else delete savedPositions[key];
+    persistPositions();
+  }
 });
 
 miniPlayer.addEventListener('click', (e) => {
@@ -2129,11 +2325,13 @@ miniPlayBtn.addEventListener('click', (e) => {
 document.addEventListener('keydown', (e) => {
   if (ageGateActive) return;
   if (e.key === 'Escape') {
+    if (skyHintBanner.classList.contains('show')) { closeSkyHint(); return; }
     if (externalWarning.classList.contains('show')) { closeExternalWarning(); return; }
     if (infoPanel.classList.contains('show')) { closeInfoPanel(); return; }
     if (overlay.classList.contains('show')) { closeOverlay(); return; }
     if (searchOpen) { closeSearch(); return; }
   }
+  if (skyHintBanner.classList.contains('show')) return;
   if (overlay.classList.contains('show') || infoPanel.classList.contains('show') ||
       externalWarning.classList.contains('show') || searchOpen) return;
   if (dragState) return;
@@ -2144,8 +2342,9 @@ document.addEventListener('keydown', (e) => {
 let wheelAccum = 0;
 let wheelTimer = null;
 window.addEventListener('wheel', (e) => {
-  if (ageGateActive || overlay.classList.contains('show') || infoPanel.classList.contains('show') ||
-      externalWarning.classList.contains('show') || searchOpen || dragState) return;
+  if (ageGateActive || skyHintBanner.classList.contains('show') || overlay.classList.contains('show') ||
+      infoPanel.classList.contains('show') || externalWarning.classList.contains('show') ||
+      searchOpen || dragState) return;
   wheelAccum += e.deltaY;
   clearTimeout(wheelTimer);
   wheelTimer = setTimeout(() => {
@@ -2160,8 +2359,9 @@ window.addEventListener('wheel', (e) => {
 let touchY = 0;
 let touchActive = false;
 window.addEventListener('touchstart', (e) => {
-  if (ageGateActive || overlay.classList.contains('show') || infoPanel.classList.contains('show') ||
-      externalWarning.classList.contains('show') || searchOpen || dragState) return;
+  if (ageGateActive || skyHintBanner.classList.contains('show') || overlay.classList.contains('show') ||
+      infoPanel.classList.contains('show') || externalWarning.classList.contains('show') ||
+      searchOpen || dragState) return;
   if (miniPlayer.contains(e.target)) return;
   touchY = e.touches[0].clientY;
   touchActive = true;
@@ -2175,6 +2375,12 @@ window.addEventListener('touchend', (e) => {
     else goToPage(currentPage - 1);
   }
 }, { passive: true });
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) savePositionForCurrent();
+});
+window.addEventListener('pagehide', savePositionForCurrent);
+window.addEventListener('beforeunload', savePositionForCurrent);
 
 function loop(t){
   drawBg(t);
@@ -2200,6 +2406,7 @@ async function init(){
   updateRepeatIcon();
   updateShuffleIcon();
   loadPlayedState();
+  loadPositions();
   requestAnimationFrame(loop);
   loadPodcastInfo();
   const result = await loadEpisodeList();
