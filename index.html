@@ -421,7 +421,7 @@ function detectGitHubRepo(){
   } catch (e) { return null; }
 }
 
-const GH_TREE_KEY = 'ghTreeCache_v3';
+const GH_TREE_KEY = 'ghTreeCache_v4';
 const GH_TREE_TTL = 30 * 60 * 1000;
 
 let ghTreeCache = null;
@@ -437,9 +437,7 @@ function loadTreeFromLS(){
   } catch (e) { return null; }
 }
 function saveTreeToLS(tree){
-  try {
-    localStorage.setItem(GH_TREE_KEY, JSON.stringify({ t: Date.now(), tree }));
-  } catch (e) {}
+  try { localStorage.setItem(GH_TREE_KEY, JSON.stringify({ t: Date.now(), tree })); } catch (e) {}
 }
 
 async function getFullTree(){
@@ -450,11 +448,10 @@ async function getFullTree(){
     return cached;
   }
   if (ghTreeDisabled) return null;
-
   const gh = detectGitHubRepo();
   if (!gh) return null;
 
-  const branches = ['gh-pages', 'main', 'master'];
+  const branches = ['main', 'master', 'gh-pages'];
   for (const branch of branches) {
     try {
       const url = 'https://api.github.com/repos/' + gh.user + '/' + gh.repo + '/git/trees/' + encodeURIComponent(branch) + '?recursive=1';
@@ -493,7 +490,6 @@ function collectFolders(tree){
 
 function findFolderInTree(tree, candidates, folders){
   if (!folders) folders = collectFolders(tree);
-
   for (const c of candidates) {
     if (!c) continue;
     if (folders.has('Episodes/' + c)) return 'Episodes/' + c + '/';
@@ -502,7 +498,6 @@ function findFolderInTree(tree, candidates, folders){
     if (!c) continue;
     if (folders.has(c)) return c + '/';
   }
-
   const normCands = candidates.filter(Boolean).map(normalizeName);
   for (const folder of folders) {
     const name = folder.split('/').pop();
@@ -510,27 +505,60 @@ function findFolderInTree(tree, candidates, folders){
       return folder + '/';
     }
   }
-
   return null;
 }
 
+function pickFromNames(names){
+  let mp3 = null, cover = null, nameTxt = null;
+  for (const n of names) {
+    if (!mp3 && /\.mp3$/i.test(n)) mp3 = n;
+    if (!cover && /^cover\.(jpe?g|png|webp|gif)$/i.test(n)) cover = n;
+    if (!nameTxt && /^name\.txt$/i.test(n)) nameTxt = n;
+  }
+  return { mp3, cover, nameTxt };
+}
+
 function findFilesInFolder(tree, folderPath){
-  const directFiles = [];
+  const names = [];
   for (const f of tree) {
     if (!f || f.type !== 'blob' || !f.path) continue;
     if (!f.path.startsWith(folderPath)) continue;
     const rel = f.path.slice(folderPath.length);
     if (rel.includes('/')) continue;
-    directFiles.push(rel);
+    names.push(rel);
   }
+  return pickFromNames(names);
+}
 
-  let mp3 = null, cover = null, nameTxt = null;
-  for (const rel of directFiles) {
-    if (!mp3 && /\.mp3$/i.test(rel)) mp3 = rel;
-    if (!cover && /^cover\.(jpe?g|png|webp|gif)$/i.test(rel)) cover = rel;
-    if (!nameTxt && /^name\.txt$/i.test(rel)) nameTxt = rel;
-  }
-  return { mp3, cover, nameTxt };
+async function fetchDirListing(folderName){
+  try {
+    const url = buildUrl(['Episodes', folderName]) + '/';
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const ct = res.headers.get('content-type') || '';
+    if (!ct.includes('text/html')) return null;
+    const html = await res.text();
+    if (html.includes('id="skyWrap"')) return null;
+    if (!/Index of/i.test(html)) return null;
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const anchors = doc.querySelectorAll('a[href]');
+    const files = [];
+    for (const a of anchors) {
+      let href = a.getAttribute('href');
+      if (!href) continue;
+      href = href.trim();
+      if (href === '../' || href === '..') continue;
+      if (href.startsWith('?') || href.startsWith('#')) continue;
+      if (href.startsWith('/') || href.startsWith('http')) continue;
+      if (href.endsWith('/')) continue;
+      const qIdx = href.indexOf('?');
+      if (qIdx >= 0) href = href.slice(0, qIdx);
+      try { href = decodeURIComponent(href); } catch (e) {}
+      if (!href) continue;
+      files.push(href);
+    }
+    return [...new Set(files)];
+  } catch (e) { return null; }
 }
 
 async function fetchText(url){
@@ -543,23 +571,6 @@ async function fetchText(url){
     if (/<!doctype|<html/i.test(trimmed)) return null;
     return trimmed;
   } catch (e) { return null; }
-}
-
-function parseJsonEntry(key, val){
-  const out = { folderKey: key, folderName: null, title: null, audioFile: null, coverFile: null };
-  if (val && typeof val === 'object' && !Array.isArray(val)) {
-    out.folderName = val.folder || val.name || key;
-    out.title = val.name || val.title || out.folderName;
-    out.audioFile = val.audio || null;
-    out.coverFile = val.cover || null;
-  } else if (typeof val === 'string') {
-    out.folderName = val || key;
-    out.title = val || key;
-  } else {
-    out.folderName = key;
-    out.title = key;
-  }
-  return out;
 }
 
 async function probeAudio(url){
@@ -587,20 +598,43 @@ async function probeAudio(url){
   });
 }
 
+function parseJsonEntry(key, val){
+  const out = { folderKey: key, folderName: null, title: null, audioFile: null, coverFile: null };
+  if (val && typeof val === 'object' && !Array.isArray(val)) {
+    out.folderName = val.folder || val.name || key;
+    out.title = val.name || val.title || out.folderName;
+    out.audioFile = val.audio || null;
+    out.coverFile = val.cover || null;
+  } else if (typeof val === 'string') {
+    out.folderName = val || key;
+    out.title = val || key;
+  } else {
+    out.folderName = key;
+    out.title = key;
+  }
+  return out;
+}
+
+function extractNumber(str){
+  const m = String(str).match(/(\d+)/);
+  return m ? parseInt(m[1], 10) : -1;
+}
+
 async function loadEpisodeList(){
   let data;
   try {
     const res = await fetch('Track_Instruction.json', { cache: 'no-store' });
-    if (!res.ok) return { episodes: [], treeError: false };
+    if (!res.ok) return { episodes: [], treeError: false, noResolved: false };
     data = await res.json();
-  } catch (e) { return { episodes: [], treeError: false }; }
+  } catch (e) { return { episodes: [], treeError: false, noResolved: false }; }
 
   const map = (data && data.Episodes) || {};
   const entries = Object.entries(map);
   entries.sort((a, b) => {
-    const na = (a[0].match(/(\d+)/) || [0, 0])[1];
-    const nb = (b[0].match(/(\d+)/) || [0, 0])[1];
-    return parseInt(na, 10) - parseInt(nb, 10);
+    const na = extractNumber(a[0]);
+    const nb = extractNumber(b[0]);
+    if (na !== nb) return nb - na;
+    return String(a[1] || a[0]).localeCompare(String(b[1] || b[0]));
   });
 
   const tree = await getFullTree();
@@ -618,8 +652,7 @@ async function loadEpisodeList(){
       coverUrl: null,
       actualFolder: null,
       dur: 0,
-      resolved: false,
-      treeFailed: !tree
+      resolved: false
     };
   });
 
@@ -633,9 +666,11 @@ async function loadEpisodeList(){
         const pathSegs = folderPath.split('/').filter(Boolean);
         ep.actualFolder = folderPath;
         if (mp3) {
+          ep.audioFile = mp3;
           ep.audioUrl = buildUrl(pathSegs.concat([mp3]));
         }
         if (coverFile) {
+          ep.coverFile = coverFile;
           ep.coverUrl = buildUrl(pathSegs.concat([coverFile]));
         }
         if (nameTxt) {
@@ -644,12 +679,36 @@ async function loadEpisodeList(){
           if (txt) ep.title = txt;
         }
         ep.resolved = !!mp3;
-        continue;
+        if (ep.resolved) continue;
       }
     }
 
+    for (const folder of candidates) {
+      const files = await fetchDirListing(folder);
+      if (files && files.length) {
+        const picked = pickFromNames(files);
+        if (picked.mp3) {
+          ep.actualFolder = folder;
+          ep.audioFile = picked.mp3;
+          ep.audioUrl = buildUrl(['Episodes', folder, picked.mp3]);
+          if (picked.cover) {
+            ep.coverFile = picked.cover;
+            ep.coverUrl = buildUrl(['Episodes', folder, picked.cover]);
+          }
+          if (picked.nameTxt) {
+            const url = buildUrl(['Episodes', folder, picked.nameTxt]);
+            const txt = await fetchText(url);
+            if (txt) ep.title = txt;
+          }
+          ep.resolved = true;
+          break;
+        }
+      }
+    }
+    if (ep.resolved) continue;
+
     if (ep.audioFile) {
-      const tryFolder = ep.actualFolder || ep.folderName;
+      const tryFolder = ep.folderName || ep.folderKey;
       const tryUrl = buildUrl(['Episodes', tryFolder, ep.audioFile]);
       if (await probeAudio(tryUrl)) {
         ep.audioUrl = tryUrl;
@@ -660,7 +719,8 @@ async function loadEpisodeList(){
     }
   }
 
-  return { episodes, treeError: !tree };
+  const anyResolved = episodes.some(e => e.audioUrl);
+  return { episodes, treeError: !tree, noResolved: !anyResolved };
 }
 
 let ambientActive = false;
@@ -2104,9 +2164,9 @@ async function init(){
   const result = await loadEpisodeList();
   EPISODES = result.episodes || [];
   buildSky();
-  if (result.treeError && EPISODES.length > 0) {
+  if (result.noResolved && EPISODES.length > 0) {
     setTimeout(() => {
-      showToast('список файлов недоступен · проверьте репозиторий', 5000);
+      showToast('файлы не найдены · репозиторий должен быть публичным', 5500);
     }, 1200);
   }
 }
