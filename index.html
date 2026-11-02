@@ -174,7 +174,7 @@
     display:grid;place-items:center;
     color:rgba(255,255,255,.92);
     cursor:pointer;
-    transition:color .3s ease, filter .3s ease;
+    transition:color .3s ease, filter .3s ease, opacity .3s ease;
     -webkit-tap-highlight-color:transparent;
     text-shadow:0 0 10px rgba(0,0,0,.9);
   }
@@ -182,6 +182,7 @@
     color:#fff;
     filter:drop-shadow(0 0 8px rgba(255,255,255,.65));
   }
+  #topBar button.muted{opacity:.5}
   #topBar button svg{
     width:20px;height:20px;display:block;
   }
@@ -820,6 +821,7 @@
 <div id="skyWrap"><div id="sky"></div></div>
 
 <div id="topBar">
+  <button id="muteBtn" aria-label="Mute"></button>
   <button id="searchBtn" aria-label="Поиск">
     <svg viewBox="0 0 24 24">
       <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/>
@@ -1000,6 +1002,7 @@ const searchInput = document.getElementById('searchInput');
 const searchBtn = document.getElementById('searchBtn');
 const infoBtn = document.getElementById('infoBtn');
 const searchSuggestions = document.getElementById('searchSuggestions');
+const muteBtn = document.getElementById('muteBtn');
 
 let ageGateActive = true;
 let searchOpen = false;
@@ -1021,65 +1024,140 @@ function resize(){
 
 let ambientActive = false;
 let ambientAudio = null;
+let ambientGen = 0;
+let ambientFailStreak = 0;
+let ambientMaxFound = 0;
+let ambientMuted = (function(){
+  try { return localStorage.getItem('ambientMuted') === '1'; } catch(e){ return false; }
+})();
+
+const muteIconOn = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3z"/><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/><path d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>';
+const muteIconOff = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3z"/><line x1="4" y1="4" x2="20" y2="20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+
+function updateMuteIcon(){
+  if (ambientMuted) {
+    muteBtn.innerHTML = muteIconOff;
+    muteBtn.setAttribute('aria-label', 'Unmute');
+    muteBtn.classList.add('muted');
+  } else {
+    muteBtn.innerHTML = muteIconOn;
+    muteBtn.setAttribute('aria-label', 'Mute');
+    muteBtn.classList.remove('muted');
+  }
+}
+
+function toggleMute(){
+  ambientMuted = !ambientMuted;
+  try { localStorage.setItem('ambientMuted', ambientMuted ? '1' : '0'); } catch(e){}
+  updateMuteIcon();
+  const target = ambientMuted ? 0 : 0.12;
+  const audio = ambientAudio;
+  if (audio) {
+    const startVol = audio.volume;
+    const t0 = performance.now();
+    const dur = 300;
+    const step = (now) => {
+      if (ambientAudio !== audio) return;
+      const p = Math.min(1, (now - t0) / dur);
+      audio.volume = startVol + (target - startVol) * p;
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+  showToast(ambientMuted ? 'фон выключен' : 'фон включён', 1500);
+}
+
+muteBtn.addEventListener('click', toggleMute);
 
 function playAmbientByNum(num){
   if (!ambientActive) return;
-  if (ambientAudio) {
-    try { ambientAudio.pause(); } catch (e) {}
-    try { ambientAudio.src = ''; } catch (e) {}
-    ambientAudio = null;
+  if (num > 50) { ambientActive = false; return; }
+  if (num < 1) num = 1;
+
+  ambientGen++;
+  const gen = ambientGen;
+
+  const oldAudio = ambientAudio;
+  ambientAudio = null;
+  if (oldAudio) {
+    try { oldAudio.pause(); } catch (e) {}
   }
+
   const audio = new Audio();
   audio.preload = 'auto';
   audio.volume = 0;
   audio.src = 'DATA/' + num + '.mp3';
-  let failed = false;
+
+  let handled = false;
+
   const onFail = () => {
-    if (failed) return;
-    failed = true;
-    if (num === 1) {
-      ambientActive = false;
-      return;
+    if (handled) return;
+    if (gen !== ambientGen) return;
+    handled = true;
+    if (ambientAudio === audio) ambientAudio = null;
+    try { audio.pause(); } catch (e) {}
+    if (!ambientActive) return;
+    ambientFailStreak++;
+    if (ambientFailStreak >= 25) { ambientActive = false; return; }
+    if (ambientFailStreak > 2 && ambientMaxFound > 0) {
+      ambientFailStreak = 0;
+      playAmbientByNum(1);
+    } else {
+      playAmbientByNum(num + 1);
     }
-    playAmbientByNum(1);
   };
+
   audio.addEventListener('error', onFail);
   audio.addEventListener('ended', () => {
+    if (handled) return;
+    if (gen !== ambientGen) return;
     if (ambientAudio !== audio) return;
     if (!ambientActive) return;
+    handled = true;
+    ambientFailStreak = 0;
     playAmbientByNum(num + 1);
   });
+
   audio.play().then(() => {
-    if (failed || !ambientActive) {
-      try { audio.pause(); } catch (e) {}
-      try { audio.src = ''; } catch (e) {}
-      return;
-    }
+    if (handled) return;
+    if (gen !== ambientGen) return;
+    if (!ambientActive) return;
     ambientAudio = audio;
+    ambientMaxFound = Math.max(ambientMaxFound, num);
+    ambientFailStreak = 0;
+    const targetVol = ambientMuted ? 0 : 0.12;
     const t0 = performance.now();
-    const targetVol = 0.12;
-    const dur = 2500;
+    const dur = 2000;
     const step = (now) => {
-      if (ambientAudio !== audio || !ambientActive) return;
+      if (gen !== ambientGen) return;
+      if (ambientAudio !== audio) return;
+      if (!ambientActive) return;
       const p = Math.min(1, (now - t0) / dur);
       audio.volume = targetVol * p;
       if (p < 1) requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
-  }).catch(onFail);
+  }).catch(() => {
+    if (handled) return;
+    if (gen !== ambientGen) return;
+    onFail();
+  });
 }
 
 function startAmbient(){
   if (ambientActive) return;
   ambientActive = true;
+  ambientFailStreak = 0;
+  ambientMaxFound = 0;
   playAmbientByNum(1);
 }
 
 function stopAmbient(permanent){
   if (permanent) ambientActive = false;
   const audio = ambientAudio;
-  if (!audio) return;
+  if (!audio) { if (permanent) ambientGen++; return; }
   ambientAudio = null;
+  ambientGen++;
   const startVol = audio.volume;
   const t0 = performance.now();
   const dur = 1500;
@@ -1090,7 +1168,6 @@ function stopAmbient(permanent){
       requestAnimationFrame(step);
     } else {
       try { audio.pause(); } catch (e) {}
-      try { audio.src = ''; } catch (e) {}
     }
   };
   requestAnimationFrame(step);
@@ -1830,6 +1907,71 @@ let shuffleOn = false;
 let shuffleOrder = [];
 let shufflePosition = 0;
 let overlayHintShown = false;
+let switchToken = 0;
+
+function fadeOutEpisode(callback){
+  const audio = episodeAudio;
+  if (!audio) { if (callback) callback(); return; }
+  if (audio.paused || audio.volume === 0) {
+    try { audio.pause(); } catch (e) {}
+    if (episodeAudio === audio) {
+      episodeAudio = null;
+      loadedIndex = -1;
+    }
+    if (callback) callback();
+    return;
+  }
+  const startVol = audio.volume;
+  const dur = 400;
+  const t0 = performance.now();
+  const step = (now) => {
+    if (episodeAudio !== audio) { if (callback) callback(); return; }
+    const p = Math.min(1, (now - t0) / dur);
+    audio.volume = Math.max(0, startVol * (1 - p));
+    if (p < 1) {
+      requestAnimationFrame(step);
+    } else {
+      try { audio.pause(); } catch (e) {}
+      if (episodeAudio === audio) {
+        episodeAudio = null;
+        loadedIndex = -1;
+      }
+      if (callback) callback();
+    }
+  };
+  requestAnimationFrame(step);
+}
+
+function setCurrentTrack(n){
+  if (EPISODES.length === 0) return;
+  if (episodeAudio) {
+    try { episodeAudio.pause(); } catch (e) {}
+    episodeAudio = null;
+    loadedIndex = -1;
+  }
+  current = n;
+  elapsed = 0;
+  if (shuffleOn) buildShuffleOrder(n);
+  updateFullUI();
+  updateMiniUI();
+}
+
+function switchToEpisode(n, autoPlay){
+  if (EPISODES.length === 0) return;
+  if (n < 0 || n >= EPISODES.length) return;
+  if (autoPlay === undefined) autoPlay = playing;
+  switchToken++;
+  const token = switchToken;
+  playing = false;
+  updateIcons();
+  fadeOutEpisode(() => {
+    if (token !== switchToken) return;
+    setCurrentTrack(n);
+    const page = Math.floor(n / PER_PAGE);
+    if (page !== currentPage) goToPage(page);
+    if (autoPlay) play();
+  });
+}
 
 function play(){
   if (current < 0) return;
@@ -1844,12 +1986,12 @@ function play(){
   if (!episodeAudio || loadedIndex !== current) {
     if (episodeAudio) {
       try { episodeAudio.pause(); } catch (e) {}
-      try { episodeAudio.src = ''; } catch (e) {}
     }
     const idx = current;
     const a = new Audio();
     a.preload = 'metadata';
     a.src = ep.audioUrl;
+    a.volume = 0;
 
     a.addEventListener('loadedmetadata', () => {
       if (!EPISODES[idx].dur && isFinite(a.duration)) {
@@ -1880,14 +2022,28 @@ function play(){
     loadedIndex = idx;
   }
 
-  episodeAudio.play().then(() => {
-    if (loadedIndex === current) {
-      playing = true;
+  const audio = episodeAudio;
+  const idx = current;
+  audio.play().then(() => {
+    if (loadedIndex !== idx) return;
+    if (episodeAudio !== audio) return;
+    playing = true;
+    updateIcons();
+    const startVol = audio.volume;
+    const t0 = performance.now();
+    const dur = 600;
+    const step = (now) => {
+      if (episodeAudio !== audio) return;
+      const p = Math.min(1, (now - t0) / dur);
+      audio.volume = Math.min(1, startVol + (1 - startVol) * p);
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }).catch(() => {
+    if (episodeAudio === audio) {
+      playing = false;
       updateIcons();
     }
-  }).catch(() => {
-    playing = false;
-    updateIcons();
   });
 }
 
@@ -1925,7 +2081,7 @@ function buildShuffleOrder(startIndex){
   shufflePosition = 0;
 }
 
-function getNextIndex(){
+function getNextIndexAuto(){
   if (EPISODES.length === 0) return -1;
   if (shuffleOn) {
     if (shufflePosition >= shuffleOrder.length - 1) {
@@ -1943,10 +2099,28 @@ function getNextIndex(){
   return next;
 }
 
-function getPrevIndex(){
+function getNextIndexManual(){
   if (EPISODES.length === 0) return -1;
   if (shuffleOn) {
-    if (shufflePosition <= 0) return -1;
+    if (shuffleOrder.length === 0) buildShuffleOrder(current);
+    if (shufflePosition >= shuffleOrder.length - 1) {
+      buildShuffleOrder(-1);
+      return shuffleOrder[0];
+    }
+    shufflePosition++;
+    return shuffleOrder[shufflePosition];
+  }
+  return (current + 1) % EPISODES.length;
+}
+
+function getPrevIndexManual(){
+  if (EPISODES.length === 0) return -1;
+  if (shuffleOn) {
+    if (shuffleOrder.length === 0) buildShuffleOrder(current);
+    if (shufflePosition <= 0) {
+      buildShuffleOrder(-1);
+      return shuffleOrder[shuffleOrder.length - 1];
+    }
     shufflePosition--;
     return shuffleOrder[shufflePosition];
   }
@@ -1955,22 +2129,36 @@ function getPrevIndex(){
 
 function onTrackEnd(){
   if (repeatMode === 'one') {
-    elapsed = 0;
-    updateProgress();
-    if (episodeAudio) {
+    const audio = episodeAudio;
+    if (audio) {
       try {
-        episodeAudio.currentTime = 0;
-        episodeAudio.play().then(() => {
+        audio.currentTime = 0;
+        audio.volume = 0;
+        audio.play().then(() => {
           playing = true;
           updateIcons();
-        }).catch(() => {});
+          const t0 = performance.now();
+          const dur = 600;
+          const step = (now) => {
+            if (episodeAudio !== audio) return;
+            const p = Math.min(1, (now - t0) / dur);
+            audio.volume = p;
+            if (p < 1) requestAnimationFrame(step);
+          };
+          requestAnimationFrame(step);
+        }).catch(() => {
+          playing = false;
+          updateIcons();
+        });
       } catch (e) {}
     }
+    elapsed = 0;
+    updateProgress();
     return;
   }
-  const next = getNextIndex();
+  const next = getNextIndexAuto();
   if (next < 0) { finish(); return; }
-  loadEpisode(next);
+  switchToEpisode(next, true);
 }
 
 const coverCache = {};
@@ -2256,27 +2444,6 @@ function onDragUp(e){
   }, 480);
 }
 
-function setCurrentTrack(n){
-  if (EPISODES.length === 0) return;
-  if (n === current && episodeAudio) {
-    updateFullUI();
-    updateMiniUI();
-    return;
-  }
-  pause();
-  if (episodeAudio) {
-    try { episodeAudio.pause(); } catch (e) {}
-    try { episodeAudio.src = ''; } catch (e) {}
-    episodeAudio = null;
-    loadedIndex = -1;
-  }
-  current = n;
-  elapsed = 0;
-  if (shuffleOn) buildShuffleOrder(n);
-  updateFullUI();
-  updateMiniUI();
-}
-
 function goToPage(n){
   removeMapArrow();
   const nn = Math.max(0, Math.min(totalPages - 1, n));
@@ -2288,11 +2455,7 @@ function goToPage(n){
 
 function loadEpisode(n){
   if (EPISODES.length === 0) return;
-  pause();
-  setCurrentTrack(n);
-  const page = Math.floor(n / PER_PAGE);
-  if (page !== currentPage) goToPage(page);
-  play();
+  switchToEpisode(n, playing);
 }
 
 let miniPtr = null;
@@ -2302,22 +2465,12 @@ function swipeEpisode(dir){
   if (current < 0) return;
   let target;
   if (dir > 0) {
-    target = getNextIndex();
-    if (target < 0) return;
+    target = getNextIndexManual();
   } else {
-    if (shuffleOn) {
-      target = getPrevIndex();
-      if (target < 0) return;
-    } else {
-      target = (current - 1 + EPISODES.length) % EPISODES.length;
-    }
+    target = getPrevIndexManual();
   }
-  const wasPlaying = playing;
-  pause();
-  setCurrentTrack(target);
-  const page = Math.floor(target / PER_PAGE);
-  if (page !== currentPage) goToPage(page);
-  if (wasPlaying) play();
+  if (target < 0 || target === current) return;
+  switchToEpisode(target, playing);
 }
 
 miniPlayer.addEventListener('pointerdown', (e) => {
@@ -2366,21 +2519,16 @@ document.getElementById('prevBtn').addEventListener('click', () => {
     updateProgress();
     return;
   }
-  if (shuffleOn) {
-    const prev = getPrevIndex();
-    if (prev < 0) return;
-    loadEpisode(prev);
-    return;
-  }
-  const n = (current - 1 + EPISODES.length) % EPISODES.length;
-  loadEpisode(n);
+  const prev = getPrevIndexManual();
+  if (prev < 0 || prev === current) return;
+  switchToEpisode(prev, playing);
 });
 
 document.getElementById('nextBtn').addEventListener('click', () => {
   if (current < 0) return;
-  const next = getNextIndex();
-  if (next < 0) { pause(); return; }
-  loadEpisode(next);
+  const next = getNextIndexManual();
+  if (next < 0 || next === current) return;
+  switchToEpisode(next, playing);
 });
 
 repeatBtn.addEventListener('click', () => {
@@ -2494,6 +2642,7 @@ window.addEventListener('resize', resize);
 
 async function init(){
   resize();
+  updateMuteIcon();
   updateIcons();
   updateRepeatIcon();
   updateShuffleIcon();
