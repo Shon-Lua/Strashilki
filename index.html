@@ -10,12 +10,15 @@
 <meta name="apple-mobile-web-app-title" content="Страшилки">
 <title>Страшилки</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:wght@400;500;600&display=swap');
+
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%}
   body{
     background:#000;
     color:#c8c8d2;
-    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-family:'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+    font-weight:500;
     overflow:hidden;
     -webkit-font-smoothing:antialiased;
     user-select:none;
@@ -23,6 +26,10 @@
     -webkit-touch-callout:none;
     -webkit-tap-highlight-color:transparent;
     overscroll-behavior:none;
+  }
+  button, input, select, textarea{
+    font-family:inherit;
+    font-weight:inherit;
   }
 
   canvas#bg{position:fixed;inset:0;z-index:0;display:block;background:#000;contain:strict}
@@ -116,7 +123,8 @@
     position:absolute;top:calc(100% - 2px);left:50%;
     transform:translate(-50%,-6px);
     white-space:nowrap;
-    font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;
+    font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+    font-weight:500;
     color:#c8c3d6;
     opacity:0;transition:.35s ease;pointer-events:none;
     text-shadow:0 0 14px #000, 0 0 6px #000, 0 0 2px #000;
@@ -134,14 +142,17 @@
 
   .pageNav{
     position:fixed;top:32px;right:28px;z-index:6;
-    display:flex;gap:6px;align-items:baseline;
-    font-size:11px;letter-spacing:.3em;
-    color:rgba(255,255,255,.28);
+    display:flex;gap:8px;align-items:baseline;
+    font-family:'Cinzel', Georgia, serif;
+    font-size:14px;letter-spacing:.32em;
+    font-weight:500;
+    color:#fff;
     font-variant-numeric:tabular-nums;
     pointer-events:none;
+    text-shadow:0 0 10px rgba(0,0,0,.95), 0 0 22px rgba(255,255,255,.22);
   }
-  .pageNav i{font-style:normal;opacity:.4}
-  #pageCurrent{color:rgba(255,255,255,.8)}
+  .pageNav i{font-style:normal;opacity:.55;color:#fff}
+  #pageCurrent{color:#fff;opacity:1}
 
   /* ===== TOASTS ===== */
   #toastContainer{
@@ -161,14 +172,16 @@
     position:relative;
     pointer-events:auto;
     max-width:100%;
-    padding:12px 20px;
+    padding:12px 22px;
     background:rgba(8,5,7,.94);
     border:1px solid rgba(255,255,255,.1);
     border-radius:3px;
-    font-size:10px;
+    font-family:'Cormorant Garamond', Georgia, serif;
+    font-weight:500;
+    font-size:12px;
     letter-spacing:.22em;
     text-transform:uppercase;
-    color:#c8c3d6;
+    color:#ded9ea;
     text-align:center;
     box-shadow:0 10px 34px rgba(0,0,0,.85), 0 0 22px rgba(255,255,255,.03);
     transform:translate3d(0,-140%,0);
@@ -213,17 +226,19 @@
   .ghostLabel{
     position:fixed;
     transform:translate(-50%, 0);
-    padding:7px 14px;
-    background:rgba(6,4,5,.85);
-    border-radius:3px;
-    font-size:9.5px;
+    padding:0;
+    background:none;
+    border:none;
+    font-family:'Cormorant Garamond', Georgia, serif;
+    font-weight:500;
+    font-size:11px;
     letter-spacing:.22em;
     text-transform:uppercase;
-    color:#e2ddee;
+    color:#fff;
     white-space:nowrap;
     pointer-events:none;
     z-index:201;
-    text-shadow:0 0 14px #000, 0 0 6px #000, 0 0 2px #000;
+    text-shadow:0 0 16px #000, 0 0 8px #000, 0 0 3px #000;
     max-width:82vw;
     overflow:hidden;
     text-overflow:ellipsis;
@@ -255,8 +270,10 @@
     box-shadow:0 0 60px rgba(255,255,255,.4), inset 0 0 60px rgba(255,255,255,.18);
   }
   .dropzone-label{
-    font-size:9px;
-    letter-spacing:.32em;
+    font-family:'Cormorant Garamond', Georgia, serif;
+    font-weight:500;
+    font-size:10px;
+    letter-spacing:.3em;
     text-transform:uppercase;
     color:rgba(255,255,255,.45);
     text-align:center;
@@ -317,18 +334,13 @@
 
   .titleBlock{width:100%;text-align:center}
   .titleBlock h2{
-    font-family:Georgia,"Times New Roman",serif;
-    font-weight:400;
-    font-size:clamp(17px, 4.5vw, 22px);
-    letter-spacing:.05em;
+    font-family:'Cinzel', Georgia, serif;
+    font-weight:500;
+    font-size:clamp(18px, 4.6vw, 23px);
+    letter-spacing:.08em;
     color:#eae6f2;
     line-height:1.3;
     text-shadow:0 0 22px rgba(255,255,255,.14);
-  }
-  .titleBlock p{
-    margin-top:8px;
-    font-size:10px;letter-spacing:.3em;text-transform:uppercase;
-    color:#5e596f;
   }
 
   .progressRow{
@@ -336,9 +348,11 @@
     display:flex;align-items:center;gap:12px;
   }
   .timeTxt{
-    font-size:10.5px;
-    letter-spacing:.1em;
-    color:#5e596f;
+    font-family:'Cinzel', Georgia, serif;
+    font-weight:400;
+    font-size:11px;
+    letter-spacing:.12em;
+    color:#6a6480;
     font-variant-numeric:tabular-nums;
     min-width:36px;
   }
@@ -491,9 +505,11 @@
     pointer-events:none;
   }
   .mini-title{
-    font-size:12px;
+    font-family:'Cormorant Garamond', Georgia, serif;
+    font-weight:500;
+    font-size:14px;
     color:#e2ddee;
-    letter-spacing:.02em;
+    letter-spacing:.03em;
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
@@ -548,11 +564,11 @@
   }
 
   @media (max-width:640px){
-    .pageNav{top:22px;right:18px;font-size:10px}
+    .pageNav{top:22px;right:18px;font-size:13px;letter-spacing:.28em;gap:7px}
     .star{width:68px;height:68px}
-    .star-label{font-size:8.5px;letter-spacing:.14em;top:calc(100% + 2px)}
-    .toast{font-size:9px;padding:10px 16px;letter-spacing:.18em}
-    .playerCard{width:88vw;gap:18px}
+    .star-label{font-size:9.5px;letter-spacing:.14em;top:calc(100% + 2px)}
+    .toast{font-size:10px;padding:10px 16px;letter-spacing:.18em}
+    .playerCard{width:88vw;gap:20px}
     .controls{gap:8px}
     .ctrlBtn{width:42px;height:42px}
     .ctrlBtn svg{width:16px;height:16px}
@@ -565,7 +581,8 @@
     .dropzone{width:120px;height:120px;bottom:80px}
     #miniPlayer{grid-template-columns:40px 1fr 36px;padding:8px 12px 8px 8px}
     .mini-cover{width:40px;height:40px}
-    .ghostLabel{font-size:9px;letter-spacing:.16em;padding:6px 11px}
+    .mini-title{font-size:13px}
+    .ghostLabel{font-size:10px;letter-spacing:.16em}
   }
 </style>
 </head>
@@ -607,7 +624,6 @@
     <div class="cover" id="cover"></div>
     <div class="titleBlock">
       <h2 id="pTitle">—</h2>
-      <p id="pSub">—</p>
     </div>
     <div class="progressRow">
       <span class="timeTxt" id="pCur">0:00</span>
@@ -779,7 +795,6 @@ const EPISODES = TITLES.map((title, i) => {
   const dur = DURATIONS[i % DURATIONS.length];
   return {
     title,
-    sub: fmt(dur),
     dur, tones: prof.tones, filter: prof.filter, noiseFreq: prof.noiseFreq, noiseGain: prof.noiseGain
   };
 });
@@ -798,7 +813,6 @@ const overlay = document.getElementById('playerOverlay');
 const playerCard = document.getElementById('playerCard');
 const cover = document.getElementById('cover');
 const pTitle = document.getElementById('pTitle');
-const pSub = document.getElementById('pSub');
 const pCur = document.getElementById('pCur');
 const pDur = document.getElementById('pDur');
 const progressBar = document.getElementById('progressBar');
@@ -1343,14 +1357,12 @@ function updateProgress(){
 function updateFullUI(){
   if (current < 0) {
     pTitle.textContent = '—';
-    pSub.textContent = '—';
     pDur.textContent = '0:00';
     cover.innerHTML = '';
     return;
   }
   const ep = EPISODES[current];
   pTitle.textContent = ep.title;
-  pSub.textContent = ep.sub;
   pDur.textContent = fmt(ep.dur);
   cover.innerHTML = makeCoverSVG(current);
   updateProgress();
@@ -1370,7 +1382,7 @@ function openOverlay(){
   miniPlayer.classList.remove('show');
   updateFullUI();
   if (!overlayHintShown) {
-    showToast('нажмите снаружи · чтобы свернуть', 3200);
+    showToast('нажмите снаружи, чтобы свернуть', 3200);
     overlayHintShown = true;
   }
 }
@@ -1420,7 +1432,7 @@ function showGhostLabel(text){
 function moveGhostLabel(x, y){
   if (!ghostLabel) return;
   ghostLabel.style.left = x + 'px';
-  ghostLabel.style.top = (y + 22) + 'px';
+  ghostLabel.style.top = (y + 24) + 'px';
 }
 function removeGhostLabel(){
   if (ghostLabel) {
@@ -1744,7 +1756,7 @@ updateRepeatIcon();
 updateShuffleIcon();
 requestAnimationFrame(loop);
 
-setTimeout(() => showToast('прокрутите небо · коснитесь звезды', 6000), 700);
+setTimeout(() => showToast('прокрутите небо, коснитесь звезды', 6000), 700);
 </script>
 </body>
 </html>
