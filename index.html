@@ -187,35 +187,17 @@
   #skyHintBanner.show{opacity:1;pointer-events:auto}
   .skyHintCard{
     width:min(440px, 100%);
-    padding:36px 32px 32px;
+    padding:34px 30px 30px;
     border:1px solid rgba(255,255,255,.14);
     border-radius:4px;
     background:rgba(8,6,10,.94);
     box-shadow:0 20px 60px rgba(0,0,0,.85), 0 0 60px -10px rgba(255,255,255,.1);
     text-align:center;
   }
-  .skyHintText{
-    font-family:'Cormorant Garamond', Georgia, serif;
-    font-weight:500;
-    font-size:clamp(15px, 3.6vw, 17px);
-    letter-spacing:.06em;
-    color:#ded9ea;
-    line-height:1.6;
-    margin-bottom:10px;
-  }
-  .skyHintText b{
-    font-family:'Cinzel', Georgia, serif;
-    font-weight:500;
-    color:#fff;
-    letter-spacing:.18em;
-    font-size:.92em;
-    display:inline-block;
-    padding:0 2px;
-  }
   .skyHintList{
     list-style:none;
     text-align:left;
-    margin:16px auto 24px;
+    margin:0 auto 24px;
     padding:14px 18px;
     background:rgba(255,255,255,.025);
     border:1px solid rgba(255,255,255,.07);
@@ -227,11 +209,11 @@
     padding-left:20px;
     font-family:'Cormorant Garamond', Georgia, serif;
     font-weight:500;
-    font-size:13.5px;
+    font-size:14px;
     letter-spacing:.03em;
     line-height:1.65;
     color:#b8b2c5;
-    margin-bottom:8px;
+    margin-bottom:10px;
   }
   .skyHintList li:last-child{margin-bottom:0}
   .skyHintList li::before{
@@ -240,6 +222,10 @@
     left:2px;top:.72em;
     width:8px;height:1px;
     background:rgba(255,255,255,.55);
+  }
+  .skyHintList b{
+    color:#eae6f2;
+    font-weight:600;
   }
   .skyHintCheck{
     display:inline-flex;
@@ -360,10 +346,9 @@
     .extGo{padding:14px 44px;font-size:11px}
     #searchInput{padding:11px 15px;font-size:14px}
     .suggestion{padding:10px 14px;font-size:13.5px}
-    .skyHintCard{padding:30px 22px 26px}
-    .skyHintText{font-size:14px;margin-bottom:8px}
-    .skyHintList{padding:12px 14px;margin:14px auto 20px}
-    .skyHintList li{font-size:12.5px;padding-left:18px}
+    .skyHintCard{padding:28px 22px 26px}
+    .skyHintList{padding:12px 14px;margin:0 auto 20px}
+    .skyHintList li{font-size:13px;padding-left:18px}
     .skyHintCheck{font-size:10px;letter-spacing:.18em;margin-bottom:20px}
     .skyHintBtn{padding:12px 48px;font-size:10.5px;letter-spacing:.42em;text-indent:.42em}
   }
@@ -458,11 +443,10 @@
 </div>
 <div id="skyHintBanner">
   <div class="skyHintCard">
-    <div class="skyHintText">Добро пожаловать в <b>Страшилки</b></div>
     <ul class="skyHintList">
-      <li>Прокручивайте небо вверх и вниз — это листает страницы с выпусками</li>
-      <li>Коснитесь звезды — чтобы открыть плеер и начать слушать</li>
-      <li>Звезду можно <b>перетащить вниз</b>, в круг — так выпуск тоже запустится</li>
+      <li>Листайте небо вверх и вниз. Так вы переключаете страницы с выпусками</li>
+      <li>Нажмите на звезду, чтобы открыть плеер и начать слушать</li>
+      <li>Звезду можно <b>перетащить вниз в круг</b>. Так выпуск тоже запустится</li>
     </ul>
     <div class="skyHintCheck" id="skyHintCheck">
       <span class="skyHintCheckBox"></span>
@@ -679,7 +663,7 @@ function detectGitHubRepo(){
   } catch (e) { return null; }
 }
 
-const GH_TREE_KEY = 'ghTreeCache_v11';
+const GH_TREE_KEY = 'ghTreeCache_v12';
 const GH_TREE_TTL = 5 * 60 * 1000;
 
 let ghTreeCache = null;
@@ -823,7 +807,9 @@ async function probeDataFile(num){
     const cl = parseInt(res.headers.get('content-length') || '0', 10);
     if (cl > 30000) return true;
     return false;
-  } catch (e) { return false; }
+  } catch (e) {
+    return false;
+  }
 }
 
 async function fetchText(url){
@@ -1313,7 +1299,6 @@ function toggleMute(){
   try { localStorage.setItem('ambientMuted', ambientMuted ? '1' : '0'); } catch(e){}
   updateMuteIcon();
   applyAmbientState();
-  showToast(ambientMuted ? 'фон выключен' : 'фон включён', 1500);
 }
 
 muteBtn.addEventListener('click', toggleMute);
