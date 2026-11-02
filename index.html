@@ -154,7 +154,6 @@
   .pageNav i{font-style:normal;opacity:.55;color:#fff}
   #pageCurrent{color:#fff;opacity:1}
 
-  /* ===== TOASTS ===== */
   #toastContainer{
     position:fixed;
     top:calc(env(safe-area-inset-top, 0px) + 16px);
@@ -544,6 +543,146 @@
   .mini-btn:hover{background:rgba(255,255,255,.14)}
   .mini-btn svg{width:16px;height:16px;fill:currentColor}
 
+  /* ===== AGE GATE ===== */
+  #ageGate{
+    position:fixed;inset:0;z-index:100;
+    background:radial-gradient(ellipse at 50% 42%, rgba(24,16,20,.96) 0%, rgba(0,0,0,.995) 72%);
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+    opacity:1;
+    transition:opacity .55s ease;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    padding:40px 22px;
+    overscroll-behavior:contain;
+  }
+  #ageGate.hide{opacity:0;pointer-events:none}
+  #ageGateInner{
+    min-height:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    gap:20px;
+    max-width:560px;
+    margin:0 auto;
+  }
+  .ageTitle{
+    font-family:'Cinzel', Georgia, serif;
+    font-weight:500;
+    font-size:clamp(30px,7.4vw,46px);
+    letter-spacing:.42em;
+    text-indent:.42em;
+    color:#f3eff8;
+    text-shadow:0 0 26px rgba(255,255,255,.2), 0 0 70px rgba(180,60,60,.22);
+    animation:ageFlicker 8s infinite;
+    line-height:1.15;
+  }
+  @keyframes ageFlicker{
+    0%,100%{opacity:.95}
+    41%{opacity:.95}
+    42%{opacity:.32}
+    44%{opacity:.92}
+    46%{opacity:.45}
+    48%{opacity:.97}
+    67%{opacity:.83}
+    69%{opacity:1}
+  }
+  .ageBadge{
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    padding:7px 20px;
+    border:1px solid rgba(255,255,255,.35);
+    font-family:'Cinzel', Georgia, serif;
+    font-size:12px;letter-spacing:.32em;
+    color:#fff;
+    border-radius:2px;
+    box-shadow:0 0 24px rgba(255,255,255,.1), inset 0 0 14px rgba(255,255,255,.05);
+  }
+  .ageBadge span{
+    display:inline-block;
+    width:5px;height:5px;
+    border-radius:50%;
+    background:#fff;
+    box-shadow:0 0 8px rgba(255,255,255,.8);
+    animation:agePulse 2s ease-in-out infinite;
+  }
+  @keyframes agePulse{
+    0%,100%{opacity:.35}
+    50%{opacity:1}
+  }
+  .ageDivider{
+    width:70px;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.42),transparent);
+    margin:2px 0;
+  }
+  .ageText{
+    font-family:'Cormorant Garamond', Georgia, serif;
+    font-weight:500;
+    font-size:clamp(14px,3.4vw,16px);
+    line-height:1.65;
+    letter-spacing:.02em;
+    color:#b8b2c5;
+    text-align:left;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    width:100%;
+  }
+  .ageText p{
+    position:relative;
+    padding-left:22px;
+  }
+  .ageText p::before{
+    content:'';
+    position:absolute;
+    left:2px;top:.75em;
+    width:9px;height:1px;
+    background:rgba(255,255,255,.42);
+  }
+  .ageText strong{
+    color:#eae6f2;
+    font-weight:600;
+    letter-spacing:.04em;
+  }
+  .ageNote{
+    font-family:'Cormorant Garamond', Georgia, serif;
+    font-weight:500;
+    font-size:11px;
+    letter-spacing:.26em;
+    text-transform:uppercase;
+    color:#5e596f;
+    margin-top:4px;
+    line-height:1.7;
+  }
+  .ageEnter{
+    margin-top:8px;
+    padding:17px 60px;
+    background:transparent;
+    border:1px solid rgba(255,255,255,.32);
+    color:#eae6f2;
+    font-family:'Cinzel', Georgia, serif;
+    font-size:13px;
+    letter-spacing:.5em;
+    text-indent:.5em;
+    text-transform:uppercase;
+    cursor:pointer;
+    transition:color .3s ease, border-color .3s ease, box-shadow .3s ease, letter-spacing .3s ease;
+    border-radius:2px;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .ageEnter:hover{
+    color:#fff;
+    border-color:#fff;
+    box-shadow:0 0 44px rgba(255,255,255,.28), inset 0 0 26px rgba(255,255,255,.07);
+    letter-spacing:.58em;
+  }
+  .ageEnter:active{
+    box-shadow:0 0 24px rgba(255,255,255,.35), inset 0 0 32px rgba(255,255,255,.14);
+  }
+
   @media (max-width:768px){
     .grain{animation:none}
     #playerOverlay{
@@ -559,6 +698,11 @@
     .toast{
       backdrop-filter:none;
       -webkit-backdrop-filter:none;
+    }
+    #ageGate{
+      backdrop-filter:none;
+      -webkit-backdrop-filter:none;
+      background:radial-gradient(ellipse at 50% 42%, rgba(22,14,18,.98) 0%, rgba(0,0,0,.998) 72%);
     }
     #sky{transition:transform .8s cubic-bezier(.7,0,.28,1)}
   }
@@ -583,6 +727,11 @@
     .mini-cover{width:40px;height:40px}
     .mini-title{font-size:13px}
     .ghostLabel{font-size:10px;letter-spacing:.16em}
+    #ageGate{padding:32px 20px}
+    .ageText{font-size:14px;gap:12px}
+    .ageText p{padding-left:18px}
+    .ageEnter{padding:15px 44px;font-size:12px;letter-spacing:.42em;text-indent:.42em}
+    .ageEnter:hover{letter-spacing:.46em}
   }
 </style>
 </head>
@@ -650,6 +799,23 @@
         <svg viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
       </button>
     </div>
+  </div>
+</div>
+
+<div id="ageGate" role="dialog" aria-modal="true" aria-labelledby="ageTitleEl">
+  <div id="ageGateInner">
+    <div class="ageTitle" id="ageTitleEl">СТРАШИЛКИ</div>
+    <div class="ageBadge"><span></span>18+</div>
+    <div class="ageDivider"></div>
+    <div class="ageText">
+      <p><strong>Внимание.</strong> Подкаст «Страшилки» предназначен исключительно для взрослой аудитории. Все материалы доступны только лицам, достигшим <strong>18 лет</strong>.</p>
+      <p>В выпусках может содержаться <strong>нецензурная лексика</strong>, описание сцен насилия, смерти, психических расстройств, а также других неприятных и тревожных событий.</p>
+      <p>Контент <strong>не рекомендован</strong> людям с повышенной чувствительностью, тревожными состояниями или склонностью к впечатлительности.</p>
+      <p>Большинство историй — <strong>вымысел</strong>. Всё происходящее является <strong>художественной литературой</strong> и не имеет отношения к реальным людям, событиям или местам.</p>
+    </div>
+    <div class="ageDivider"></div>
+    <div class="ageNote">нажимая «войти», вы подтверждаете, что вам есть 18 лет,<br>и принимаете данные условия</div>
+    <button class="ageEnter" id="ageEnterBtn">Войти</button>
   </div>
 </div>
 
@@ -829,6 +995,8 @@ const miniFill = document.getElementById('miniFill');
 const miniPlayBtn = document.getElementById('miniPlayBtn');
 const miniPlayIcon = document.getElementById('miniPlayIcon');
 
+let ageGateActive = true;
+
 let W = 0, H = 0;
 function resize(){
   W = canvas.width = Math.floor(innerWidth * dpr);
@@ -900,6 +1068,17 @@ function showToast(text, duration){
   });
   return el;
 }
+
+/* ================= AGE GATE ================= */
+const ageGateEl = document.getElementById('ageGate');
+document.getElementById('ageEnterBtn').addEventListener('click', () => {
+  ageGateEl.classList.add('hide');
+  setTimeout(() => {
+    ageGateEl.remove();
+    ageGateActive = false;
+    showToast('прокрутите небо, коснитесь звезды', 6000);
+  }, 600);
+});
 
 /* ================= BACKGROUND ================= */
 const spheres = [];
@@ -1683,6 +1862,7 @@ miniPlayBtn.addEventListener('click', (e) => {
 
 /* ================= KEYBOARD / SCROLL ================= */
 document.addEventListener('keydown', (e) => {
+  if (ageGateActive) return;
   if (overlay.classList.contains('show')) {
     if (e.key === 'Escape') closeOverlay();
     return;
@@ -1710,7 +1890,7 @@ let wheelAccum = 0;
 let wheelTimer = null;
 
 window.addEventListener('wheel', (e) => {
-  if (overlay.classList.contains('show') || dragState) return;
+  if (ageGateActive || overlay.classList.contains('show') || dragState) return;
   wheelAccum += e.deltaY;
   clearTimeout(wheelTimer);
   wheelTimer = setTimeout(() => {
@@ -1725,7 +1905,7 @@ window.addEventListener('wheel', (e) => {
 let touchY = 0;
 let touchActive = false;
 window.addEventListener('touchstart', (e) => {
-  if (overlay.classList.contains('show') || dragState) return;
+  if (ageGateActive || overlay.classList.contains('show') || dragState) return;
   touchY = e.touches[0].clientY;
   touchActive = true;
 }, { passive: true });
@@ -1755,8 +1935,6 @@ updateIcons();
 updateRepeatIcon();
 updateShuffleIcon();
 requestAnimationFrame(loop);
-
-setTimeout(() => showToast('прокрутите небо, коснитесь звезды', 6000), 700);
 </script>
 </body>
 </html>
