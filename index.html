@@ -434,20 +434,6 @@ function buildUrl(segments){
   return segments.filter(s => s !== null && s !== undefined && s !== '').map(encodePathSegment).join('/');
 }
 
-async function fileExists(url){
-  try {
-    const res = await fetch(url, { method: 'HEAD', cache: 'no-store' });
-    if (res.ok) return true;
-    if (res.status === 405) {
-      const res2 = await fetch(url, { headers: { 'Range': 'bytes=0-0' }, cache: 'no-store' });
-      return res2.ok;
-    }
-    return false;
-  } catch (e) {
-    return false;
-  }
-}
-
 function detectGitHubRepo(){
   try {
     const host = location.hostname;
@@ -461,7 +447,7 @@ function detectGitHubRepo(){
   } catch (e) { return null; }
 }
 
-const GH_TREE_KEY = 'ghTreeCache_v6';
+const GH_TREE_KEY = 'ghTreeCache_v7';
 const GH_TREE_TTL = 30 * 60 * 1000;
 
 let ghTreeCache = null;
@@ -525,90 +511,70 @@ function levenshtein(a, b){
   }
   return d[m][n];
 }
-function numberMatch(a, b){
-  const na = String(a).match(/\d+/);
-  const nb = String(b).match(/\d+/);
-  if (na && nb) return na[0] === nb[0];
-  return true;
-}
 
-function collectFolders(tree){
-  const folders = new Set();
+function getEpisodeFolders(tree){
+  const folders = [];
   for (const f of tree) {
-    if (!f || !f.path) continue;
+    if (!f.path) continue;
     const parts = f.path.split('/');
-    for (let i = 1; i <= parts.length - 1; i++) folders.add(parts.slice(0, i).join('/'));
+    if (parts.length >= 2 && parts[0] === 'Episodes') {
+      if (!folders.includes(parts[1])) folders.push(parts[1]);
+    }
   }
   return folders;
 }
 
-function findFolderInTree(tree, candidates, folders){
-  if (!folders) folders = collectFolders(tree);
-
-  for (const c of candidates) {
-    if (!c) continue;
-    if (folders.has('Episodes/' + c)) return 'Episodes/' + c + '/';
-  }
-  for (const c of candidates) {
-    if (!c) continue;
-    if (folders.has(c)) return c + '/';
-  }
-
-  const looseCands = candidates.filter(Boolean).map(looseNorm).filter(Boolean);
-  for (const folder of folders) {
-    if (!folder.startsWith('Episodes/')) continue;
-    const name = folder.slice('Episodes/'.length);
-    if (name.includes('/')) continue;
-    const ln = looseNorm(name);
-    if (!ln) continue;
-    for (let i = 0; i < looseCands.length; i++) {
-      if (looseCands[i] === ln) {
-        if (numberMatch(name, candidates[i])) return folder + '/';
-      }
-    }
-  }
-
-  let best = null, bestScore = 0;
-  for (const folder of folders) {
-    if (!folder.startsWith('Episodes/')) continue;
-    const name = folder.slice('Episodes/'.length);
-    if (name.includes('/')) continue;
-    const ln = looseNorm(name);
-    if (!ln) continue;
-    for (const cand of candidates) {
-      if (!cand) continue;
-      const lc = looseNorm(cand);
-      if (!lc) continue;
-      if (!numberMatch(name, cand)) continue;
-      const dist = levenshtein(ln, lc);
-      const maxLen = Math.max(ln.length, lc.length);
-      const score = 1 - dist / maxLen;
-      if (score > bestScore) { bestScore = score; best = folder + '/'; }
-    }
-  }
-  if (bestScore >= 0.75) return best;
-  return null;
-}
-
-function pickFromNames(names){
-  let mp3 = null, cover = null, nameTxt = null;
-  for (const n of names) {
-    if (!mp3 && /\.mp3$/i.test(n)) mp3 = n;
-    if (!cover && /^cover\.(jpe?g|png|webp|gif)$/i.test(n)) cover = n;
-    if (!nameTxt && /^name\.txt$/i.test(n)) nameTxt = n;
-  }
-  return { mp3, cover, nameTxt };
-}
-function findFilesInFolder(tree, folderPath){
-  const names = [];
+function listFilesInFolder(tree, folderPath){
+  const prefix = folderPath.endsWith('/') ? folderPath : folderPath + '/';
+  const files = [];
   for (const f of tree) {
     if (!f || f.type !== 'blob' || !f.path) continue;
-    if (!f.path.startsWith(folderPath)) continue;
-    const rel = f.path.slice(folderPath.length);
+    if (!f.path.startsWith(prefix)) continue;
+    const rel = f.path.slice(prefix.length);
     if (rel.includes('/')) continue;
-    names.push(rel);
+    files.push(rel);
   }
-  return pickFromNames(names);
+  return files;
+}
+
+function findEpisodeFolder(episodeFolders, candidates){
+  for (const c of candidates) {
+    if (c && episodeFolders.includes(c)) return c;
+  }
+  const lowerCands = candidates.filter(Boolean).map(c => c.toLowerCase());
+  for (const folder of episodeFolders) {
+    if (lowerCands.includes(folder.toLowerCase())) return folder;
+  }
+  const normCands = candidates.filter(Boolean).map(looseNorm);
+  for (const folder of episodeFolders) {
+    if (normCands.includes(looseNorm(folder))) return folder;
+  }
+  let best = null, bestScore = 0;
+  for (const folder of episodeFolders) {
+    for (const cand of candidates) {
+      if (!cand) continue;
+      const a = looseNorm(folder);
+      const b = looseNorm(cand);
+      if (!a || !b) continue;
+      const dist = levenshtein(a, b);
+      const score = 1 - dist / Math.max(a.length, b.length);
+      if (score > bestScore) { bestScore = score; best = folder; }
+    }
+  }
+  return bestScore >= 0.85 ? best : null;
+}
+
+function findDataTracks(tree){
+  const tracks = [];
+  for (const f of tree) {
+    if (!f || f.type !== 'blob' || !f.path) continue;
+    if (!f.path.startsWith('DATA/')) continue;
+    const rel = f.path.slice(5);
+    if (rel.includes('/')) continue;
+    const m = rel.match(/^(\d+)\.mp3$/i);
+    if (m) tracks.push(parseInt(m[1], 10));
+  }
+  return tracks.sort((a, b) => a - b);
 }
 
 async function fetchText(url){
@@ -624,7 +590,7 @@ async function fetchText(url){
 }
 
 function parseJsonEntry(key, val){
-  const out = { folderKey: key, folderName: key, title: key, audioFile: null, coverFile: null };
+  const out = { folderKey: key, folderName: key, title: key };
   if (typeof val === 'string') {
     out.folderName = val || key;
     out.title = val || key;
@@ -634,8 +600,6 @@ function parseJsonEntry(key, val){
     if (val.title) out.title = val.title;
     else if (val.name) out.title = val.name;
     else if (val.folder) out.title = val.folder;
-    if (val.audio) out.audioFile = val.audio;
-    if (val.cover) out.coverFile = val.cover;
   }
   return out;
 }
@@ -643,68 +607,6 @@ function parseJsonEntry(key, val){
 function extractNumber(str){
   const m = String(str).match(/(\d+)/);
   return m ? parseInt(m[1], 10) : -1;
-}
-
-function sanitizeVariants(name){
-  const out = new Set();
-  out.add(name);
-  out.add(name.replace(/[()]/g, '').replace(/\s+/g, ' ').trim());
-  out.add(name.replace(/\s*\(/g, ' ').replace(/\)/g, ' ').replace(/\s+/g, ' ').trim());
-  out.add(name.replace(/[()]/g, '').trim());
-  return [...out];
-}
-
-async function resolveAudioForFolder(folderCandidates, extraNames){
-  const names = [];
-  if (extraNames) for (const n of extraNames) if (n) names.push(n);
-
-  for (const c of folderCandidates) {
-    if (!c) continue;
-    for (const v of sanitizeVariants(c)) {
-      names.push(v + '.mp3');
-      names.push(v + '.MP3');
-    }
-  }
-  names.push('audio.mp3', 'Audio.mp3', 'AUDIO.MP3');
-  names.push('track.mp3', 'Track.mp3', 'podcast.mp3', 'Podcast.mp3', '1.mp3');
-
-  const seen = new Set();
-  const unique = [];
-  for (const n of names) {
-    if (!n) continue;
-    const low = n.toLowerCase();
-    if (seen.has(low)) continue;
-    seen.add(low);
-    unique.push(n);
-  }
-
-  for (const folder of folderCandidates) {
-    if (!folder) continue;
-    for (const name of unique) {
-      const url = buildUrl(['Episodes', folder, name]);
-      if (await fileExists(url)) return { audioUrl: url, actualFolder: folder };
-    }
-  }
-  return null;
-}
-
-async function resolveCoverForFolder(folder){
-  const covers = ['Cover.jpg', 'cover.jpg', 'Cover.png', 'cover.png', 'Cover.jpeg', 'cover.jpeg', 'Cover.webp', 'cover.webp', 'Cover.gif', 'cover.gif'];
-  for (const n of covers) {
-    const url = buildUrl(['Episodes', folder, n]);
-    if (await fileExists(url)) return url;
-  }
-  return null;
-}
-
-async function loadManifest(){
-  try {
-    const res = await fetch('Episodes/files.json', { cache: 'no-store' });
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (!data || typeof data !== 'object') return null;
-    return data;
-  } catch (e) { return null; }
 }
 
 async function loadEpisodeList(){
@@ -725,83 +627,71 @@ async function loadEpisodeList(){
   });
 
   const tree = await getFullTree();
-  const folders = tree ? collectFolders(tree) : null;
-  const manifest = !tree ? await loadManifest() : null;
-
-  const episodes = entries.map(([key, val]) => {
-    const p = parseJsonEntry(key, val);
-    return {
-      folderKey: key,
-      folderName: p.folderName,
-      title: p.title,
-      audioFile: p.audioFile,
-      coverFile: p.coverFile,
-      audioUrl: null,
-      coverUrl: null,
-      actualFolder: null,
-      dur: 0,
-      resolved: false
-    };
-  });
-
-  for (const ep of episodes) {
-    const candidates = [...new Set([ep.folderName, ep.folderKey, ep.title].filter(Boolean))];
-    if (!candidates.length) continue;
-
-    if (tree && folders) {
-      const folderPath = findFolderInTree(tree, candidates, folders);
-      if (folderPath) {
-        const { mp3, cover: coverFile, nameTxt } = findFilesInFolder(tree, folderPath);
-        const pathSegs = folderPath.split('/').filter(Boolean);
-        ep.actualFolder = pathSegs[pathSegs.length - 1];
-        if (mp3) ep.audioUrl = buildUrl(pathSegs.concat([mp3]));
-        if (coverFile) ep.coverUrl = buildUrl(pathSegs.concat([coverFile]));
-        if (nameTxt) {
-          const txt = await fetchText(buildUrl(pathSegs.concat([nameTxt])));
-          if (txt) ep.title = txt;
-        }
-        ep.resolved = !!mp3;
-        if (ep.resolved) continue;
-      }
-    }
-
-    if (manifest) {
-      for (const cand of candidates) {
-        const m = manifest[cand];
-        if (!m) continue;
-        const audioFile = typeof m === 'string' ? m : m.audio;
-        const coverFile = typeof m === 'object' ? m.cover : null;
-        const folder = typeof m === 'object' ? (m.folder || cand) : cand;
-        const titleFromM = typeof m === 'object' ? m.name : null;
-        if (titleFromM) ep.title = titleFromM;
-        if (audioFile) {
-          ep.audioUrl = buildUrl(['Episodes', folder, audioFile]);
-          ep.actualFolder = folder;
-          ep.coverUrl = buildUrl(['Episodes', folder, coverFile || 'Cover.jpg']);
-          ep.resolved = true;
-          break;
-        }
-      }
-      if (ep.resolved) continue;
-    }
-
-    const extraNames = [];
-    if (ep.audioFile) extraNames.push(ep.audioFile);
-
-    const found = await resolveAudioForFolder(candidates, extraNames);
-    if (found) {
-      ep.audioUrl = found.audioUrl;
-      ep.actualFolder = found.actualFolder;
-      if (ep.coverFile) {
-        ep.coverUrl = buildUrl(['Episodes', found.actualFolder, ep.coverFile]);
-      } else {
-        ep.coverUrl = await resolveCoverForFolder(found.actualFolder);
-      }
-      ep.resolved = true;
-    }
+  if (!tree) {
+    const episodes = entries.map(([key, val]) => {
+      const p = parseJsonEntry(key, val);
+      return {
+        folderKey: key,
+        folderName: p.folderName,
+        title: p.title,
+        audioUrl: null,
+        coverUrl: null,
+        actualFolder: null,
+        dur: 0,
+        resolved: false,
+        treeFailed: true
+      };
+    });
+    return { episodes, treeError: true };
   }
 
-  return { episodes, treeError: !tree };
+  const episodeFolders = getEpisodeFolders(tree);
+
+  const episodes = [];
+  for (const [key, val] of entries) {
+    const p = parseJsonEntry(key, val);
+    const candidates = [...new Set([p.folderName, key, p.title].filter(Boolean))];
+    const folder = findEpisodeFolder(episodeFolders, candidates);
+    if (!folder) continue;
+
+    const folderPath = 'Episodes/' + folder + '/';
+    const files = listFilesInFolder(tree, 'Episodes/' + folder);
+
+    let mp3 = null;
+    for (const f of files) {
+      if (/\.mp3$/i.test(f)) { mp3 = f; break; }
+    }
+    if (!mp3) continue;
+
+    let coverFile = null;
+    for (const f of files) {
+      if (/^cover\.(jpe?g|png|webp|gif)$/i.test(f)) { coverFile = f; break; }
+    }
+    let nameFile = null;
+    for (const f of files) {
+      if (f.toLowerCase() === 'name.txt') { nameFile = f; break; }
+    }
+
+    let title = p.title;
+    if (nameFile) {
+      const txt = await fetchText(buildUrl(['Episodes', folder, nameFile]));
+      if (txt) title = txt;
+    }
+
+    episodes.push({
+      folderKey: key,
+      folderName: folder,
+      title,
+      audioUrl: buildUrl(['Episodes', folder, mp3]),
+      coverUrl: coverFile ? buildUrl(['Episodes', folder, coverFile]) : null,
+      actualFolder: folder,
+      dur: 0,
+      resolved: true,
+      treeFailed: false
+    });
+  }
+
+  return { episodes, treeError: false };
 }
 
 let ambientActive = false;
@@ -809,7 +699,7 @@ let ambientAudio = null;
 let ambientGen = 0;
 let ambientQueue = [];
 let ambientQueuePos = 0;
-let ambientTracksFound = false;
+let ambientTracksLoaded = false;
 let ambientMuted = (function(){
   try { return localStorage.getItem('ambientMuted') === '1'; } catch(e){ return false; }
 })();
@@ -922,7 +812,7 @@ function playAmbientTrack(num){
 
 function playAmbientFromQueue(){
   if (!ambientActive) return;
-  if (!ambientQueue.length) return;
+  if (!ambientQueue.length) { ambientActive = false; return; }
   if (ambientQueuePos >= ambientQueue.length) {
     shuffleArray(ambientQueue);
     ambientQueuePos = 0;
@@ -931,26 +821,43 @@ function playAmbientFromQueue(){
   playAmbientTrack(num);
 }
 
+async function getDataTracks(){
+  const tree = await getFullTree();
+  if (tree) {
+    return findDataTracks(tree);
+  }
+  const found = [];
+  for (let i = 1; i <= 50; i++) {
+    const url = 'DATA/' + i + '.mp3';
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 3000);
+      const res = await fetch(url, { method: 'HEAD', cache: 'no-store', signal: controller.signal });
+      clearTimeout(timer);
+      if (res.ok) found.push(i);
+      else break;
+    } catch (e) {
+      break;
+    }
+  }
+  return found;
+}
+
 async function startAmbient(){
   if (ambientActive) return;
   ambientActive = true;
 
-  if (!ambientTracksFound) {
-    ambientTracksFound = true;
-    const checks = [];
-    for (let i = 1; i <= 25; i++) {
-      checks.push(fileExists('DATA/' + i + '.mp3').then(ok => ok ? i : null));
-    }
-    const results = await Promise.all(checks);
-    const found = results.filter(x => x !== null);
-    if (found.length) {
-      ambientQueue = shuffleArray(found.slice());
+  if (!ambientTracksLoaded) {
+    ambientTracksLoaded = true;
+    const tracks = await getDataTracks();
+    if (tracks.length) {
+      ambientQueue = shuffleArray(tracks.slice());
       ambientQueuePos = 0;
     }
   }
 
   if (!ambientActive) return;
-  if (!ambientQueue.length) return;
+  if (!ambientQueue.length) { ambientActive = false; return; }
   playAmbientFromQueue();
 }
 
@@ -2262,6 +2169,11 @@ async function init(){
   const result = await loadEpisodeList();
   EPISODES = result.episodes || [];
   buildSky();
+  if (result.treeError && EPISODES.length === 0) {
+    setTimeout(() => {
+      showToast('файлы недоступны · репозиторий должен быть публичным', 5500);
+    }, 800);
+  }
 }
 
 init();
