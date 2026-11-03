@@ -149,17 +149,12 @@
   @keyframes spinAnim{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
   #miniPlayer{position:fixed;left:50%;bottom:22px;transform:translate(-50%, 200%);width:min(420px, calc(100% - 32px));display:grid;grid-template-columns:44px 1fr 40px;align-items:center;gap:12px;padding:10px 14px 10px 10px;background:rgba(8,8,10,.9);border:1px solid rgba(255,255,255,.1);border-radius:12px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:30;transition:transform .5s cubic-bezier(.2,.9,.3,1.2), opacity .35s ease;opacity:0;cursor:pointer;box-shadow:0 15px 50px rgba(0,0,0,.75), 0 0 0 1px rgba(0,0,0,.4);will-change:transform,opacity;touch-action:none}
   #miniPlayer.show{transform:translate(-50%, 0);opacity:1}
-  #miniPlayer:hover{border-color:rgba(255,255,255,.22);box-shadow:0 15px 50px rgba(0,0,0,.85), 0 0 30px -8px rgba(255,255,255,.22)}
   .mini-cover{width:44px;height:44px;border-radius:7px;overflow:hidden;background:#050505;box-shadow:0 0 0 1px rgba(255,255,255,.08);pointer-events:none}
   .mini-cover svg, .mini-cover img{display:block;width:100%;height:100%;object-fit:cover}
-  .mini-info{min-width:0;display:flex;flex-direction:column;gap:7px;pointer-events:none;overflow:hidden}
-  .mini-title{font-family:'IM Fell English', Georgia, serif;font-weight:400;font-size:14px;color:#e2ddee;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;position:relative}
-  .mini-bar-wrap{position:relative;padding:11px 0;margin:-11px 0;cursor:pointer;pointer-events:auto;touch-action:none}
-  .mini-bar{height:2px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden}
-  .mini-fill{height:100%;width:100%;background:#fff;box-shadow:0 0 8px rgba(255,255,255,.8);transform:scaleX(0);transform-origin:left center;transition:transform .2s linear;will-change:transform}
-  .mini-btn{width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,.06);color:#fff;cursor:pointer;display:grid;place-items:center;transition:.25s ease}
-  .mini-btn:hover{background:rgba(255,255,255,.14)}
-  .mini-btn svg{width:16px;height:16px;fill:currentColor}
+  .mini-info{min-width:0;display:flex;flex-direction:column;justify-content:center;align-items:center;pointer-events:none;overflow:hidden;text-align:center}
+  .mini-title{font-family:'IM Fell English', Georgia, serif;font-weight:400;font-size:14px;color:#e2ddee;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;position:relative;text-align:center}
+  .mini-btn{width:40px;height:40px;border:none;background:transparent;color:#fff;cursor:pointer;display:grid;place-items:center;padding:0}
+  .mini-btn svg{width:18px;height:18px;fill:currentColor}
   #searchBox{position:fixed;top:68px;right:20px;width:min(320px, calc(100% - 40px));z-index:27;opacity:0;transform:translateY(-10px);pointer-events:none;transition:opacity .3s ease, transform .3s ease}
   #searchBox.show{opacity:1;transform:translateY(0);pointer-events:auto}
   #searchInput{width:100%;padding:12px 18px;background:rgba(8,6,10,.95);border:1px solid rgba(255,255,255,.15);border-radius:3px;color:#eae6f2;font-family:'IM Fell English', Georgia, serif;font-weight:400;font-size:15px;letter-spacing:.03em;outline:none;transition:border-color .25s ease, box-shadow .25s ease;box-shadow:0 10px 30px rgba(0,0,0,.85);-webkit-appearance:none}
@@ -323,9 +318,6 @@
   <div class="mini-cover" id="miniCover"></div>
   <div class="mini-info">
     <div class="mini-title" id="miniTitle">—</div>
-    <div class="mini-bar-wrap" id="miniBarWrap">
-      <div class="mini-bar"><div class="mini-fill" id="miniFill"></div></div>
-    </div>
   </div>
   <button class="mini-btn" id="miniPlayBtn" aria-label="Play/Pause">
     <svg viewBox="0 0 24 24" id="miniPlayIcon"><path d="M8 5v14l11-7z"/></svg>
@@ -478,8 +470,6 @@ const shuffleBtn = document.getElementById('shuffleBtn');
 const miniPlayer = document.getElementById('miniPlayer');
 const miniCover = document.getElementById('miniCover');
 const miniTitle = document.getElementById('miniTitle');
-const miniFill = document.getElementById('miniFill');
-const miniBarWrap = document.getElementById('miniBarWrap');
 const miniPlayBtn = document.getElementById('miniPlayBtn');
 const miniPlayIcon = document.getElementById('miniPlayIcon');
 const infoPanel = document.getElementById('infoPanel');
@@ -515,7 +505,7 @@ let loadingSpinner = false;
 let pageSizes = [];
 let pageStarts = [0];
 
-const POSITIONS_KEY = 'episodePositions_v1';
+const POSITIONS_KEY = 'episodePositions_v2';
 const LAST_KEY = 'lastPlayedKey_v1';
 let savedPositions = {};
 let lastPositionSave = 0;
@@ -1120,7 +1110,7 @@ function restoreLastPlayed(){
   updateFullUI();
   updateMiniUI();
   miniPlayer.classList.add('show');
-  preloadEpisode(idx);
+  preloadEpisodeDuration(idx);
 }
 
 let ambientActive = false;
@@ -1690,55 +1680,31 @@ let shufflePosition = 0;
 let overlayHintShown = false;
 let resolveToken = 0;
 
-let preloadAudio = null;
-let preloadIndex = -1;
-
 function clearAudio(a){
   if (!a) return;
   try { a.pause(); } catch(e) {}
   try { a.removeAttribute('src'); a.load(); } catch(e) {}
 }
 
-function clearPreload(){
-  if (preloadAudio) clearAudio(preloadAudio);
-  preloadAudio = null;
-  preloadIndex = -1;
-}
-
-function preloadEpisode(n){
+function preloadEpisodeDuration(n){
   if (n < 0 || n >= EPISODES.length) return;
-  if (EPISODES[n].dur) return;
-  if (preloadIndex === n && preloadAudio) return;
-  clearPreload();
   const ep = EPISODES[n];
   if (!ep || !ep.audioUrl) return;
+  if (ep.dur) return;
   const a = new Audio();
   a.preload = 'metadata';
-  a.muted = true;
   a.src = ep.audioUrl;
-  const nCapture = n;
   a.addEventListener('loadedmetadata', () => {
     if (isFinite(a.duration) && a.duration > 0) {
-      if (!EPISODES[nCapture].dur) EPISODES[nCapture].dur = a.duration;
-      if (current === nCapture) {
-        pDur.textContent = fmt(EPISODES[nCapture].dur);
+      if (!ep.dur) ep.dur = a.duration;
+      if (current === n) {
+        pDur.textContent = fmt(ep.dur);
         updateProgress();
       }
     }
-    if (preloadAudio === a) { preloadAudio = null; preloadIndex = -1; }
     try { a.removeAttribute('src'); a.load(); } catch(e) {}
   });
-  a.addEventListener('error', () => {
-    if (preloadAudio === a) { preloadAudio = null; preloadIndex = -1; }
-  });
-  preloadAudio = a;
-  preloadIndex = n;
-}
-
-function buildSrcWithPosition(url, pos){
-  if (!url) return url;
-  if (!(pos > 2)) return url;
-  return url + '#t=' + pos.toFixed(1);
+  a.addEventListener('error', () => {});
 }
 
 function setLoading(v){
@@ -1812,7 +1778,7 @@ function switchToEpisode(n, autoPlay){
     if (page !== currentPage) goToPage(page);
     if (autoPlay) play();
     else {
-      preloadEpisode(n);
+      preloadEpisodeDuration(n);
       updateIcons();
       applyAmbientState();
     }
@@ -1846,28 +1812,21 @@ async function play(){
 
   if (!episodeAudio || loadedIndex !== current) {
     if (episodeAudio) clearAudio(episodeAudio);
-    clearPreload();
     const idx = current;
     const savedPos = savedPositions[ep.folderKey] || 0;
     const a = new Audio();
     a.preload = 'auto';
-    a.src = buildSrcWithPosition(ep.audioUrl, savedPos);
+    a.src = ep.audioUrl;
     try { a.volume = 1; } catch(e) {}
 
-    let didSeekFromMeta = false;
     a.addEventListener('loadedmetadata', () => {
       if (!EPISODES[idx].dur && isFinite(a.duration) && a.duration > 0) EPISODES[idx].dur = a.duration;
       if (current === idx) pDur.textContent = EPISODES[idx].dur ? fmt(EPISODES[idx].dur) : '0:00';
       if (savedPos > 2 && isFinite(a.duration) && savedPos < a.duration - 5) {
-        if (Math.abs(a.currentTime - savedPos) > 2) {
-          try {
-            a.currentTime = savedPos;
-            didSeekFromMeta = true;
-            if (current === idx) { elapsed = savedPos; updateProgress(); }
-          } catch(e) {}
-        } else {
-          if (current === idx) { elapsed = a.currentTime; updateProgress(); }
-        }
+        try {
+          a.currentTime = savedPos;
+          if (current === idx) { elapsed = savedPos; updateProgress(); }
+        } catch(e) {}
       }
     });
     a.addEventListener('timeupdate', () => {
@@ -2136,7 +2095,6 @@ function updateProgress(){
   progressFill.style.transform = 'scaleX(' + p + ')';
   progressKnob.style.left = (p * 100) + '%';
   pCur.textContent = fmt(elapsed);
-  miniFill.style.transform = 'scaleX(' + p + ')';
 }
 function updateFullUI(){
   if (current < 0 || !EPISODES[current]) {
@@ -2158,7 +2116,6 @@ function updateMiniUI(){
   const ep = EPISODES[current];
   applyMarquee(miniTitle, ep.title);
   setCoverTo(miniCover, ep, current);
-  updateProgress();
   updateIcons();
 }
 function openOverlay(){
@@ -2462,7 +2419,6 @@ function seekToClientX(clientX, rect){
 }
 
 setupBarDrag(progressBar, () => progressBar.getBoundingClientRect(), seekToClientX);
-setupBarDrag(miniBarWrap, () => miniBarWrap.getBoundingClientRect(), seekToClientX);
 
 let miniPtr = null;
 let miniWasSwipe = false;
@@ -2477,7 +2433,6 @@ function swipeEpisode(dir){
 miniPlayer.addEventListener('pointerdown', (e) => {
   if (!e.isPrimary) return;
   if (e.target.closest('#miniPlayBtn')) return;
-  if (e.target.closest('.mini-bar-wrap')) return;
   miniPtr = { x: e.clientX, y: e.clientY, id: e.pointerId, moved: false };
 });
 miniPlayer.addEventListener('pointermove', (e) => {
@@ -2549,7 +2504,6 @@ shuffleBtn.addEventListener('click', () => {
 
 miniPlayer.addEventListener('click', (e) => {
   if (e.target.closest('#miniPlayBtn')) return;
-  if (e.target.closest('.mini-bar-wrap')) return;
   if (miniWasSwipe) { miniWasSwipe = false; return; }
   if (current < 0) return;
   openOverlay();
