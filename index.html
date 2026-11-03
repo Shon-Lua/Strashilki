@@ -129,7 +129,7 @@
   .progressRow{width:100%;display:flex;align-items:center;gap:12px}
   .timeTxt{font-family:'Special Elite', 'Courier New', monospace;font-weight:400;font-size:11px;letter-spacing:.12em;color:#6a6480;font-variant-numeric:tabular-nums;min-width:36px}
   .timeTxt.right{text-align:right}
-  .progressBar{flex:1;height:3px;position:relative;cursor:pointer;padding:9px 0;margin:-9px 0}
+  .progressBar{flex:1;height:3px;position:relative;cursor:pointer;padding:9px 0;margin:-9px 0;touch-action:none}
   .progressBar::before{content:'';position:absolute;left:0;right:0;top:50%;height:3px;margin-top:-1.5px;background:rgba(255,255,255,.1);border-radius:3px}
   .progressFill{position:absolute;left:0;top:50%;height:3px;margin-top:-1.5px;width:100%;background:#fff;border-radius:3px;transform:scaleX(0);transform-origin:left center;box-shadow:0 0 10px rgba(255,255,255,.85);transition:transform .2s linear;will-change:transform}
   .progressKnob{position:absolute;top:50%;left:0%;width:11px;height:11px;border-radius:50%;background:#fff;transform:translate(-50%,-50%);box-shadow:0 0 12px rgba(255,255,255,.9);pointer-events:none;transition:left .2s linear}
@@ -1707,6 +1707,7 @@ function clearPreload(){
 
 function preloadEpisode(n){
   if (n < 0 || n >= EPISODES.length) return;
+  if (EPISODES[n].dur) return;
   if (preloadIndex === n && preloadAudio) return;
   clearPreload();
   const ep = EPISODES[n];
@@ -1715,20 +1716,29 @@ function preloadEpisode(n){
   a.preload = 'metadata';
   a.muted = true;
   a.src = ep.audioUrl;
+  const nCapture = n;
   a.addEventListener('loadedmetadata', () => {
     if (isFinite(a.duration) && a.duration > 0) {
-      if (!EPISODES[n].dur) EPISODES[n].dur = a.duration;
-      if (current === n) {
-        pDur.textContent = fmt(EPISODES[n].dur);
+      if (!EPISODES[nCapture].dur) EPISODES[nCapture].dur = a.duration;
+      if (current === nCapture) {
+        pDur.textContent = fmt(EPISODES[nCapture].dur);
         updateProgress();
       }
     }
+    if (preloadAudio === a) { preloadAudio = null; preloadIndex = -1; }
+    try { a.removeAttribute('src'); a.load(); } catch(e) {}
   });
   a.addEventListener('error', () => {
     if (preloadAudio === a) { preloadAudio = null; preloadIndex = -1; }
   });
   preloadAudio = a;
   preloadIndex = n;
+}
+
+function buildSrcWithPosition(url, pos){
+  if (!url) return url;
+  if (!(pos > 2)) return url;
+  return url + '#t=' + pos.toFixed(1);
 }
 
 function setLoading(v){
@@ -1836,44 +1846,30 @@ async function play(){
 
   if (!episodeAudio || loadedIndex !== current) {
     if (episodeAudio) clearAudio(episodeAudio);
+    clearPreload();
     const idx = current;
-    let a;
-    let adoptedPreload = false;
-
-    if (preloadIndex === idx && preloadAudio) {
-      a = preloadAudio;
-      preloadAudio = null;
-      preloadIndex = -1;
-      adoptedPreload = true;
-      try { a.muted = false; } catch(e) {}
-    } else {
-      clearPreload();
-      a = new Audio();
-      a.preload = 'metadata';
-      a.src = ep.audioUrl;
-    }
-
+    const savedPos = savedPositions[ep.folderKey] || 0;
+    const a = new Audio();
+    a.preload = 'auto';
+    a.src = buildSrcWithPosition(ep.audioUrl, savedPos);
     try { a.volume = 1; } catch(e) {}
 
-    const onLoadedMeta = () => {
-      if (!EPISODES[idx].dur && isFinite(a.duration)) EPISODES[idx].dur = a.duration;
+    let didSeekFromMeta = false;
+    a.addEventListener('loadedmetadata', () => {
+      if (!EPISODES[idx].dur && isFinite(a.duration) && a.duration > 0) EPISODES[idx].dur = a.duration;
       if (current === idx) pDur.textContent = EPISODES[idx].dur ? fmt(EPISODES[idx].dur) : '0:00';
-      const key = EPISODES[idx].folderKey;
-      const savedPos = savedPositions[key];
-      if (savedPos && savedPos > 2 && isFinite(a.duration) && savedPos < a.duration - 5) {
-        try {
-          a.currentTime = savedPos;
-          if (current === idx) { elapsed = savedPos; updateProgress(); }
-        } catch (e) {}
+      if (savedPos > 2 && isFinite(a.duration) && savedPos < a.duration - 5) {
+        if (Math.abs(a.currentTime - savedPos) > 2) {
+          try {
+            a.currentTime = savedPos;
+            didSeekFromMeta = true;
+            if (current === idx) { elapsed = savedPos; updateProgress(); }
+          } catch(e) {}
+        } else {
+          if (current === idx) { elapsed = a.currentTime; updateProgress(); }
+        }
       }
-    };
-
-    if (adoptedPreload && a.readyState >= 1 && isFinite(a.duration) && a.duration > 0) {
-      onLoadedMeta();
-    } else {
-      a.addEventListener('loadedmetadata', onLoadedMeta);
-    }
-
+    });
     a.addEventListener('timeupdate', () => {
       if (loadedIndex === idx) {
         elapsed = a.currentTime;
@@ -2418,20 +2414,41 @@ function loadEpisode(n){
   switchToEpisode(n, playing || wantsToPlay);
 }
 
-let miniPtr = null;
-let miniWasSwipe = false;
-let miniBarScrubbing = false;
+function setupBarDrag(barEl, getSeekRect, onSeek){
+  let scrubbing = false;
+  let activePid = null;
 
-function swipeEpisode(dir){
-  if (current < 0) return;
-  const target = dir > 0 ? getNextIndexManual() : getPrevIndexManual();
-  if (target < 0 || target === current) return;
-  switchToEpisode(target, playing || wantsToPlay);
+  const handleMove = (e) => {
+    if (!scrubbing || e.pointerId !== activePid) return;
+    onSeek(e.clientX, getSeekRect());
+  };
+  const handleUp = (e) => {
+    if (!scrubbing || e.pointerId !== activePid) return;
+    scrubbing = false;
+    activePid = null;
+    document.removeEventListener('pointermove', handleMove);
+    document.removeEventListener('pointerup', handleUp);
+    document.removeEventListener('pointercancel', handleUp);
+    onSeek(e.clientX, getSeekRect());
+  };
+
+  barEl.addEventListener('pointerdown', (e) => {
+    if (!e.isPrimary) return;
+    if (current < 0 || !episodeAudio || !episodeAudio.duration || isNaN(episodeAudio.duration)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    scrubbing = true;
+    activePid = e.pointerId;
+    try { barEl.setPointerCapture(e.pointerId); } catch(err) {}
+    document.addEventListener('pointermove', handleMove);
+    document.addEventListener('pointerup', handleUp);
+    document.addEventListener('pointercancel', handleUp);
+    onSeek(e.clientX, getSeekRect());
+  });
 }
 
-function seekMiniBar(clientX){
+function seekToClientX(clientX, rect){
   if (!episodeAudio || !episodeAudio.duration || isNaN(episodeAudio.duration)) return;
-  const rect = miniBarWrap.getBoundingClientRect();
   const p = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
   try { episodeAudio.currentTime = p * episodeAudio.duration; } catch(e) { return; }
   elapsed = episodeAudio.currentTime;
@@ -2444,28 +2461,18 @@ function seekMiniBar(clientX){
   }
 }
 
-miniBarWrap.addEventListener('pointerdown', (e) => {
-  if (!e.isPrimary) return;
-  if (current < 0 || !episodeAudio || !episodeAudio.duration || isNaN(episodeAudio.duration)) return;
-  e.stopPropagation();
-  e.preventDefault();
-  miniBarScrubbing = true;
-  try { miniBarWrap.setPointerCapture(e.pointerId); } catch(err) {}
-  seekMiniBar(e.clientX);
-});
-miniBarWrap.addEventListener('pointermove', (e) => {
-  if (!miniBarScrubbing) return;
-  e.stopPropagation();
-  seekMiniBar(e.clientX);
-});
-miniBarWrap.addEventListener('pointerup', (e) => {
-  if (!miniBarScrubbing) return;
-  miniBarScrubbing = false;
-  seekMiniBar(e.clientX);
-});
-miniBarWrap.addEventListener('pointercancel', () => {
-  miniBarScrubbing = false;
-});
+setupBarDrag(progressBar, () => progressBar.getBoundingClientRect(), seekToClientX);
+setupBarDrag(miniBarWrap, () => miniBarWrap.getBoundingClientRect(), seekToClientX);
+
+let miniPtr = null;
+let miniWasSwipe = false;
+
+function swipeEpisode(dir){
+  if (current < 0) return;
+  const target = dir > 0 ? getNextIndexManual() : getPrevIndexManual();
+  if (target < 0 || target === current) return;
+  switchToEpisode(target, playing || wantsToPlay);
+}
 
 miniPlayer.addEventListener('pointerdown', (e) => {
   if (!e.isPrimary) return;
@@ -2538,21 +2545,6 @@ shuffleBtn.addEventListener('click', () => {
   if (shuffleOn && current >= 0) buildShuffleOrder(current);
   updateShuffleIcon();
   showToast(shuffleOn ? 'случайный порядок' : 'по порядку', 1800);
-});
-
-progressBar.addEventListener('click', (e) => {
-  if (current < 0 || !episodeAudio || !episodeAudio.duration || isNaN(episodeAudio.duration)) return;
-  const rect = progressBar.getBoundingClientRect();
-  const p = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-  episodeAudio.currentTime = p * episodeAudio.duration;
-  elapsed = episodeAudio.currentTime;
-  updateProgress();
-  if (EPISODES[current]) {
-    const key = EPISODES[current].folderKey;
-    if (elapsed > 2) savedPositions[key] = elapsed;
-    else delete savedPositions[key];
-    persistPositions();
-  }
 });
 
 miniPlayer.addEventListener('click', (e) => {
