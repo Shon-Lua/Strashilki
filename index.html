@@ -1120,24 +1120,7 @@ function restoreLastPlayed(){
   updateFullUI();
   updateMiniUI();
   miniPlayer.classList.add('show');
-
-  const ep = EPISODES[idx];
-  if (ep && ep.audioUrl) {
-    const a = new Audio();
-    a.preload = 'metadata';
-    a.src = ep.audioUrl;
-    a.addEventListener('loadedmetadata', () => {
-      if (isFinite(a.duration) && a.duration > 0 && !EPISODES[idx].dur) {
-        EPISODES[idx].dur = a.duration;
-        if (current === idx) {
-          pDur.textContent = fmt(EPISODES[idx].dur);
-          updateProgress();
-        }
-      }
-      try { a.removeAttribute('src'); a.load(); } catch(e){}
-    });
-    a.addEventListener('error', () => { try { a.removeAttribute('src'); } catch(e){} });
-  }
+  preloadEpisode(idx);
 }
 
 let ambientActive = false;
@@ -1707,6 +1690,47 @@ let shufflePosition = 0;
 let overlayHintShown = false;
 let resolveToken = 0;
 
+let preloadAudio = null;
+let preloadIndex = -1;
+
+function clearAudio(a){
+  if (!a) return;
+  try { a.pause(); } catch(e) {}
+  try { a.removeAttribute('src'); a.load(); } catch(e) {}
+}
+
+function clearPreload(){
+  if (preloadAudio) clearAudio(preloadAudio);
+  preloadAudio = null;
+  preloadIndex = -1;
+}
+
+function preloadEpisode(n){
+  if (n < 0 || n >= EPISODES.length) return;
+  if (preloadIndex === n && preloadAudio) return;
+  clearPreload();
+  const ep = EPISODES[n];
+  if (!ep || !ep.audioUrl) return;
+  const a = new Audio();
+  a.preload = 'metadata';
+  a.muted = true;
+  a.src = ep.audioUrl;
+  a.addEventListener('loadedmetadata', () => {
+    if (isFinite(a.duration) && a.duration > 0) {
+      if (!EPISODES[n].dur) EPISODES[n].dur = a.duration;
+      if (current === n) {
+        pDur.textContent = fmt(EPISODES[n].dur);
+        updateProgress();
+      }
+    }
+  });
+  a.addEventListener('error', () => {
+    if (preloadAudio === a) { preloadAudio = null; preloadIndex = -1; }
+  });
+  preloadAudio = a;
+  preloadIndex = n;
+}
+
 function setLoading(v){
   if (loadingSpinner === v) return;
   loadingSpinner = v;
@@ -1726,7 +1750,7 @@ function fadeOutEpisode(callback){
   const audio = episodeAudio;
   if (!audio) { if (callback) callback(); return; }
   if (audio.paused || audio.volume === 0) {
-    try { audio.pause(); } catch (e) {}
+    clearAudio(audio);
     if (episodeAudio === audio) { episodeAudio = null; loadedIndex = -1; }
     if (callback) callback();
     return;
@@ -1740,7 +1764,7 @@ function fadeOutEpisode(callback){
     try { audio.volume = Math.max(0, startVol * (1 - p)); } catch(e){}
     if (p < 1) requestAnimationFrame(step);
     else {
-      try { audio.pause(); } catch (e) {}
+      try { audio.pause(); audio.removeAttribute('src'); audio.load(); } catch (e) {}
       if (episodeAudio === audio) { episodeAudio = null; loadedIndex = -1; }
       if (callback) callback();
     }
@@ -1752,7 +1776,7 @@ function setCurrentTrack(n){
   if (EPISODES.length === 0) return;
   savePositionForCurrent();
   if (episodeAudio) {
-    try { episodeAudio.pause(); } catch (e) {}
+    clearAudio(episodeAudio);
     episodeAudio = null;
     loadedIndex = -1;
   }
@@ -1777,7 +1801,11 @@ function switchToEpisode(n, autoPlay){
     const page = getPageForIndex(n);
     if (page !== currentPage) goToPage(page);
     if (autoPlay) play();
-    else { updateIcons(); applyAmbientState(); }
+    else {
+      preloadEpisode(n);
+      updateIcons();
+      applyAmbientState();
+    }
   });
 }
 
@@ -1807,14 +1835,27 @@ async function play(){
   }
 
   if (!episodeAudio || loadedIndex !== current) {
-    if (episodeAudio) { try { episodeAudio.pause(); } catch (e) {} }
+    if (episodeAudio) clearAudio(episodeAudio);
     const idx = current;
-    const a = new Audio();
-    a.preload = 'auto';
-    a.src = ep.audioUrl;
+    let a;
+    let adoptedPreload = false;
+
+    if (preloadIndex === idx && preloadAudio) {
+      a = preloadAudio;
+      preloadAudio = null;
+      preloadIndex = -1;
+      adoptedPreload = true;
+      try { a.muted = false; } catch(e) {}
+    } else {
+      clearPreload();
+      a = new Audio();
+      a.preload = 'metadata';
+      a.src = ep.audioUrl;
+    }
+
     try { a.volume = 1; } catch(e) {}
 
-    a.addEventListener('loadedmetadata', () => {
+    const onLoadedMeta = () => {
       if (!EPISODES[idx].dur && isFinite(a.duration)) EPISODES[idx].dur = a.duration;
       if (current === idx) pDur.textContent = EPISODES[idx].dur ? fmt(EPISODES[idx].dur) : '0:00';
       const key = EPISODES[idx].folderKey;
@@ -1825,7 +1866,14 @@ async function play(){
           if (current === idx) { elapsed = savedPos; updateProgress(); }
         } catch (e) {}
       }
-    });
+    };
+
+    if (adoptedPreload && a.readyState >= 1 && isFinite(a.duration) && a.duration > 0) {
+      onLoadedMeta();
+    } else {
+      a.addEventListener('loadedmetadata', onLoadedMeta);
+    }
+
     a.addEventListener('timeupdate', () => {
       if (loadedIndex === idx) {
         elapsed = a.currentTime;
