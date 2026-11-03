@@ -24,6 +24,7 @@
   }
   button, input{font-family:inherit;font-weight:inherit}
   canvas#bg{position:fixed;inset:0;z-index:0;display:block;background:#000;pointer-events:none}
+  #dragTrail{position:fixed;inset:0;z-index:201;display:block;width:100%;height:100%;pointer-events:none}
   .grain{
     position:fixed;inset:-60%;z-index:2;pointer-events:none;opacity:.026;
     background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>");
@@ -146,8 +147,13 @@
   #playerOverlay.show{opacity:1;pointer-events:auto}
   .playerCard{position:relative;width:min(440px, 88vw);display:flex;flex-direction:column;align-items:center;gap:22px;padding:0 4px;transform-origin:50% 100%;transform:translateY(35vh) scale(.35);opacity:0;transition:transform .65s cubic-bezier(.2,.9,.3,1.25), opacity .4s ease;will-change:transform,opacity}
   #playerOverlay.show .playerCard{transform:translateY(0) scale(1);opacity:1}
-  .cover{width:100%;aspect-ratio:1/1;border-radius:14px;overflow:hidden;position:relative;box-shadow:0 30px 80px -20px rgba(0,0,0,.95), 0 0 0 1px rgba(255,255,255,.06), 0 0 70px -10px rgba(255,255,255,.08);background:#050505}
-  .cover svg, .cover img{display:block;width:100%;height:100%;object-fit:cover}
+  .cover{width:100%;aspect-ratio:1/1;border-radius:14px;overflow:hidden;position:relative;box-shadow:0 30px 80px -20px rgba(0,0,0,.95), 0 0 0 1px rgba(255,255,255,.06), 0 0 70px -10px rgba(255,255,255,.08);background:#050505;touch-action:pan-y;cursor:grab}
+  .cover:active{cursor:grabbing}
+  .cover svg, .cover img{display:block;width:100%;height:100%;object-fit:cover;-webkit-user-drag:none;user-select:none}
+  #homePageBtn{position:fixed;left:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 92px);z-index:28;display:flex;align-items:center;gap:9px;padding:10px 14px;border:1px solid rgba(255,255,255,.18);border-radius:3px;background:rgba(8,6,10,.84);color:rgba(255,255,255,.78);font-family:'Special Elite','Courier New',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;opacity:0;visibility:hidden;pointer-events:none;transform:translateY(10px);transition:opacity .24s ease,transform .24s ease,border-color .24s ease,color .24s ease,box-shadow .24s ease;-webkit-tap-highlight-color:transparent;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+  #homePageBtn.show{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0)}
+  #homePageBtn svg{width:15px;height:15px;display:block;flex-shrink:0}
+  #homePageBtn:hover{color:#fff;border-color:rgba(255,255,255,.5);box-shadow:0 0 22px rgba(255,255,255,.12)}
   .titleBlock{width:100%;text-align:center;overflow:hidden}
   .titleBlock h2{font-family:'Special Elite', 'Courier New', monospace;font-weight:400;font-size:clamp(18px, 4.6vw, 23px);letter-spacing:.08em;color:#eae6f2;line-height:1.3;text-shadow:0 0 22px rgba(255,255,255,.14);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;width:100%;position:relative}
   .progressRow{width:100%;display:flex;align-items:center;gap:12px}
@@ -324,6 +330,7 @@
 </head>
 <body>
 <canvas id="bg"></canvas>
+<canvas id="dragTrail" aria-hidden="true"></canvas>
 <div class="grain"></div>
 <div class="vignette"></div>
 <div id="skyWrap"><div id="sky"></div></div>
@@ -345,6 +352,10 @@
     <circle cx="12" cy="7.4" r="1.3" fill="currentColor"/>
     <rect x="11.1" y="10" width="1.8" height="7.2" rx="0.9" fill="currentColor"/>
   </svg>
+</button>
+<button id="homePageBtn" type="button" aria-label="Перейти на первую страницу">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.2 12 4l8 7.2M6.5 9.5V20h11V9.5M10 20v-6h4v6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <span>Первая страница</span>
 </button>
 <div id="toastContainer" aria-live="polite"></div>
 <div class="dropzone" id="dropzone"><div class="dropzone-label">отпустите<br>здесь</div></div>
@@ -484,6 +495,9 @@ const isMobile = innerWidth < 700;
 const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2);
 const canvas = document.getElementById('bg');
 const ctx = canvas.getContext('2d');
+const dragTrailCanvas = document.getElementById('dragTrail');
+const dragTrailCtx = dragTrailCanvas.getContext('2d', { alpha: true, desynchronized: true });
+const homePageBtn = document.getElementById('homePageBtn');
 const sky = document.getElementById('sky');
 const pageCurrentEl = document.getElementById('pageCurrent');
 const pageTotalEl = document.getElementById('pageTotal');
@@ -623,11 +637,90 @@ skyHintOk.addEventListener('click', closeSkyHint);
 skyHintBanner.addEventListener('click', (e) => { if (e.target === skyHintBanner) closeSkyHint(); });
 
 let W = 0, H = 0;
+let dragTrailDpr = 1;
+let dragTrailPoints = [];
+let dragTrailFrame = 0;
+function resizeDragTrail(){
+  if (!dragTrailCanvas || !dragTrailCtx) return;
+  dragTrailDpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.1 : 1.5);
+  dragTrailCanvas.width = Math.max(1, Math.floor(innerWidth * dragTrailDpr));
+  dragTrailCanvas.height = Math.max(1, Math.floor(innerHeight * dragTrailDpr));
+  dragTrailCanvas.style.width = innerWidth + 'px';
+  dragTrailCanvas.style.height = innerHeight + 'px';
+  dragTrailCtx.setTransform(dragTrailDpr, 0, 0, dragTrailDpr, 0, 0);
+  dragTrailCtx.clearRect(0, 0, innerWidth, innerHeight);
+}
 function resize(){
   W = canvas.width = Math.floor(innerWidth * dpr);
   H = canvas.height = Math.floor(innerHeight * dpr);
   canvas.style.width = innerWidth + 'px';
   canvas.style.height = innerHeight + 'px';
+  resizeDragTrail();
+}
+function addDragTrailPoint(x, y){
+  const now = performance.now();
+  const last = dragTrailPoints[dragTrailPoints.length - 1];
+  if (!last || Math.hypot(x - last.x, y - last.y) >= 2.5) {
+    dragTrailPoints.push({ x, y, t: now });
+    const limit = isMobile ? 13 : 20;
+    if (dragTrailPoints.length > limit) dragTrailPoints.splice(0, dragTrailPoints.length - limit);
+  }
+  if (!dragTrailFrame) dragTrailFrame = requestAnimationFrame(renderDragTrail);
+}
+function renderDragTrail(now){
+  dragTrailFrame = 0;
+  if (!dragTrailCtx) return;
+  const ctxTrail = dragTrailCtx;
+  const life = isMobile ? 210 : 300;
+  const time = now || performance.now();
+  dragTrailPoints = dragTrailPoints.filter(point => time - point.t < life);
+  ctxTrail.clearRect(0, 0, innerWidth, innerHeight);
+  if (dragTrailPoints.length > 1) {
+    const points = dragTrailPoints;
+    const first = points[0];
+    const last = points[points.length - 1];
+    const gradient = ctxTrail.createLinearGradient(first.x, first.y, last.x, last.y);
+    gradient.addColorStop(0, 'rgba(190,190,215,0)');
+    gradient.addColorStop(.38, 'rgba(205,205,225,.22)');
+    gradient.addColorStop(.78, 'rgba(235,235,248,.68)');
+    gradient.addColorStop(1, 'rgba(255,255,255,.96)');
+    ctxTrail.save();
+    ctxTrail.globalCompositeOperation = 'lighter';
+    ctxTrail.lineCap = 'round';
+    ctxTrail.lineJoin = 'round';
+    ctxTrail.strokeStyle = gradient;
+    ctxTrail.lineWidth = isMobile ? 2.1 : 3;
+    ctxTrail.shadowColor = 'rgba(235,235,255,.6)';
+    ctxTrail.shadowBlur = isMobile ? 0 : 7;
+    ctxTrail.beginPath();
+    ctxTrail.moveTo(first.x, first.y);
+    for (let i = 1; i < points.length - 1; i++) {
+      const midX = (points[i].x + points[i + 1].x) / 2;
+      const midY = (points[i].y + points[i + 1].y) / 2;
+      ctxTrail.quadraticCurveTo(points[i].x, points[i].y, midX, midY);
+    }
+    ctxTrail.lineTo(last.x, last.y);
+    ctxTrail.stroke();
+    ctxTrail.shadowBlur = 0;
+    const particleStep = isMobile ? 4 : 3;
+    for (let i = Math.max(0, points.length - 1 - particleStep * 3); i < points.length - 1; i += particleStep) {
+      const point = points[i];
+      const age = Math.max(0, time - point.t);
+      ctxTrail.globalAlpha = Math.max(0, 1 - age / life) * .5;
+      ctxTrail.fillStyle = '#f1f1ff';
+      ctxTrail.beginPath();
+      ctxTrail.arc(point.x, point.y, isMobile ? 1.15 : 1.6, 0, Math.PI * 2);
+      ctxTrail.fill();
+    }
+    ctxTrail.restore();
+  }
+  if (dragTrailPoints.length || dragState) dragTrailFrame = requestAnimationFrame(renderDragTrail);
+}
+function clearDragTrail(){
+  dragTrailPoints = [];
+  if (dragTrailFrame) cancelAnimationFrame(dragTrailFrame);
+  dragTrailFrame = 0;
+  if (dragTrailCtx) dragTrailCtx.clearRect(0, 0, innerWidth, innerHeight);
 }
 
 function encodePathSegment(s){
@@ -1085,6 +1178,7 @@ async function buildSky(){
   pageTotalEl.textContent = totalPages;
   pageCurrentEl.textContent = 1;
   currentPage = 0;
+  updateHomePageButton();
 
   const pages = [];
   const positionsPerPage = [];
@@ -2329,6 +2423,7 @@ function setCoverTo(container, ep, index){
     if (!preloaded || container.dataset.coverKey !== key || !container.isConnected) return;
     const image = preloaded.cloneNode(false);
     image.alt = '';
+    image.draggable = false;
     image.decoding = 'async';
     image.loading = 'eager';
     container.replaceChildren(image);
@@ -2708,6 +2803,8 @@ function startDrag(index, starEl, e){
   dropzone.classList.add('visible');
   miniPlayer.classList.remove('show');
 
+  clearDragTrail();
+  addDragTrailPoint(cx, cy);
   dragState = {
     index,
     starEl,
@@ -2736,6 +2833,7 @@ function renderDragFrame(){
   state.lastY = state.pendingY;
   state.proxy.style.left = state.lastX + 'px';
   state.proxy.style.top = state.lastY + 'px';
+  addDragTrailPoint(state.lastX, state.lastY);
   const r = state.dropRect;
   const over = state.lastX > r.left && state.lastX < r.right && state.lastY > r.top && state.lastY < r.bottom;
   dropzone.classList.toggle('hover', over);
@@ -2763,6 +2861,7 @@ function onDragCancel(e){
   }
 
   const state = dragState;
+  addDragTrailPoint(state.pendingX, state.pendingY);
   dragState = null;
   dropzone.classList.remove('visible', 'hover');
 
@@ -2787,6 +2886,7 @@ function onDragUp(e){
   }
 
   const state = dragState;
+  addDragTrailPoint(e.clientX, e.clientY);
   dragState = null;
   state.lastX = e.clientX;
   state.lastY = e.clientY;
@@ -2844,13 +2944,24 @@ function onDragUp(e){
     dropzone.classList.remove('visible', 'hover');
   };
 }
+function updateHomePageButton(){
+  homePageBtn.classList.toggle('show', currentPage > 0);
+  homePageBtn.setAttribute('aria-hidden', currentPage > 0 ? 'false' : 'true');
+}
+homePageBtn.addEventListener('click', () => {
+  if (currentPage > 0) goToPage(0);
+});
 function goToPage(n){
   removeMapArrow();
   const nn = Math.max(0, Math.min(totalPages - 1, n));
-  if (nn === currentPage) return;
+  if (nn === currentPage) {
+    updateHomePageButton();
+    return;
+  }
   currentPage = nn;
   sky.style.transform = 'translateY(-' + (nn * 100) + 'vh)';
   pageCurrentEl.textContent = nn + 1;
+  updateHomePageButton();
   preloadPageCovers(nn);
 }
 function loadEpisode(n){
@@ -2923,6 +3034,27 @@ function swipeEpisode(dir){
   if (target < 0 || target === current) return;
   switchToEpisode(target, playing || wantsToPlay);
 }
+
+let coverSwipeState = null;
+cover.addEventListener('pointerdown', (e) => {
+  if (!overlay.classList.contains('show') || !e.isPrimary) return;
+  if (e.pointerType === 'mouse' && e.button !== 0) return;
+  coverSwipeState = { x: e.clientX, y: e.clientY, id: e.pointerId };
+  try { cover.setPointerCapture(e.pointerId); } catch (err) {}
+});
+cover.addEventListener('pointerup', (e) => {
+  if (!coverSwipeState || e.pointerId !== coverSwipeState.id) return;
+  const state = coverSwipeState;
+  coverSwipeState = null;
+  const dx = e.clientX - state.x;
+  const dy = e.clientY - state.y;
+  if (Math.abs(dx) < 48 || Math.abs(dx) <= Math.abs(dy) * 1.25) return;
+  e.preventDefault();
+  swipeEpisode(dx < 0 ? 1 : -1);
+});
+cover.addEventListener('pointercancel', (e) => {
+  if (coverSwipeState && e.pointerId === coverSwipeState.id) coverSwipeState = null;
+});
 
 miniPlayer.addEventListener('pointerdown', (e) => {
   if (!e.isPrimary) return;
@@ -3051,7 +3183,7 @@ window.addEventListener('touchstart', (e) => {
   if (ageGateActive || skyHintBanner.classList.contains('show') || overlay.classList.contains('show') ||
       infoPanel.classList.contains('show') || externalWarning.classList.contains('show') ||
       searchOpen || dragState) return;
-  if (miniPlayer.contains(e.target)) return;
+  if (miniPlayer.contains(e.target) || homePageBtn.contains(e.target)) return;
   touchY = e.touches[0].clientY;
   touchActive = true;
 }, { passive: true });
@@ -3068,7 +3200,7 @@ window.addEventListener('touchend', (e) => {
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) savePositionForCurrent();
 });
-window.addEventListener('pagehide', savePositionForCurrent);
+window.addEventListener('pagehide', () => { savePositionForCurrent(); clearDragTrail(); });
 window.addEventListener('beforeunload', savePositionForCurrent);
 
 function loop(t){
