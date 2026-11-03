@@ -44,9 +44,16 @@
   .star.drag-proxy .star-flare{animation:none;opacity:.95}
   .star.drag-proxy .star-ring{opacity:1;filter:none}
   .star.drag-proxy .ring-text{fill:#fff}
-  .star.launching .star-core{animation:starLaunchPulse .56s cubic-bezier(.18,.78,.24,1) both!important}
-  .star.launching .star-ring{opacity:1}
-  @keyframes starLaunchPulse{0%{transform:translate(-50%,-50%) scale(1);opacity:1}38%{transform:translate(-50%,-50%) scale(2.25);opacity:1}72%{transform:translate(-50%,-50%) scale(.78);opacity:.9}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
+  .star.launching .star-core{animation:starLaunchPulse .82s cubic-bezier(.16,.78,.2,1) both!important}
+  .star.launching .star-ring{opacity:1;animation:starLaunchOrbit .82s cubic-bezier(.16,.78,.2,1) both}
+  .star.launching .star-flare{animation:starLaunchFlare .82s cubic-bezier(.16,.78,.2,1) both}
+  .star.drag-proxy.absorbing .star-core{animation:starAbsorbCore .48s cubic-bezier(.16,.78,.2,1) both!important}
+  .star.drag-proxy.absorbing .star-ring{animation:starAbsorbRing .48s cubic-bezier(.16,.78,.2,1) both}
+  @keyframes starLaunchPulse{0%{transform:translate(-50%,-50%) scale(1);opacity:1}32%{transform:translate(-50%,-50%) scale(5.4);opacity:1}58%{transform:translate(-50%,-50%) scale(2.1);opacity:.96}78%{transform:translate(-50%,-50%) scale(.72);opacity:.82}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
+  @keyframes starLaunchOrbit{0%{transform:translate(-50%,-50%) rotate(0deg) scale(1)}42%{transform:translate(-50%,-50%) rotate(105deg) scale(1.72)}75%{transform:translate(-50%,-50%) rotate(185deg) scale(.9)}100%{transform:translate(-50%,-50%) rotate(220deg) scale(1)}}
+  @keyframes starLaunchFlare{0%{transform:translate(-50%,-50%) scale(1);opacity:.55}34%{transform:translate(-50%,-50%) scale(4.2);opacity:1}72%{transform:translate(-50%,-50%) scale(1.5);opacity:.8}100%{transform:translate(-50%,-50%) scale(1);opacity:.5}}
+  @keyframes starAbsorbCore{0%{transform:translate(-50%,-50%) scale(1.25);opacity:1}55%{transform:translate(-50%,-50%) scale(4.8);opacity:1}100%{transform:translate(-50%,-50%) scale(.15);opacity:0}}
+  @keyframes starAbsorbRing{0%{transform:translate(-50%,-50%) rotate(0deg) scale(1);opacity:1}65%{transform:translate(-50%,-50%) rotate(150deg) scale(1.8);opacity:1}100%{transform:translate(-50%,-50%) rotate(240deg) scale(.12);opacity:0}}
   .star-core{position:absolute;top:50%;left:50%;width:var(--core-size,8px);height:var(--core-size,8px);border-radius:50%;background:#fff;transform:translate(-50%,-50%);box-shadow:0 0 10px 3px rgba(255,255,255,.95), 0 0 32px 10px rgba(255,255,255,.28);animation:twinkle var(--pulse-dur,3s) ease-in-out infinite;animation-delay:var(--pulse-delay,0s);transition:transform .35s ease, box-shadow .35s ease;z-index:2}
   @keyframes twinkle{0%,100%{opacity:.45}50%{opacity:1}}
   .star:hover .star-core{transform:translate(-50%,-50%) scale(1.7);box-shadow:0 0 16px 6px rgba(255,255,255,1), 0 0 52px 18px rgba(255,255,255,.5)}
@@ -118,9 +125,11 @@
   #toastContainer{position:fixed;top:calc(env(safe-area-inset-top, 0px) + 16px);left:50%;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;align-items:center;gap:8px;width:min(420px, calc(100% - 24px));pointer-events:none}
   .toast{position:relative;pointer-events:auto;max-width:100%;padding:12px 22px;background:rgba(8,5,7,.94);border:1px solid rgba(255,255,255,.1);border-radius:3px;font-family:'IM Fell English', Georgia, serif;font-weight:400;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:#ded9ea;text-align:center;box-shadow:0 10px 34px rgba(0,0,0,.85), 0 0 22px rgba(255,255,255,.03);transform:translate3d(0,-140%,0);opacity:0;transition:transform .45s cubic-bezier(.2,.9,.3,1.15), opacity .32s ease;will-change:transform,opacity;touch-action:none;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .toast.show{transform:translate3d(0,0,0);opacity:1}
-  .launchWave{position:fixed;width:26px;height:26px;border:1px solid rgba(255,255,255,.88);border-radius:50%;pointer-events:none;z-index:206;will-change:transform,opacity;contain:layout paint}
-  .launchWave.secondary{width:18px;height:18px;border-color:rgba(220,220,235,.72)}
-  .launchCore{position:fixed;width:10px;height:10px;border-radius:50%;background:#fff;pointer-events:none;z-index:207;will-change:transform,opacity;box-shadow:0 0 16px 5px rgba(255,255,255,.55)}
+  .launchFlash{position:fixed;left:0;top:0;width:190px;height:190px;border-radius:50%;pointer-events:none;z-index:205;contain:layout paint;will-change:transform,opacity;background:radial-gradient(circle,rgba(255,255,255,.42) 0%,rgba(220,220,235,.18) 22%,rgba(255,255,255,.055) 42%,rgba(255,255,255,0) 72%)}
+  .launchWave{position:fixed;width:38px;height:38px;border:1px solid rgba(255,255,255,.96);border-radius:50%;pointer-events:none;z-index:206;will-change:transform,opacity;contain:layout paint;box-shadow:0 0 22px rgba(255,255,255,.34),inset 0 0 14px rgba(255,255,255,.12)}
+  .launchWave.secondary{width:25px;height:25px;border-width:1px;border-color:rgba(225,225,242,.86);box-shadow:0 0 18px rgba(225,225,242,.28)}
+  .launchWave.tertiary{width:13px;height:13px;border-width:1px;border-color:rgba(255,255,255,.72);box-shadow:0 0 12px rgba(255,255,255,.22)}
+  .launchCore{position:fixed;width:18px;height:18px;border-radius:50%;background:#fff;pointer-events:none;z-index:207;will-change:transform,opacity;box-shadow:0 0 28px 10px rgba(255,255,255,.76),0 0 76px 28px rgba(235,235,255,.28)}
   .dropzone{position:fixed;left:50%;bottom:44px;transform:translate(-50%, 30px);width:150px;height:150px;border-radius:50%;border:2px dashed rgba(255,255,255,.2);display:grid;place-items:center;z-index:120;pointer-events:none;opacity:0;transition:opacity .35s ease, transform .35s ease, border-color .25s ease, box-shadow .25s ease, background .25s ease}
   .dropzone.visible{opacity:1;transform:translate(-50%, 0)}
   .dropzone.hover{border-color:#fff;border-style:solid;background:rgba(255,255,255,.07);box-shadow:0 0 60px rgba(255,255,255,.4), inset 0 0 60px rgba(255,255,255,.18)}
@@ -295,6 +304,11 @@
     .skyHintList li{font-size:13px;padding-left:18px}
     .skyHintCheck{font-size:10px;letter-spacing:.18em;margin-bottom:20px}
     .skyHintBtn{padding:12px 48px;font-size:10.5px;letter-spacing:.42em;text-indent:.42em}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .star.launching .star-core,.star.launching .star-ring,.star.launching .star-flare,
+    .star.drag-proxy.absorbing .star-core,.star.drag-proxy.absorbing .star-ring{animation:none!important}
   }
 </style>
 </head>
@@ -2439,16 +2453,25 @@ function updateRepeatIcon(){
 function updateShuffleIcon(){ shuffleBtn.classList.toggle('active', shuffleOn); }
 
 function createLaunchEffect(cx, cy, sourceEl){
+  const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduced) return isMobile ? 0 : 0;
+
+  const duration = isMobile ? 660 : 840;
   if (sourceEl) {
     sourceEl.classList.remove('launching');
-    void sourceEl.offsetWidth;
-    sourceEl.classList.add('launching');
-    setTimeout(() => sourceEl.classList.remove('launching'), 620);
+    requestAnimationFrame(() => {
+      if (!sourceEl.isConnected) return;
+      sourceEl.classList.add('launching');
+      setTimeout(() => sourceEl.classList.remove('launching'), duration + 40);
+    });
   }
 
-  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const flash = document.createElement('div');
+  flash.className = 'launchFlash';
+  flash.style.left = (cx - 95) + 'px';
+  flash.style.top = (cy - 95) + 'px';
+  document.body.appendChild(flash);
 
-  const duration = isMobile ? 460 : 620;
   const wave = document.createElement('div');
   wave.className = 'launchWave';
   wave.style.left = cx + 'px';
@@ -2461,11 +2484,17 @@ function createLaunchEffect(cx, cy, sourceEl){
   wave2.style.top = cy + 'px';
   document.body.appendChild(wave2);
 
+  const wave3 = document.createElement('div');
+  wave3.className = 'launchWave tertiary';
+  wave3.style.left = cx + 'px';
+  wave3.style.top = cy + 'px';
+  document.body.appendChild(wave3);
+
   const core = document.createElement('div');
   core.className = 'launchCore';
   core.style.left = cx + 'px';
   core.style.top = cy + 'px';
-  core.style.transform = 'translate(-50%,-50%) scale(1)';
+  core.style.transform = 'translate(-50%,-50%) scale(.2)';
   document.body.appendChild(core);
 
   const removeWhenDone = (animation, element) => {
@@ -2473,32 +2502,50 @@ function createLaunchEffect(cx, cy, sourceEl){
     animation.oncancel = () => element.remove();
   };
 
+  const flashAnim = flash.animate([
+    { transform: 'translate(-50%,-50%) scale(.08)', opacity: .92 },
+    { transform: 'translate(-50%,-50%) scale(' + (isMobile ? 2.9 : 3.8) + ')', opacity: 0 }
+  ], { duration: duration * .82, easing: 'cubic-bezier(.12,.72,.2,1)', fill: 'forwards' });
+  removeWhenDone(flashAnim, flash);
+
+  const outerScale = isMobile ? 13.2 : 17.5;
   const a1 = wave.animate([
-    { transform: 'translate(-50%,-50%) scale(.3)', opacity: .95 },
-    { transform: 'translate(-50%,-50%) scale(7.2)', opacity: 0 }
-  ], { duration, easing: 'cubic-bezier(.16,.72,.25,1)', fill: 'forwards' });
+    { transform: 'translate(-50%,-50%) scale(.18)', opacity: 1 },
+    { transform: 'translate(-50%,-50%) scale(' + outerScale + ')', opacity: 0 }
+  ], { duration, easing: 'cubic-bezier(.12,.72,.2,1)', fill: 'forwards' });
   removeWhenDone(a1, wave);
 
   const a2 = wave2.animate([
-    { transform: 'translate(-50%,-50%) scale(.25)', opacity: .7 },
-    { transform: 'translate(-50%,-50%) scale(5.2)', opacity: 0 }
-  ], { duration: duration * .82, delay: duration * .12, easing: 'cubic-bezier(.16,.72,.25,1)', fill: 'forwards' });
+    { transform: 'translate(-50%,-50%) scale(.15)', opacity: .92 },
+    { transform: 'translate(-50%,-50%) scale(' + (isMobile ? 11.5 : 14.8) + ')', opacity: 0 }
+  ], { duration: duration * .86, delay: duration * .1, easing: 'cubic-bezier(.12,.72,.2,1)', fill: 'forwards' });
   removeWhenDone(a2, wave2);
 
-  const a3 = core.animate([
-    { transform: 'translate(-50%,-50%) scale(.65)', opacity: .95 },
-    { transform: 'translate(-50%,-50%) scale(2.4)', opacity: 0 }
-  ], { duration: duration * .58, easing: 'cubic-bezier(.2,.8,.25,1)', fill: 'forwards' });
-  removeWhenDone(a3, core);
+  const a3 = wave3.animate([
+    { transform: 'translate(-50%,-50%) scale(.2)', opacity: .82 },
+    { transform: 'translate(-50%,-50%) scale(' + (isMobile ? 20 : 26) + ')', opacity: 0 }
+  ], { duration: duration * .72, delay: duration * .2, easing: 'cubic-bezier(.12,.72,.2,1)', fill: 'forwards' });
+  removeWhenDone(a3, wave3);
+
+  const a4 = core.animate([
+    { transform: 'translate(-50%,-50%) scale(.2)', opacity: 1 },
+    { transform: 'translate(-50%,-50%) scale(5.2)', opacity: .98, offset: .38 },
+    { transform: 'translate(-50%,-50%) scale(1.1)', opacity: 0 }
+  ], { duration: duration * .66, easing: 'cubic-bezier(.16,.78,.2,1)', fill: 'forwards' });
+  removeWhenDone(a4, core);
+  return duration;
 }
 
-function launchEpisode(index, sourceEl){
+function launchEpisode(index, sourceEl, impactPoint){
   if (transitioning) return;
   if (index < 0 || index >= EPISODES.length) return;
   transitioning = true;
 
   let cx, cy;
-  if (sourceEl && sourceEl.getBoundingClientRect) {
+  if (impactPoint && Number.isFinite(impactPoint.x) && Number.isFinite(impactPoint.y)) {
+    cx = impactPoint.x;
+    cy = impactPoint.y;
+  } else if (sourceEl && sourceEl.getBoundingClientRect) {
     const rect = sourceEl.getBoundingClientRect();
     cx = rect.left + rect.width / 2;
     cy = rect.top + rect.height / 2;
@@ -2507,14 +2554,15 @@ function launchEpisode(index, sourceEl){
     cy = innerHeight / 2;
   }
 
-  createLaunchEffect(cx, cy, sourceEl);
+  const effectDuration = createLaunchEffect(cx, cy, sourceEl);
+  const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   setTimeout(() => {
     setCurrentTrack(index);
     openOverlay();
     play();
     transitioning = false;
-  }, isMobile ? 480 : 650);
+  }, reduced ? 80 : effectDuration + 40);
 }
 
 let dragState = null;
@@ -2549,10 +2597,10 @@ function createDragProxy(starEl, index, x, y){
   document.body.appendChild(proxy);
   if (!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) {
     proxy.animate([
-      { transform: dragTransform(x, y, .86) },
-      { transform: dragTransform(x, y, 1.15) },
-      { transform: dragTransform(x, y, 1.08) }
-    ], { duration: 240, easing: 'cubic-bezier(.18,.8,.25,1)' });
+      { transform: dragTransform(x, y, .88) },
+      { transform: dragTransform(x, y, 1.34) },
+      { transform: dragTransform(x, y, 1.12) }
+    ], { duration: isMobile ? 300 : 360, easing: 'cubic-bezier(.16,.82,.2,1)' });
   }
   return proxy;
 }
@@ -2672,10 +2720,10 @@ function onDragUp(e){
     const originX = rect.left + rect.width / 2;
     const originY = rect.top + rect.height / 2;
     const animation = state.proxy.animate([
-      { transform: dragTransform(state.lastX, state.lastY, 1.08), opacity: 1 },
-      { transform: dragTransform((state.lastX + originX) / 2, (state.lastY + originY) / 2, .96), opacity: .92, offset: .58 },
-      { transform: dragTransform(originX, originY, .72), opacity: 0 }
-    ], { duration: isMobile ? 240 : 330, easing: 'cubic-bezier(.2,.72,.25,1)', fill: 'forwards' });
+      { transform: dragTransform(state.lastX, state.lastY, 1.12), opacity: 1 },
+      { transform: dragTransform((state.lastX + originX) / 2, (state.lastY + originY) / 2, 1.32), opacity: 1, offset: .42 },
+      { transform: dragTransform(originX, originY, .68), opacity: 0 }
+    ], { duration: isMobile ? 330 : 430, easing: 'cubic-bezier(.16,.82,.2,1)', fill: 'forwards' });
     finishDragProxy(state, animation);
     return;
   }
@@ -2683,7 +2731,7 @@ function onDragUp(e){
   dropzone.classList.add('hover');
   const targetX = r.left + r.width / 2;
   const targetY = r.top + r.height / 2;
-  const duration = isMobile ? 250 : 360;
+  const duration = isMobile ? 420 : 540;
 
   if (reduced) {
     state.proxy.remove();
@@ -2693,17 +2741,19 @@ function onDragUp(e){
     return;
   }
 
+  state.proxy.classList.add('absorbing');
   const animation = state.proxy.animate([
-    { transform: dragTransform(state.lastX, state.lastY, 1.08), opacity: 1 },
-    { transform: dragTransform(targetX, targetY, 1.34), opacity: .96, offset: .72 },
-    { transform: dragTransform(targetX, targetY, .16), opacity: 0 }
-  ], { duration, easing: 'cubic-bezier(.18,.78,.22,1)', fill: 'forwards' });
+    { transform: dragTransform(state.lastX, state.lastY, 1.12), opacity: 1, offset: 0 },
+    { transform: dragTransform(targetX, targetY, 1.72), opacity: 1, offset: .58 },
+    { transform: dragTransform(targetX, targetY, 1.34), opacity: .96, offset: .78 },
+    { transform: dragTransform(targetX, targetY, .08), opacity: 0, offset: 1 }
+  ], { duration, easing: 'cubic-bezier(.14,.78,.18,1)', fill: 'forwards' });
 
   animation.onfinish = () => {
     state.proxy.remove();
     restoreDraggedStar(state);
     dropzone.classList.remove('visible', 'hover');
-    launchEpisode(state.index, state.starEl);
+    launchEpisode(state.index, state.starEl, { x: targetX, y: targetY });
   };
   animation.oncancel = () => {
     state.proxy.remove();
