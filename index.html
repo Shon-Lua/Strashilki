@@ -23,7 +23,7 @@
     -webkit-tap-highlight-color:transparent;overscroll-behavior:none;
   }
   button, input{font-family:inherit;font-weight:inherit}
-  canvas#bg{position:fixed;inset:0;z-index:0;display:block;background:#000;contain:strict}
+  canvas#bg{position:fixed;inset:0;z-index:0;display:block;background:#000;pointer-events:none}
   .grain{
     position:fixed;inset:-60%;z-index:2;pointer-events:none;opacity:.026;
     background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>");
@@ -31,15 +31,15 @@
   }
   @keyframes grainMove{0%{transform:translate3d(0,0,0)}33%{transform:translate3d(-3%,2%,0)}66%{transform:translate3d(2%,-3%,0)}100%{transform:translate3d(0,0,0)}}
   .vignette{position:fixed;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 36%, rgba(0,0,0,.62) 78%, rgba(0,0,0,.97) 100%)}
-  #skyWrap{position:fixed;inset:0;z-index:4;overflow:hidden}
-  #sky{position:absolute;top:0;left:0;width:100%;height:100%;transition:transform .95s cubic-bezier(.7,0,.28,1);will-change:transform;backface-visibility:hidden}
-  .page{position:absolute;left:0;width:100%;height:100vh;overflow:hidden;backface-visibility:hidden}
+  #skyWrap{position:fixed;inset:0;z-index:4;overflow:hidden;background:#000}
+  #sky{position:absolute;top:0;left:0;width:100%;height:100%;transition:transform .95s cubic-bezier(.7,0,.28,1);background:#000}
+  .page{position:absolute;left:0;width:100%;height:100vh;overflow:hidden;background:#000}
   .page-sky{position:absolute;inset:0;pointer-events:none}
   .page-sky svg{display:block;width:100%;height:100%}
-  .star{position:absolute;width:78px;height:78px;transform:translate(-50%,-50%);background:none;border:none;padding:0;cursor:grab;display:grid;place-items:center;-webkit-tap-highlight-color:transparent;touch-action:none;z-index:5;backface-visibility:hidden}
+  .star{position:absolute;width:78px;height:78px;transform:translate(-50%,-50%);background:none;border:none;padding:0;cursor:grab;display:grid;place-items:center;-webkit-tap-highlight-color:transparent;touch-action:none;z-index:5}
   .star.revealing{pointer-events:none}
   .star.dragging{opacity:0.15 !important;pointer-events:none}
-  .star-core{position:absolute;top:50%;left:50%;width:var(--core-size,8px);height:var(--core-size,8px);border-radius:50%;background:#fff;transform:translate(-50%,-50%);box-shadow:0 0 10px 3px rgba(255,255,255,.95), 0 0 32px 10px rgba(255,255,255,.28);animation:twinkle var(--pulse-dur,3s) ease-in-out infinite;animation-delay:var(--pulse-delay,0s);transition:transform .35s ease, box-shadow .35s ease;backface-visibility:hidden;z-index:2}
+  .star-core{position:absolute;top:50%;left:50%;width:var(--core-size,8px);height:var(--core-size,8px);border-radius:50%;background:#fff;transform:translate(-50%,-50%);box-shadow:0 0 10px 3px rgba(255,255,255,.95), 0 0 32px 10px rgba(255,255,255,.28);animation:twinkle var(--pulse-dur,3s) ease-in-out infinite;animation-delay:var(--pulse-delay,0s);transition:transform .35s ease, box-shadow .35s ease;z-index:2}
   @keyframes twinkle{0%,100%{opacity:.45}50%{opacity:1}}
   .star:hover .star-core{transform:translate(-50%,-50%) scale(1.7);box-shadow:0 0 16px 6px rgba(255,255,255,1), 0 0 52px 18px rgba(255,255,255,.5)}
   .star-flare{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);animation:twinkle var(--pulse-dur,3s) ease-in-out infinite;animation-delay:var(--pulse-delay,0s);pointer-events:none;opacity:.5;transition:opacity .35s ease;z-index:1}
@@ -94,10 +94,10 @@
   #pageCurrent{color:#fff;opacity:1}
   #infoBtn{
     position:fixed;
-    bottom:22px;right:22px;
+    top:24px;left:20px;
     z-index:26;
     background:none;border:none;
-    padding:8px;width:40px;height:40px;
+    padding:6px;width:34px;height:34px;
     display:grid;place-items:center;
     color:rgba(255,255,255,.85);
     cursor:pointer;
@@ -106,9 +106,9 @@
     text-shadow:0 0 10px rgba(0,0,0,.9);
   }
   #infoBtn:hover{color:#fff;filter:drop-shadow(0 0 8px rgba(255,255,255,.65))}
-  #infoBtn svg{width:22px;height:22px;display:block}
+  #infoBtn svg{width:20px;height:20px;display:block}
   #toastContainer{position:fixed;top:calc(env(safe-area-inset-top, 0px) + 16px);left:50%;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;align-items:center;gap:8px;width:min(420px, calc(100% - 24px));pointer-events:none}
-  .toast{position:relative;pointer-events:auto;max-width:100%;padding:12px 22px;background:rgba(8,5,7,.94);border:1px solid rgba(255,255,255,.1);border-radius:3px;font-family:'IM Fell English', Georgia, serif;font-weight:400;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:#ded9ea;text-align:center;box-shadow:0 10px 34px rgba(0,0,0,.85), 0 0 22px rgba(255,255,255,.03);transform:translate3d(0,-140%,0);opacity:0;transition:transform .45s cubic-bezier(.2,.9,.3,1.15), opacity .32s ease;will-change:transform,opacity;touch-action:none;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;backface-visibility:hidden}
+  .toast{position:relative;pointer-events:auto;max-width:100%;padding:12px 22px;background:rgba(8,5,7,.94);border:1px solid rgba(255,255,255,.1);border-radius:3px;font-family:'IM Fell English', Georgia, serif;font-weight:400;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:#ded9ea;text-align:center;box-shadow:0 10px 34px rgba(0,0,0,.85), 0 0 22px rgba(255,255,255,.03);transform:translate3d(0,-140%,0);opacity:0;transition:transform .45s cubic-bezier(.2,.9,.3,1.15), opacity .32s ease;will-change:transform,opacity;touch-action:none;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .toast.show{transform:translate3d(0,0,0);opacity:1}
   .ghostStar{position:fixed;width:22px;height:22px;border-radius:50%;background:#fff;transform:translate(-50%,-50%);pointer-events:none;z-index:200;box-shadow:0 0 30px 10px rgba(255,255,255,.85), 0 0 90px 30px rgba(255,255,255,.3);will-change:transform,left,top}
   .trailDot{position:fixed;width:9px;height:9px;border-radius:50%;background:#fff;box-shadow:0 0 16px rgba(255,255,255,.9);transform:translate(-50%,-50%) scale(1);pointer-events:none;z-index:199;opacity:.9;transition:opacity .55s ease, transform .55s ease}
@@ -120,7 +120,7 @@
   .dropzone.hover .dropzone-label{color:#fff}
   #playerOverlay{position:fixed;inset:0;z-index:40;display:grid;place-items:center;background:radial-gradient(circle at 50% 42%, rgba(18,18,22,.65) 0%, rgba(0,0,0,.98) 72%);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);opacity:0;pointer-events:none;transition:opacity .4s ease}
   #playerOverlay.show{opacity:1;pointer-events:auto}
-  .playerCard{position:relative;width:min(440px, 88vw);display:flex;flex-direction:column;align-items:center;gap:22px;padding:0 4px;transform-origin:50% 100%;transform:translateY(35vh) scale(.35);opacity:0;transition:transform .65s cubic-bezier(.2,.9,.3,1.25), opacity .4s ease;will-change:transform,opacity;backface-visibility:hidden}
+  .playerCard{position:relative;width:min(440px, 88vw);display:flex;flex-direction:column;align-items:center;gap:22px;padding:0 4px;transform-origin:50% 100%;transform:translateY(35vh) scale(.35);opacity:0;transition:transform .65s cubic-bezier(.2,.9,.3,1.25), opacity .4s ease;will-change:transform,opacity}
   #playerOverlay.show .playerCard{transform:translateY(0) scale(1);opacity:1}
   .cover{width:100%;aspect-ratio:1/1;border-radius:14px;overflow:hidden;position:relative;box-shadow:0 30px 80px -20px rgba(0,0,0,.95), 0 0 0 1px rgba(255,255,255,.06), 0 0 70px -10px rgba(255,255,255,.08);background:#050505}
   .cover svg, .cover img{display:block;width:100%;height:100%;object-fit:cover}
@@ -147,13 +147,14 @@
   #shuffleBtn{margin-left:10px}
   .spinner-circle{transform-box: fill-box;transform-origin: center;animation: spinAnim 1s linear infinite}
   @keyframes spinAnim{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-  #miniPlayer{position:fixed;left:50%;bottom:22px;transform:translate(-50%, 200%);width:min(420px, calc(100% - 32px));display:grid;grid-template-columns:44px 1fr 40px;align-items:center;gap:12px;padding:10px 14px 10px 10px;background:rgba(8,8,10,.9);border:1px solid rgba(255,255,255,.1);border-radius:12px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:30;transition:transform .5s cubic-bezier(.2,.9,.3,1.2), opacity .35s ease;opacity:0;cursor:pointer;box-shadow:0 15px 50px rgba(0,0,0,.75), 0 0 0 1px rgba(0,0,0,.4);will-change:transform,opacity;backface-visibility:hidden;touch-action:none}
+  #miniPlayer{position:fixed;left:50%;bottom:22px;transform:translate(-50%, 200%);width:min(420px, calc(100% - 32px));display:grid;grid-template-columns:44px 1fr 40px;align-items:center;gap:12px;padding:10px 14px 10px 10px;background:rgba(8,8,10,.9);border:1px solid rgba(255,255,255,.1);border-radius:12px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:30;transition:transform .5s cubic-bezier(.2,.9,.3,1.2), opacity .35s ease;opacity:0;cursor:pointer;box-shadow:0 15px 50px rgba(0,0,0,.75), 0 0 0 1px rgba(0,0,0,.4);will-change:transform,opacity;touch-action:none}
   #miniPlayer.show{transform:translate(-50%, 0);opacity:1}
   #miniPlayer:hover{border-color:rgba(255,255,255,.22);box-shadow:0 15px 50px rgba(0,0,0,.85), 0 0 30px -8px rgba(255,255,255,.22)}
   .mini-cover{width:44px;height:44px;border-radius:7px;overflow:hidden;background:#050505;box-shadow:0 0 0 1px rgba(255,255,255,.08);pointer-events:none}
   .mini-cover svg, .mini-cover img{display:block;width:100%;height:100%;object-fit:cover}
   .mini-info{min-width:0;display:flex;flex-direction:column;gap:7px;pointer-events:none;overflow:hidden}
   .mini-title{font-family:'IM Fell English', Georgia, serif;font-weight:400;font-size:14px;color:#e2ddee;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;position:relative}
+  .mini-bar-wrap{position:relative;padding:11px 0;margin:-11px 0;cursor:pointer;pointer-events:auto;touch-action:none}
   .mini-bar{height:2px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden}
   .mini-fill{height:100%;width:100%;background:#fff;box-shadow:0 0 8px rgba(255,255,255,.8);transform:scaleX(0);transform-origin:left center;transition:transform .2s linear;will-change:transform}
   .mini-btn{width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,.06);color:#fff;cursor:pointer;display:grid;place-items:center;transition:.25s ease}
@@ -164,6 +165,18 @@
   #searchInput{width:100%;padding:12px 18px;background:rgba(8,6,10,.95);border:1px solid rgba(255,255,255,.15);border-radius:3px;color:#eae6f2;font-family:'IM Fell English', Georgia, serif;font-weight:400;font-size:15px;letter-spacing:.03em;outline:none;transition:border-color .25s ease, box-shadow .25s ease;box-shadow:0 10px 30px rgba(0,0,0,.85);-webkit-appearance:none}
   #searchInput:focus{border-color:rgba(255,255,255,.55);box-shadow:0 10px 30px rgba(0,0,0,.85), 0 0 24px rgba(255,255,255,.12)}
   #searchInput::placeholder{color:rgba(255,255,255,.28);letter-spacing:.04em}
+  #searchInput::-webkit-search-cancel-button{
+    -webkit-appearance:none;
+    appearance:none;
+    width:14px;
+    height:14px;
+    background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'><path d='M3 3l8 8M11 3l-8 8' stroke='white' stroke-width='1.5' stroke-linecap='round'/></svg>") center/contain no-repeat;
+    cursor:pointer;
+    opacity:.7;
+    transition:opacity .2s ease;
+    margin-left:6px;
+  }
+  #searchInput::-webkit-search-cancel-button:hover{opacity:1}
   #searchSuggestions{margin-top:6px;background:rgba(8,6,10,.97);border:1px solid rgba(255,255,255,.12);border-radius:3px;box-shadow:0 10px 30px rgba(0,0,0,.9);max-height:260px;overflow-y:auto;display:none;-webkit-overflow-scrolling:touch}
   #searchSuggestions.show{display:block}
   .suggestion{padding:11px 16px;font-family:'IM Fell English', Georgia, serif;font-weight:400;font-size:14px;letter-spacing:.02em;color:#b8b2c5;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.05);transition:background .18s ease, color .18s ease;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -226,13 +239,19 @@
     .toast{backdrop-filter:none;-webkit-backdrop-filter:none}
     #sky{transition:transform .8s cubic-bezier(.7,0,.28,1)}
     #skyHintBanner{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(0,0,0,.85)}
+    .star-core{box-shadow:0 0 8px 2px rgba(255,255,255,.9), 0 0 20px 6px rgba(255,255,255,.22)}
+    .star:hover .star-core{box-shadow:0 0 12px 3px rgba(255,255,255,.95), 0 0 32px 10px rgba(255,255,255,.3)}
+    .star-flare{animation:none;opacity:.55}
+    .star:hover .star-flare{opacity:.55}
+    .star-ring{filter:none}
+    .star.active .star-ring{filter:none}
   }
   @media (max-width:640px){
     #topBar{top:16px;right:12px;gap:0}
     #topBar button{width:30px;height:30px;padding:5px}
     #topBar button svg{width:18px;height:18px}
-    #infoBtn{bottom:16px;right:14px;width:34px;height:34px;padding:6px}
-    #infoBtn svg{width:20px;height:20px}
+    #infoBtn{top:16px;left:12px;width:30px;height:30px;padding:5px}
+    #infoBtn svg{width:18px;height:18px}
     .pageNav{font-size:12px;letter-spacing:.26em;gap:6px;margin-left:4px}
     #searchBox{top:54px;right:12px;width:calc(100% - 24px);max-width:320px}
     .star{width:68px;height:68px}
@@ -304,7 +323,9 @@
   <div class="mini-cover" id="miniCover"></div>
   <div class="mini-info">
     <div class="mini-title" id="miniTitle">—</div>
-    <div class="mini-bar"><div class="mini-fill" id="miniFill"></div></div>
+    <div class="mini-bar-wrap" id="miniBarWrap">
+      <div class="mini-bar"><div class="mini-fill" id="miniFill"></div></div>
+    </div>
   </div>
   <button class="mini-btn" id="miniPlayBtn" aria-label="Play/Pause">
     <svg viewBox="0 0 24 24" id="miniPlayIcon"><path d="M8 5v14l11-7z"/></svg>
@@ -458,6 +479,7 @@ const miniPlayer = document.getElementById('miniPlayer');
 const miniCover = document.getElementById('miniCover');
 const miniTitle = document.getElementById('miniTitle');
 const miniFill = document.getElementById('miniFill');
+const miniBarWrap = document.getElementById('miniBarWrap');
 const miniPlayBtn = document.getElementById('miniPlayBtn');
 const miniPlayIcon = document.getElementById('miniPlayIcon');
 const infoPanel = document.getElementById('infoPanel');
@@ -988,9 +1010,8 @@ function createStarEl(ep, idx, pos){
 }
 
 async function buildSky(){
-  sky.innerHTML = '';
-  starEls = [];
-  EPISODES = [];
+  const initialStarCount = isMobile ? 220 : 460;
+  sky.innerHTML = '<div class="page" style="top:0"><div class="page-sky">' + makeSkySVG(initialStarCount) + '</div></div>';
 
   let data;
   try {
@@ -1020,22 +1041,26 @@ async function buildSky(){
   pageTotalEl.textContent = totalPages;
   pageCurrentEl.textContent = 1;
   currentPage = 0;
-  sky.style.transform = 'translateY(0)';
 
   const pages = [];
   const positionsPerPage = [];
+  const fragment = document.createDocumentFragment();
   for (let p = 0; p < totalPages; p++) {
     const page = document.createElement('div');
     page.className = 'page';
     page.style.top = (p * 100) + 'vh';
     const skyLayer = document.createElement('div');
     skyLayer.className = 'page-sky';
-    skyLayer.innerHTML = makeSkySVG(260 + Math.floor(Math.random() * 160));
+    const perPageStars = isMobile ? 140 + Math.floor(Math.random() * 90) : 260 + Math.floor(Math.random() * 160);
+    skyLayer.innerHTML = makeSkySVG(perPageStars);
     page.appendChild(skyLayer);
-    sky.appendChild(page);
+    fragment.appendChild(page);
     pages.push(page);
     positionsPerPage.push(generateChaoticPositions(pageSizes[p]));
   }
+  while (sky.firstChild) sky.removeChild(sky.firstChild);
+  sky.appendChild(fragment);
+  sky.style.transform = 'translateY(0)';
 
   let globalIdx = 0;
   let resolveIndex = 0;
@@ -1060,19 +1085,20 @@ async function buildSky(){
       star.classList.add('revealing');
       star.style.opacity = '0';
       star.style.transform = 'translate(-50%,-50%) scale(0.15)';
-      star.style.transition = 'opacity .8s ease, transform .8s cubic-bezier(.2,.9,.3,1.4)';
+      const revealDur = isMobile ? 0.45 : 0.8;
+      star.style.transition = 'opacity ' + revealDur + 's ease, transform ' + revealDur + 's cubic-bezier(.2,.9,.3,1.4)';
       pages[p].appendChild(star);
       starEls[idx] = star;
 
       const thisStar = star;
-      const delay = 40 + (globalIdx % 8) * 40;
+      const delay = isMobile ? (20 + (globalIdx % 5) * 22) : (40 + (globalIdx % 8) * 40);
       setTimeout(() => {
         thisStar.style.opacity = '1';
         thisStar.style.transform = 'translate(-50%,-50%) scale(1)';
         setTimeout(() => {
           thisStar.classList.remove('revealing');
           thisStar.style.transition = '';
-        }, 850);
+        }, revealDur * 1000 + 50);
       }, delay);
 
       globalIdx++;
@@ -1632,7 +1658,7 @@ function performSearch(rawQuery){
 }
 
 const spheres = [];
-const sphereCount = isMobile ? 4 : 7;
+const sphereCount = isMobile ? 3 : 7;
 for (let i = 0; i < sphereCount; i++) {
   const deep = i < 2;
   spheres.push({
@@ -2245,7 +2271,9 @@ function startDrag(index, starEl, e){
   miniPlayer.classList.remove('show');
   dragState = {
     index, starEl, ghost, startX: e.clientX, startY: e.clientY,
-    moved: false, pid: e.pointerId, lastTrail: 0
+    moved: false, pid: e.pointerId, lastTrail: 0,
+    dropRect: dropzone.getBoundingClientRect(),
+    trailInterval: isMobile ? 40 : 26
   };
   window.addEventListener('pointermove', onDragMove);
   window.addEventListener('pointerup', onDragUp);
@@ -2260,11 +2288,11 @@ function onDragMove(e){
   dragState.ghost.style.top = e.clientY + 'px';
   moveGhostLabel(e.clientX, e.clientY);
   const now = performance.now();
-  if (now - dragState.lastTrail > 26) {
+  if (now - dragState.lastTrail > dragState.trailInterval) {
     spawnTrail(e.clientX, e.clientY);
     dragState.lastTrail = now;
   }
-  const r = dropzone.getBoundingClientRect();
+  const r = dragState.dropRect;
   const over = e.clientX > r.left && e.clientX < r.right && e.clientY > r.top && e.clientY < r.bottom;
   dropzone.classList.toggle('hover', over);
 }
@@ -2288,7 +2316,7 @@ function onDragUp(e){
     return;
   }
 
-  const r = dropzone.getBoundingClientRect();
+  const r = state.dropRect;
   const over = e.clientX > r.left && e.clientX < r.right && e.clientY > r.top && e.clientY < r.bottom;
 
   if (!over) {
@@ -2344,6 +2372,7 @@ function loadEpisode(n){
 
 let miniPtr = null;
 let miniWasSwipe = false;
+let miniBarScrubbing = false;
 
 function swipeEpisode(dir){
   if (current < 0) return;
@@ -2352,9 +2381,48 @@ function swipeEpisode(dir){
   switchToEpisode(target, playing || wantsToPlay);
 }
 
+function seekMiniBar(clientX){
+  if (!episodeAudio || !episodeAudio.duration || isNaN(episodeAudio.duration)) return;
+  const rect = miniBarWrap.getBoundingClientRect();
+  const p = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+  try { episodeAudio.currentTime = p * episodeAudio.duration; } catch(e) { return; }
+  elapsed = episodeAudio.currentTime;
+  updateProgress();
+  if (current >= 0 && EPISODES[current]) {
+    const key = EPISODES[current].folderKey;
+    if (elapsed > 2) savedPositions[key] = elapsed;
+    else delete savedPositions[key];
+    persistPositions();
+  }
+}
+
+miniBarWrap.addEventListener('pointerdown', (e) => {
+  if (!e.isPrimary) return;
+  if (current < 0 || !episodeAudio || !episodeAudio.duration || isNaN(episodeAudio.duration)) return;
+  e.stopPropagation();
+  e.preventDefault();
+  miniBarScrubbing = true;
+  try { miniBarWrap.setPointerCapture(e.pointerId); } catch(err) {}
+  seekMiniBar(e.clientX);
+});
+miniBarWrap.addEventListener('pointermove', (e) => {
+  if (!miniBarScrubbing) return;
+  e.stopPropagation();
+  seekMiniBar(e.clientX);
+});
+miniBarWrap.addEventListener('pointerup', (e) => {
+  if (!miniBarScrubbing) return;
+  miniBarScrubbing = false;
+  seekMiniBar(e.clientX);
+});
+miniBarWrap.addEventListener('pointercancel', () => {
+  miniBarScrubbing = false;
+});
+
 miniPlayer.addEventListener('pointerdown', (e) => {
   if (!e.isPrimary) return;
   if (e.target.closest('#miniPlayBtn')) return;
+  if (e.target.closest('.mini-bar-wrap')) return;
   miniPtr = { x: e.clientX, y: e.clientY, id: e.pointerId, moved: false };
 });
 miniPlayer.addEventListener('pointermove', (e) => {
@@ -2441,6 +2509,7 @@ progressBar.addEventListener('click', (e) => {
 
 miniPlayer.addEventListener('click', (e) => {
   if (e.target.closest('#miniPlayBtn')) return;
+  if (e.target.closest('.mini-bar-wrap')) return;
   if (miniWasSwipe) { miniWasSwipe = false; return; }
   if (current < 0) return;
   openOverlay();
