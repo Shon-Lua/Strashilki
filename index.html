@@ -117,29 +117,19 @@
   .pageNav:hover,.pageNav[aria-expanded="true"]{border-color:rgba(210,205,225,.42);background:rgba(14,10,16,.78);box-shadow:0 0 20px rgba(160,145,185,.12)}
   .pageNav i{font-style:normal;opacity:.55;color:#fff}
   #pageCurrent{color:#fff;opacity:1}
-  #pageMapPanel{position:fixed;top:68px;right:18px;width:min(350px,calc(100vw - 24px));z-index:76;padding:16px 16px 14px;border:1px solid rgba(190,180,205,.22);border-radius:3px;background:radial-gradient(ellipse at 50% 0%,rgba(55,42,59,.22),transparent 65%),linear-gradient(145deg,rgba(11,9,14,.98),rgba(3,3,5,.985));box-shadow:0 22px 70px rgba(0,0,0,.88),inset 0 0 34px rgba(120,95,135,.045);opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-9px) scale(.985);transform-origin:top right;transition:opacity .24s ease,transform .28s cubic-bezier(.2,.8,.2,1),visibility .24s ease}
+  #pageMapPanel{position:fixed;top:68px;right:18px;width:min(430px,calc(100vw - 24px));z-index:76;padding:10px 11px 11px;border:1px solid rgba(190,180,205,.17);border-radius:3px;background:radial-gradient(ellipse at 22% 78%,rgba(105,15,29,.12),transparent 48%),radial-gradient(ellipse at 76% 22%,rgba(165,165,185,.075),transparent 53%),rgba(0,0,0,.94);box-shadow:0 22px 70px rgba(0,0,0,.88),inset 0 0 38px rgba(120,95,135,.035);opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-9px) scale(.985);transform-origin:top right;transition:opacity .24s ease,transform .28s cubic-bezier(.2,.8,.2,1),visibility .24s ease}
   #pageMapPanel.show{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0) scale(1)}
-  .pageMapHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:13px}
-  .pageMapEyebrow{font-family:'Special Elite','Courier New',monospace;font-size:9px;letter-spacing:.34em;color:rgba(190,178,205,.52);text-transform:uppercase;margin-bottom:5px}
-  .pageMapTitle{font-family:'Special Elite','Courier New',monospace;font-size:14px;letter-spacing:.18em;color:#e2dce9;text-transform:uppercase}
-  #pageMapClose{width:28px;height:28px;display:grid;place-items:center;border:1px solid rgba(210,200,220,.15);background:rgba(255,255,255,.025);color:rgba(230,222,238,.62);font-size:19px;line-height:1;cursor:pointer;border-radius:2px;flex-shrink:0}
-  #pageMapClose:hover{color:#fff;border-color:rgba(230,220,245,.45)}
-  .pageMapFrame{position:relative;height:154px;overflow:hidden;border:1px solid rgba(180,165,195,.18);border-radius:2px;background:radial-gradient(ellipse at 50% 55%,rgba(65,49,69,.24),rgba(4,4,7,.96) 72%)}
-  .pageMapFrame::before,.pageMapFrame::after{content:'';position:absolute;pointer-events:none;inset:9px;border:1px solid rgba(180,165,195,.08)}
-  .pageMapFrame::after{inset:0;background:linear-gradient(90deg,rgba(0,0,0,.22),transparent 16%,transparent 84%,rgba(0,0,0,.22));}
+  .pageMapFrame{position:relative;height:224px;overflow:hidden;border:1px solid rgba(180,165,195,.13);border-radius:2px;background:#000}
+  .pageMapFrame::after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 48%,transparent 48%,rgba(0,0,0,.42) 100%)}
   #pageMapCanvas{display:block;width:100%;height:100%}
-  .pageMapCoordinates{position:absolute;left:12px;top:10px;font-family:'Special Elite','Courier New',monospace;font-size:8px;letter-spacing:.18em;color:rgba(205,195,215,.42);pointer-events:none}
-  .pageMapMeta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 1px 9px;font-family:'Special Elite','Courier New',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase}
-  #pageMapPageLabel{color:#e8e1ef}
-  #pageMapEpisodeLabel{color:rgba(190,178,202,.55);text-align:right}
-  .pageMapSliderLabel{display:flex;justify-content:space-between;gap:10px;margin-bottom:8px;font-family:'Special Elite','Courier New',monospace;font-size:8px;letter-spacing:.22em;text-transform:uppercase;color:rgba(190,180,205,.48)}
-  #pageMapSlider{display:block;width:100%;height:20px;margin:0;background:transparent;appearance:none;-webkit-appearance:none;cursor:pointer;touch-action:pan-y}
-  #pageMapSlider::-webkit-slider-runnable-track{height:2px;background:linear-gradient(90deg,rgba(110,82,111,.65),rgba(210,198,220,.42),rgba(94,68,79,.7));border-radius:2px}
-  #pageMapSlider::-moz-range-track{height:2px;background:linear-gradient(90deg,rgba(110,82,111,.65),rgba(210,198,220,.42),rgba(94,68,79,.7));border-radius:2px}
-  #pageMapSlider::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:13px;height:13px;margin-top:-5.5px;border-radius:50%;border:1px solid rgba(245,238,250,.85);background:#bcb1c7;box-shadow:0 0 10px rgba(210,195,225,.7),0 0 24px rgba(125,90,135,.35)}
-  #pageMapSlider::-moz-range-thumb{width:12px;height:12px;border-radius:50%;border:1px solid rgba(245,238,250,.85);background:#bcb1c7;box-shadow:0 0 10px rgba(210,195,225,.7),0 0 24px rgba(125,90,135,.35)}
-  #pageMapSlider:focus-visible{outline:1px solid rgba(225,215,240,.6);outline-offset:4px}
-  .pageMapFooter{display:flex;justify-content:space-between;gap:10px;padding-top:9px;border-top:1px solid rgba(190,175,205,.1);font-family:'IM Fell English',Georgia,serif;font-style:italic;font-size:11px;color:rgba(184,174,198,.45)}
+  .pageMapMeta{display:flex;align-items:center;justify-content:center;gap:10px;margin:9px 1px 5px;font-family:'Special Elite','Courier New',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase}
+  #pageMapPageLabel{color:#e8e1ef;text-shadow:0 0 12px rgba(225,215,235,.22)}
+  #pageMapSlider{display:block;width:100%;height:22px;margin:0;background:transparent;appearance:none;-webkit-appearance:none;cursor:pointer;touch-action:pan-y}
+  #pageMapSlider::-webkit-slider-runnable-track{height:2px;background:linear-gradient(90deg,rgba(100,20,35,.72),rgba(210,198,220,.48),rgba(100,20,35,.72));border-radius:2px}
+  #pageMapSlider::-moz-range-track{height:2px;background:linear-gradient(90deg,rgba(100,20,35,.72),rgba(210,198,220,.48),rgba(100,20,35,.72));border-radius:2px}
+  #pageMapSlider::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:14px;height:14px;margin-top:-6px;border-radius:50%;border:1px solid rgba(245,238,250,.9);background:#c9c0d2;box-shadow:0 0 10px rgba(210,195,225,.72),0 0 24px rgba(125,35,55,.32)}
+  #pageMapSlider::-moz-range-thumb{width:13px;height:13px;border-radius:50%;border:1px solid rgba(245,238,250,.9);background:#c9c0d2;box-shadow:0 0 10px rgba(210,195,225,.72),0 0 24px rgba(125,35,55,.32)}
+  #pageMapSlider:focus-visible{outline:1px solid rgba(225,215,240,.6);outline-offset:3px}
   #infoBtn{
     position:fixed;
     top:24px;left:20px;
@@ -290,7 +280,7 @@
     .grain{animation:none}
     #playerOverlay{backdrop-filter:none;-webkit-backdrop-filter:none;background:radial-gradient(circle at 50% 42%, rgba(16,16,20,.94) 0%, rgba(0,0,0,.985) 72%)}
     #miniPlayer{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(8,8,10,.97)}
-    #pageMapPanel{backdrop-filter:none;-webkit-backdrop-filter:none;background:linear-gradient(145deg,rgba(11,9,14,.99),rgba(3,3,5,.995))}
+    #pageMapPanel{backdrop-filter:none;-webkit-backdrop-filter:none}
     .toast{backdrop-filter:none;-webkit-backdrop-filter:none}
     #sky{transition:transform .8s cubic-bezier(.7,0,.28,1)}
     #skyHintBanner{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(0,0,0,.85)}
@@ -309,8 +299,8 @@
     #infoBtn svg{width:18px;height:18px}
     .pageNav{font-size:12px;letter-spacing:.26em;gap:6px;margin-left:4px}
     #topBar button.pageNav{width:auto;height:auto;min-width:58px;padding:4px 6px}
-    #pageMapPanel{top:54px;right:12px;width:min(350px,calc(100vw - 24px));padding:14px 13px 12px}
-    .pageMapFrame{height:138px}
+    #pageMapPanel{top:54px;right:12px;width:min(430px,calc(100vw - 24px));padding:9px}
+    .pageMapFrame{height:190px}
     #searchBox{top:54px;right:12px;width:calc(100% - 24px);max-width:320px}
     .star{width:68px;height:68px}
     .toast{font-size:10px;padding:10px 16px;letter-spacing:.18em}
@@ -385,15 +375,9 @@
   </button>
 </div>
 <div id="pageMapPanel" aria-hidden="true">
-  <div class="pageMapHeader">
-    <div><div class="pageMapEyebrow">Архив · карта эфира</div><div class="pageMapTitle">Созвездие выпусков</div></div>
-    <button id="pageMapClose" type="button" aria-label="Закрыть карту">×</button>
-  </div>
-  <div class="pageMapFrame"><canvas id="pageMapCanvas" aria-label="Мини-карта выпусков на выбранной странице"></canvas><div class="pageMapCoordinates">SECTOR 0<span id="pageMapSector">1</span> · NIGHT INDEX</div></div>
-  <div class="pageMapMeta"><span id="pageMapPageLabel">Страница 1 / 1</span><span id="pageMapEpisodeLabel">Выпуски 1–0</span></div>
-  <div class="pageMapSliderLabel"><span>Перемещение по архиву</span><span>01 — <span id="pageMapTotalLabel">01</span></span></div>
-  <input id="pageMapSlider" type="range" min="0" max="0" step="1" value="0" aria-label="Выбор страницы с выпусками">
-  <div class="pageMapFooter"><span>Светлые точки — выпуски</span><span>Найдите нужную звезду</span></div>
+  <div class="pageMapFrame"><canvas id="pageMapCanvas" aria-label="Карта звёзд выпусков на выбранной странице"></canvas></div>
+  <div class="pageMapMeta"><span id="pageMapPageLabel">Страница 1 / 1</span></div>
+  <input id="pageMapSlider" type="range" min="0" max="0" step="1" value="0" aria-label="Выбор страницы">
 </div>
 <button id="infoBtn" aria-label="Информация">
   <svg viewBox="0 0 24 24">
@@ -546,14 +530,10 @@ const skyWrap = document.getElementById('skyWrap');
 let pageTurnCleanupTimer = 0;
 const pageNavBtn = document.getElementById('pageNavBtn');
 const pageMapPanel = document.getElementById('pageMapPanel');
-const pageMapClose = document.getElementById('pageMapClose');
 const pageMapCanvas = document.getElementById('pageMapCanvas');
 const pageMapCtx = pageMapCanvas.getContext('2d');
 const pageMapSlider = document.getElementById('pageMapSlider');
 const pageMapPageLabel = document.getElementById('pageMapPageLabel');
-const pageMapEpisodeLabel = document.getElementById('pageMapEpisodeLabel');
-const pageMapTotalLabel = document.getElementById('pageMapTotalLabel');
-const pageMapSector = document.getElementById('pageMapSector');
 const sky = document.getElementById('sky');
 const pageCurrentEl = document.getElementById('pageCurrent');
 const pageTotalEl = document.getElementById('pageTotal');
@@ -3043,25 +3023,35 @@ function drawPageMap(){
   const g = pageMapCtx;
   g.setTransform(ratio, 0, 0, ratio, 0, 0);
   g.clearRect(0, 0, width, height);
-
-  const haze = g.createRadialGradient(width * .52, height * .52, 2, width * .52, height * .52, width * .72);
-  haze.addColorStop(0, 'rgba(75,57,82,.22)');
-  haze.addColorStop(.58, 'rgba(23,19,29,.18)');
-  haze.addColorStop(1, 'rgba(0,0,0,0)');
-  g.fillStyle = haze;
+  g.fillStyle = '#000';
   g.fillRect(0, 0, width, height);
 
-  g.save();
-  g.strokeStyle = 'rgba(190,178,205,.075)';
-  g.lineWidth = 1;
-  g.setLineDash([2, 7]);
-  for (let x = width * .2; x < width; x += width * .2) { g.beginPath(); g.moveTo(x, 10); g.lineTo(x, height - 10); g.stroke(); }
-  for (let y = height * .25; y < height; y += height * .25) { g.beginPath(); g.moveTo(10, y); g.lineTo(width - 10, y); g.stroke(); }
-  g.setLineDash([]);
-  g.strokeStyle = 'rgba(190,178,205,.11)';
-  g.beginPath(); g.ellipse(width * .5, height * .52, width * .32, height * .38, -.17, 0, Math.PI * 2); g.stroke();
-  g.beginPath(); g.moveTo(width * .5, 12); g.lineTo(width * .5, height - 12); g.stroke();
-  g.restore();
+  const deepRed = g.createRadialGradient(width * .22, height * .72, 1, width * .22, height * .72, width * .7);
+  deepRed.addColorStop(0, 'rgba(105,8,25,.15)');
+  deepRed.addColorStop(.48, 'rgba(55,8,18,.075)');
+  deepRed.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = deepRed;
+  g.fillRect(0, 0, width, height);
+
+  const coldHaze = g.createRadialGradient(width * .76, height * .22, 1, width * .76, height * .22, width * .62);
+  coldHaze.addColorStop(0, 'rgba(155,155,175,.095)');
+  coldHaze.addColorStop(.52, 'rgba(62,57,75,.045)');
+  coldHaze.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = coldHaze;
+  g.fillRect(0, 0, width, height);
+
+  for (let i = 0; i < 92; i++) {
+    const fx = (Math.sin((i + 1) * 127.1) * 43758.5453) % 1;
+    const fy = (Math.sin((i + 1) * 269.5) * 24634.6345) % 1;
+    const x = ((fx + 1) % 1) * width;
+    const y = ((fy + 1) % 1) * height;
+    const radius = .35 + ((i * 17) % 11) / 12;
+    const alpha = .12 + ((i * 13) % 9) / 22;
+    g.fillStyle = 'rgba(225,220,238,' + alpha.toFixed(3) + ')';
+    g.beginPath();
+    g.arc(x, y, radius, 0, Math.PI * 2);
+    g.fill();
+  }
 
   const page = Math.max(0, Math.min(totalPages - 1, currentPage));
   const start = pageStarts[page] || 0;
@@ -3076,40 +3066,30 @@ function drawPageMap(){
     points.push({ x: px, y: py, index: i });
   }
 
-  if (points.length > 2) {
-    g.save();
-    g.strokeStyle = 'rgba(164,145,176,.14)';
-    g.lineWidth = .8;
-    g.beginPath();
-    points.forEach((pt, i) => { if (i === 0) g.moveTo(pt.x, pt.y); else g.lineTo(pt.x, pt.y); });
-    g.stroke();
-    g.restore();
-  }
-
   for (const point of points) {
     const active = point.index === current;
     const played = EPISODES[point.index] && playedSet.has(EPISODES[point.index].folderKey);
-    const radius = active ? 3.3 : (played ? 1.9 : 2.35);
-    const glow = g.createRadialGradient(point.x, point.y, .2, point.x, point.y, active ? 15 : 8);
-    glow.addColorStop(0, active ? 'rgba(255,244,255,.95)' : 'rgba(220,213,232,.72)');
-    glow.addColorStop(.3, active ? 'rgba(188,151,194,.5)' : 'rgba(164,155,188,.24)');
+    const radius = active ? 3.6 : (played ? 1.8 : 2.3);
+    const glowRadius = active ? 17 : 9;
+    const glow = g.createRadialGradient(point.x, point.y, .2, point.x, point.y, glowRadius);
+    glow.addColorStop(0, active ? 'rgba(255,248,255,.98)' : 'rgba(228,222,240,.75)');
+    glow.addColorStop(.32, active ? 'rgba(196,150,194,.48)' : 'rgba(165,155,190,.22)');
     glow.addColorStop(1, 'rgba(150,120,170,0)');
     g.fillStyle = glow;
-    g.beginPath(); g.arc(point.x, point.y, active ? 15 : 8, 0, Math.PI * 2); g.fill();
-    g.fillStyle = active ? '#fff' : (played ? 'rgba(191,160,174,.78)' : 'rgba(224,220,238,.9)');
-    g.beginPath(); g.arc(point.x, point.y, radius, 0, Math.PI * 2); g.fill();
+    g.beginPath();
+    g.arc(point.x, point.y, glowRadius, 0, Math.PI * 2);
+    g.fill();
+    g.fillStyle = active ? '#fff' : (played ? 'rgba(191,160,174,.78)' : 'rgba(230,225,240,.92)');
+    g.beginPath();
+    g.arc(point.x, point.y, radius, 0, Math.PI * 2);
+    g.fill();
     if (active) {
-      g.strokeStyle = 'rgba(232,211,239,.72)';
+      g.strokeStyle = 'rgba(235,215,242,.78)';
       g.lineWidth = 1;
-      g.beginPath(); g.arc(point.x, point.y, 7.5, 0, Math.PI * 2); g.stroke();
+      g.beginPath();
+      g.arc(point.x, point.y, 8.5, 0, Math.PI * 2);
+      g.stroke();
     }
-  }
-
-  if (!points.length) {
-    g.fillStyle = 'rgba(205,194,215,.48)';
-    g.font = 'italic 12px Georgia';
-    g.textAlign = 'center';
-    g.fillText('Сигналов пока нет', width / 2, height / 2 + 4);
   }
 }
 function updatePageMap(){
@@ -3118,12 +3098,6 @@ function updatePageMap(){
   pageMapSlider.value = String(Math.max(0, Math.min(safeTotal - 1, currentPage)));
   pageMapSlider.disabled = safeTotal <= 1;
   pageMapPageLabel.textContent = 'Страница ' + (currentPage + 1) + ' / ' + safeTotal;
-  const start = (pageStarts[currentPage] || 0) + 1;
-  const count = pageSizes[currentPage] || 0;
-  const end = Math.max(start - 1, start + count - 1);
-  pageMapEpisodeLabel.textContent = count ? ('Выпуски ' + start + '–' + end) : 'Выпуски не найдены';
-  pageMapTotalLabel.textContent = String(safeTotal).padStart(2, '0');
-  pageMapSector.textContent = String(currentPage + 1).padStart(2, '0');
   drawPageMap();
 }
 function openPageMap(){
@@ -3142,7 +3116,6 @@ pageNavBtn.addEventListener('click', (e) => {
   if (pageMapPanel.classList.contains('show')) closePageMap();
   else openPageMap();
 });
-pageMapClose.addEventListener('click', closePageMap);
 pageMapPanel.addEventListener('pointerdown', (e) => e.stopPropagation());
 pageMapSlider.addEventListener('input', () => goToPage(Number(pageMapSlider.value)));
 document.addEventListener('pointerdown', (e) => {
