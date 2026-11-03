@@ -505,7 +505,7 @@ let loadingSpinner = false;
 let pageSizes = [];
 let pageStarts = [0];
 
-const POSITIONS_KEY = 'episodePositions_v3';
+const POSITIONS_KEY = 'episodePositions_v2';
 const LAST_KEY = 'lastPlayedKey_v1';
 let savedPositions = {};
 let lastPositionSave = 0;
@@ -616,8 +616,8 @@ function detectGitHubRepo(){
   } catch (e) { return null; }
 }
 
-const GH_TREE_KEY = 'ghTreeCache_v15';
-const GH_TREE_TTL = 30 * 60 * 1000;
+const GH_TREE_KEY = 'ghTreeCache_v14';
+const GH_TREE_TTL = 60 * 60 * 1000;
 
 let ghTreeCache = null;
 let ghTreeDisabled = false;
@@ -681,53 +681,61 @@ function levenshtein(a, b){
   return d[m][n];
 }
 
-function getEpisodeFolders(tree){
-  const folders = [];
-  for (const f of tree) {
-    if (!f.path) continue;
-    const parts = f.path.split('/');
-    if (parts.length >= 2 && parts[0] === 'Episodes') {
-      if (!folders.includes(parts[1])) folders.push(parts[1]);
+function buildEpisodeFileIndex(tree){
+  const filesByFolder = new Map();
+  for (const item of tree) {
+    if (!item || item.type !== 'blob' || !item.path || !item.path.startsWith('Episodes/')) continue;
+    const relative = item.path.slice(9);
+    const split = relative.indexOf('/');
+    if (split <= 0) continue;
+    const folder = relative.slice(0, split);
+    const file = relative.slice(split + 1);
+    if (!file || file.includes('/')) continue;
+    let files = filesByFolder.get(folder);
+    if (!files) {
+      files = [];
+      filesByFolder.set(folder, files);
     }
+    files.push(file);
   }
-  return folders;
+  const folders = Array.from(filesByFolder.keys());
+  const exact = new Map();
+  const normalized = new Map();
+  for (const folder of folders) {
+    exact.set(folder.toLowerCase(), folder);
+    const norm = looseNorm(folder);
+    if (norm && !normalized.has(norm)) normalized.set(norm, folder);
+  }
+  return { folders, filesByFolder, exact, normalized };
 }
 
-function listFilesInFolder(tree, folderPath){
-  const prefix = folderPath.endsWith('/') ? folderPath : folderPath + '/';
-  const files = [];
-  for (const f of tree) {
-    if (!f || f.type !== 'blob' || !f.path) continue;
-    if (!f.path.startsWith(prefix)) continue;
-    const rel = f.path.slice(prefix.length);
-    if (rel.includes('/')) continue;
-    files.push(rel);
+function findEpisodeFolder(index, candidates){
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    const found = index.exact.get(String(candidate).toLowerCase());
+    if (found) return found;
   }
-  return files;
-}
-
-function findEpisodeFolder(episodeFolders, candidates){
-  for (const c of candidates) {
-    if (c && episodeFolders.includes(c)) return c;
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    const found = index.normalized.get(looseNorm(candidate));
+    if (found) return found;
   }
-  const lowerCands = candidates.filter(Boolean).map(c => c.toLowerCase());
-  for (const folder of episodeFolders) {
-    if (lowerCands.includes(folder.toLowerCase())) return folder;
-  }
-  const normCands = candidates.filter(Boolean).map(looseNorm);
-  for (const folder of episodeFolders) {
-    if (normCands.includes(looseNorm(folder))) return folder;
-  }
-  let best = null, bestScore = 0;
-  for (const folder of episodeFolders) {
-    for (const cand of candidates) {
-      if (!cand) continue;
-      const a = looseNorm(folder);
-      const b = looseNorm(cand);
-      if (!a || !b) continue;
-      const dist = levenshtein(a, b);
-      const score = 1 - dist / Math.max(a.length, b.length);
-      if (score > bestScore) { bestScore = score; best = folder; }
+  let best = null;
+  let bestScore = 0;
+  for (const folder of index.folders) {
+    const normalizedFolder = looseNorm(folder);
+    if (!normalizedFolder) continue;
+    for (const candidate of candidates) {
+      if (!candidate) continue;
+      const normalizedCandidate = looseNorm(candidate);
+      if (!normalizedCandidate) continue;
+      const maxLength = Math.max(normalizedFolder.length, normalizedCandidate.length);
+      if (maxLength === 0 || Math.abs(normalizedFolder.length - normalizedCandidate.length) / maxLength > 0.2) continue;
+      const score = 1 - levenshtein(normalizedFolder, normalizedCandidate) / maxLength;
+      if (score > bestScore) {
+        bestScore = score;
+        best = folder;
+      }
     }
   }
   return bestScore >= 0.85 ? best : null;
@@ -765,7 +773,7 @@ async function probeDataFile(num){
 
 async function fetchText(url){
   try {
-    const res = await fetch(url, { cache: 'no-store' });
+    const res = await fetch(url, { cache: 'default' });
     if (!res.ok) return null;
     const ct = (res.headers.get('content-type') || '').toLowerCase();
     if (ct.includes('html')) return null;
@@ -797,34 +805,43 @@ function extractNumber(str){
   return m ? parseInt(m[1], 10) : -1;
 }
 
-async function resolveOneEpisode(key, val, episodeFolders, tree){
-  const p = parseJsonEntry(key, val);
-  const candidates = [...new Set([p.folderName, key, p.title].filter(Boolean))];
-  const folder = findEpisodeFolder(episodeFolders, candidates);
+function resolveOneEpisode(key, val, fileIndex){
+  const parsed = parseJsonEntry(key, val);
+  const candidates = [...new Set([parsed.folderName, key, parsed.title].filter(Boolean))];
+  const folder = findEpisodeFolder(fileIndex, candidates);
   if (!folder) return null;
-  const files = listFilesInFolder(tree, 'Episodes/' + folder);
-  let mp3 = null;
-  for (const f of files) { if (/\.mp3$/i.test(f)) { mp3 = f; break; } }
+  const files = fileIndex.filesByFolder.get(folder) || [];
+  const mp3 = files.find(file => /\.mp3$/i.test(file));
   if (!mp3) return null;
-  let coverFile = null;
-  for (const f of files) { if (/^cover\.(jpe?g|png|webp|gif)$/i.test(f)) { coverFile = f; break; } }
-  let nameFile = null;
-  for (const f of files) { if (f.toLowerCase() === 'name.txt') { nameFile = f; break; } }
-  let title = p.title;
-  if (nameFile) {
-    const txt = await fetchText(buildUrl(['Episodes', folder, nameFile]));
-    if (txt) title = txt;
-  }
+  const coverFile = files.find(file => /^cover\.(jpe?g|png|webp|gif)$/i.test(file)) || null;
+  const nameFile = files.find(file => file.toLowerCase() === 'name.txt') || null;
   return {
     folderKey: key,
     folderName: folder,
-    title,
+    title: parsed.title,
     audioUrl: buildUrl(['Episodes', folder, mp3]),
     coverUrl: coverFile ? buildUrl(['Episodes', folder, coverFile]) : null,
+    nameUrl: nameFile ? buildUrl(['Episodes', folder, nameFile]) : null,
     actualFolder: folder,
     dur: 0,
     resolved: true
   };
+}
+
+async function loadEpisodeNamesInBackground(){
+  let cursor = 0;
+  const workers = Math.min(8, EPISODES.length);
+  const runWorker = async () => {
+    while (cursor < EPISODES.length) {
+      const index = cursor++;
+      const ep = EPISODES[index];
+      if (!ep || !ep.nameUrl) continue;
+      const title = await fetchText(ep.nameUrl);
+      if (!title || title === ep.title) continue;
+      updateEpisodeTitle(index, title);
+    }
+  };
+  await Promise.all(Array.from({ length: workers }, runWorker));
 }
 
 function computePageSizes(total){
@@ -1005,7 +1022,7 @@ async function buildSky(){
 
   let data;
   try {
-    const res = await fetch('Track_Instruction.json', { cache: 'no-store' });
+    const res = await fetch('Track_Instruction.json', { cache: 'default' });
     if (!res.ok) return;
     data = await res.json();
   } catch (e) { return; }
@@ -1024,9 +1041,12 @@ async function buildSky(){
   const tree = await getFullTree();
   if (!tree) return;
 
-  const episodeFolders = getEpisodeFolders(tree);
+  const fileIndex = buildEpisodeFileIndex(tree);
+  EPISODES = entries.map(([key, val]) => resolveOneEpisode(key, val, fileIndex)).filter(Boolean);
+  starEls = [];
+  if (!EPISODES.length) return;
 
-  computePageSizes(entries.length);
+  computePageSizes(EPISODES.length);
   totalPages = pageSizes.length;
   pageTotalEl.textContent = totalPages;
   pageCurrentEl.textContent = 1;
@@ -1035,10 +1055,10 @@ async function buildSky(){
   const pages = [];
   const positionsPerPage = [];
   const fragment = document.createDocumentFragment();
-  for (let p = 0; p < totalPages; p++) {
+  for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
     const page = document.createElement('div');
     page.className = 'page';
-    page.style.top = (p * 100) + 'vh';
+    page.style.top = (pageIndex * 100) + 'vh';
     const skyLayer = document.createElement('div');
     skyLayer.className = 'page-sky';
     const perPageStars = isMobile ? 140 + Math.floor(Math.random() * 90) : 260 + Math.floor(Math.random() * 160);
@@ -1046,57 +1066,55 @@ async function buildSky(){
     page.appendChild(skyLayer);
     fragment.appendChild(page);
     pages.push(page);
-    positionsPerPage.push(generateChaoticPositions(pageSizes[p]));
+    positionsPerPage.push(generateChaoticPositions(pageSizes[pageIndex]));
   }
   while (sky.firstChild) sky.removeChild(sky.firstChild);
   sky.appendChild(fragment);
   sky.style.transform = 'translateY(0)';
 
-  let globalIdx = 0;
-  let resolveIndex = 0;
-
-  while (resolveIndex < entries.length) {
-    const batch = entries.slice(resolveIndex, resolveIndex + 3);
-    resolveIndex += 3;
-
-    const results = await Promise.all(batch.map(([key, val]) =>
-      resolveOneEpisode(key, val, episodeFolders, tree).catch(() => null)
-    ));
-
-    for (const ep of results) {
-      if (!ep) continue;
-      EPISODES.push(ep);
-      const idx = EPISODES.length - 1;
-      const p = getPageForIndex(idx);
-      const localIdx = idx - pageStarts[p];
-      const pos = positionsPerPage[p][localIdx] || [0.1 + Math.random() * 0.8, 0.15 + Math.random() * 0.7];
-
-      const star = createStarEl(ep, idx, pos);
-      star.classList.add('revealing');
-      star.style.opacity = '0';
-      star.style.transform = 'translate(-50%,-50%) scale(0.15)';
-      const revealDur = isMobile ? 0.45 : 0.8;
-      star.style.transition = 'opacity ' + revealDur + 's ease, transform ' + revealDur + 's cubic-bezier(.2,.9,.3,1.4)';
-      pages[p].appendChild(star);
-      starEls[idx] = star;
-
-      const thisStar = star;
-      const delay = isMobile ? (20 + (globalIdx % 5) * 22) : (40 + (globalIdx % 8) * 40);
+  for (let index = 0; index < EPISODES.length; index++) {
+    const ep = EPISODES[index];
+    const pageIndex = getPageForIndex(index);
+    const localIndex = index - pageStarts[pageIndex];
+    const position = positionsPerPage[pageIndex][localIndex] || [0.1 + Math.random() * 0.8, 0.15 + Math.random() * 0.7];
+    const star = createStarEl(ep, index, position);
+    star.classList.add('revealing');
+    star.style.opacity = '0';
+    star.style.transform = 'translate(-50%,-50%) scale(0.15)';
+    const revealDuration = isMobile ? 0.45 : 0.8;
+    star.style.transition = 'opacity ' + revealDuration + 's ease, transform ' + revealDuration + 's cubic-bezier(.2,.9,.3,1.4)';
+    pages[pageIndex].appendChild(star);
+    starEls[index] = star;
+    const delay = isMobile ? (20 + (index % 5) * 22) : (40 + (index % 8) * 40);
+    setTimeout(() => {
+      if (!star.isConnected) return;
+      star.style.opacity = '1';
+      star.style.transform = 'translate(-50%,-50%) scale(1)';
       setTimeout(() => {
-        thisStar.style.opacity = '1';
-        thisStar.style.transform = 'translate(-50%,-50%) scale(1)';
-        setTimeout(() => {
-          thisStar.classList.remove('revealing');
-          thisStar.style.transition = '';
-        }, revealDur * 1000 + 50);
-      }, delay);
-
-      globalIdx++;
-    }
+        star.classList.remove('revealing');
+        star.style.transition = '';
+      }, revealDuration * 1000 + 50);
+    }, delay);
   }
 
   updateActiveStars();
+  preloadPageCovers(0);
   restoreLastPlayed();
+  loadEpisodeNamesInBackground().catch(() => {});
+}
+
+function restoreLastPlayed(){
+  const key = getLastPlayed();
+  if (!key) return;
+  const idx = EPISODES.findIndex(e => e.folderKey === key);
+  if (idx < 0) return;
+  current = idx;
+  elapsed = savedPositions[key] || 0;
+  if (shuffleOn) buildShuffleOrder(idx);
+  updateFullUI();
+  updateMiniUI();
+  miniPlayer.classList.add('show');
+  preloadEpisodeDuration(idx);
 }
 
 let ambientActive = false;
@@ -1665,104 +1683,71 @@ let shuffleOrder = [];
 let shufflePosition = 0;
 let overlayHintShown = false;
 let resolveToken = 0;
+const episodeAudioPool = new Map();
+let audioPreloadGeneration = 0;
+let previousPreloadTimer = null;
 
-const audioCache = new Map();
-const MAX_AUDIO_CACHE = 3;
-let neighborPreloadTimer = null;
-
-const coverUrlMap = new WeakMap();
-const coverPreloadCache = new Set();
-
-function trimAudioCache(){
-  if (audioCache.size <= MAX_AUDIO_CACHE) return;
-  const keys = [...audioCache.keys()];
-  keys.sort((a, b) => Math.abs(b - current) - Math.abs(a - current));
-  while (audioCache.size > MAX_AUDIO_CACHE && keys.length) {
-    const k = keys.shift();
-    if (k === current || k === loadedIndex) continue;
-    const a = audioCache.get(k);
-    if (!a) continue;
-    try { a.pause(); a.removeAttribute('src'); a.load(); } catch(e){}
-    audioCache.delete(k);
-  }
+function clearAudio(audio){
+  if (!audio) return;
+  try { audio.pause(); } catch(e) {}
+  try { audio.removeAttribute('src'); audio.load(); } catch(e) {}
 }
 
-function destroyAudio(a){
-  if (!a) return;
-  try { a.pause(); } catch(e){}
-  try { a.removeAttribute('src'); a.load(); } catch(e){}
-}
-
-function takeFromCache(idx){
-  if (!audioCache.has(idx)) return null;
-  const a = audioCache.get(idx);
-  audioCache.delete(idx);
-  return a;
-}
-
-function putToCache(idx, a){
-  if (!a) return;
-  if (idx === current) return;
-  try { a.preload = 'none'; } catch(e){}
-  audioCache.set(idx, a);
-  trimAudioCache();
-}
-
-function buildSrcWithPosition(url, pos){
-  if (!url) return url;
-  if (!(pos > 2)) return url;
-  return url + '#t=' + Math.floor(pos);
-}
-
-function onAudioMetadata(a){
-  if (episodeAudio !== a) return;
-  if (loadedIndex < 0 || loadedIndex >= EPISODES.length) return;
-  const idx = loadedIndex;
-  const ep = EPISODES[idx];
-  if (!ep) return;
-  if (!ep.dur && isFinite(a.duration) && a.duration > 0) ep.dur = a.duration;
-  if (current === idx) pDur.textContent = ep.dur ? fmt(ep.dur) : '0:00';
-  const key = ep.folderKey;
-  const savedPos = savedPositions[key] || 0;
-  if (savedPos > 2 && isFinite(a.duration) && savedPos < a.duration - 5) {
-    if (Math.abs(a.currentTime - savedPos) > 2) {
-      try { a.currentTime = savedPos; } catch(e){}
+function restoreAudioPosition(index, audio){
+  const ep = EPISODES[index];
+  if (!ep || !audio || audio._positionRestoredFor === index) return;
+  if (!isFinite(audio.duration) || audio.duration <= 0) return;
+  const saved = savedPositions[ep.folderKey] || 0;
+  if (saved > 2 && saved < audio.duration - 5) {
+    try { audio.currentTime = saved; } catch(e) { return; }
+    if (current === index) {
+      elapsed = saved;
+      updateProgress();
     }
   }
-  if (current === idx) { elapsed = a.currentTime; updateProgress(); }
+  audio._positionRestoredFor = index;
 }
 
-function setupAudioListeners(a){
-  if (a._bound) return;
-  a._bound = true;
-
-  a.addEventListener('loadedmetadata', () => onAudioMetadata(a));
-
-  a.addEventListener('timeupdate', () => {
-    if (episodeAudio !== a) return;
-    if (loadedIndex < 0 || loadedIndex >= EPISODES.length) return;
-    const idx = loadedIndex;
-    elapsed = a.currentTime;
+function attachEpisodeAudioEvents(index, audio){
+  audio.addEventListener('loadedmetadata', () => {
+    const ep = EPISODES[index];
+    if (!ep) return;
+    if (isFinite(audio.duration) && audio.duration > 0) ep.dur = audio.duration;
+    if (current === index && episodeAudio === audio) {
+      restoreAudioPosition(index, audio);
+      pDur.textContent = ep.dur ? fmt(ep.dur) : '0:00';
+      updateProgress();
+    }
+  });
+  audio.addEventListener('durationchange', () => {
+    const ep = EPISODES[index];
+    if (!ep || !isFinite(audio.duration) || audio.duration <= 0) return;
+    ep.dur = audio.duration;
+    if (current === index && episodeAudio === audio) {
+      pDur.textContent = fmt(ep.dur);
+      updateProgress();
+    }
+  });
+  audio.addEventListener('timeupdate', () => {
+    if (current !== index || episodeAudio !== audio) return;
+    elapsed = audio.currentTime;
     updateProgress();
     const now = Date.now();
-    if (now - lastPositionSave > 3000 && current === idx) {
+    if (now - lastPositionSave > 3000) {
       lastPositionSave = now;
-      const key = EPISODES[idx].folderKey;
-      if (key) {
-        if (a.currentTime > 2) savedPositions[key] = a.currentTime;
-        else delete savedPositions[key];
+      const ep = EPISODES[index];
+      if (ep && ep.folderKey) {
+        if (audio.currentTime > 2) savedPositions[ep.folderKey] = audio.currentTime;
+        else delete savedPositions[ep.folderKey];
         persistPositions();
       }
     }
   });
-
-  a.addEventListener('ended', () => {
-    if (episodeAudio !== a) return;
-    onTrackEnd();
+  audio.addEventListener('ended', () => {
+    if (current === index && episodeAudio === audio) onTrackEnd();
   });
-
-  a.addEventListener('error', () => {
-    if (episodeAudio !== a) return;
+  audio.addEventListener('error', () => {
+    if (current !== index || episodeAudio !== audio || !wantsToPlay) return;
     playing = false;
     wantsToPlay = false;
     setLoading(false);
@@ -1770,72 +1755,109 @@ function setupAudioListeners(a){
     applyAmbientState();
     showToast('ошибка воспроизведения', 2500);
   });
-
-  a.addEventListener('playing', () => {
-    if (episodeAudio !== a) return;
-    if (wantsToPlay) setLoading(false);
-    try { if (a.volume < 0.99) a.volume = 1; } catch(e){}
-  });
-
-  a.addEventListener('waiting', () => {
-    if (episodeAudio !== a) return;
-    if (wantsToPlay) setLoading(true);
-  });
-
-  a.addEventListener('canplay', () => {
-    if (episodeAudio !== a) return;
-    if (wantsToPlay && a.readyState >= 3) setLoading(false);
-  });
-}
-
-function preloadMetadata(idx){
-  if (idx < 0 || idx >= EPISODES.length) return;
-  if (idx === current && episodeAudio) return;
-  if (audioCache.has(idx)) return;
-  const ep = EPISODES[idx];
-  if (!ep || !ep.audioUrl) return;
-  const a = new Audio();
-  a.preload = 'metadata';
-  a.src = ep.audioUrl;
-  a.addEventListener('loadedmetadata', () => {
-    if (isFinite(a.duration) && a.duration > 0) {
-      if (!EPISODES[idx].dur) EPISODES[idx].dur = a.duration;
-      if (current === idx) {
-        pDur.textContent = fmt(EPISODES[idx].dur);
-        updateProgress();
-      }
+  audio.addEventListener('playing', () => {
+    if (current === index && episodeAudio === audio && wantsToPlay) {
+      playing = true;
+      setLoading(false);
+      updateIcons();
+      refreshAudioPreloadPool(true);
     }
   });
-  a.addEventListener('error', () => {});
-  audioCache.set(idx, a);
-  trimAudioCache();
+  audio.addEventListener('waiting', () => {
+    if (current === index && episodeAudio === audio && wantsToPlay) setLoading(true);
+  });
+  audio.addEventListener('canplay', () => {
+    if (current === index && episodeAudio === audio && wantsToPlay && audio.readyState >= 3) setLoading(false);
+  });
 }
 
-function preloadCover(idx){
-  if (idx < 0 || idx >= EPISODES.length) return;
-  const ep = EPISODES[idx];
-  if (!ep || !ep.coverUrl) return;
-  if (coverPreloadCache.has(ep.coverUrl)) return;
-  coverPreloadCache.add(ep.coverUrl);
-  const img = new Image();
-  img.decoding = 'async';
-  img.src = ep.coverUrl;
+function getEpisodeAudio(index, preloadMode){
+  if (index < 0 || index >= EPISODES.length) return null;
+  const ep = EPISODES[index];
+  if (!ep || !ep.audioUrl) return null;
+  let audio = episodeAudioPool.get(index);
+  if (audio) return audio;
+  audio = new Audio();
+  const mode = preloadMode || 'auto';
+  audio.preload = mode;
+  audio.setAttribute('preload', mode);
+  audio.setAttribute('fetchpriority', index === current ? 'high' : 'low');
+  audio.playsInline = true;
+  audio._episodeIndex = index;
+  attachEpisodeAudioEvents(index, audio);
+  episodeAudioPool.set(index, audio);
+  audio.src = ep.audioUrl;
+  try { audio.load(); } catch(e) {}
+  return audio;
 }
 
-function scheduleNeighborPreload(idx){
-  if (neighborPreloadTimer) {
-    clearTimeout(neighborPreloadTimer);
-    neighborPreloadTimer = null;
+function getAdjacentEpisodeIndices(index){
+  if (index < 0 || index >= EPISODES.length || EPISODES.length < 2) return { next: -1, previous: -1 };
+  if (shuffleOn && shuffleOrder.length === EPISODES.length) {
+    const position = shuffleOrder.indexOf(index);
+    if (position >= 0) {
+      return {
+        next: shuffleOrder[(position + 1) % shuffleOrder.length],
+        previous: shuffleOrder[(position - 1 + shuffleOrder.length) % shuffleOrder.length]
+      };
+    }
   }
-  neighborPreloadTimer = setTimeout(() => {
-    neighborPreloadTimer = null;
-    if (idx !== current) return;
-    preloadMetadata(idx + 1);
-    preloadMetadata(idx - 1);
-    preloadCover(idx + 1);
-    preloadCover(idx - 1);
-    preloadCover(idx);
-  }, 1500);
+  return {
+    next: (index + 1) % EPISODES.length,
+    previous: (index - 1 + EPISODES.length) % EPISODES.length
+  };
+}
+
+function refreshAudioPreloadPool(preloadNeighbors){
+  if (current < 0 || current >= EPISODES.length) return;
+  const generation = ++audioPreloadGeneration;
+  clearTimeout(previousPreloadTimer);
+  const adjacent = getAdjacentEpisodeIndices(current);
+  const keep = new Set([current]);
+  if (adjacent.next >= 0) keep.add(adjacent.next);
+  if (adjacent.previous >= 0) keep.add(adjacent.previous);
+
+  const activeAudio = getEpisodeAudio(current);
+  if (activeAudio) {
+    episodeAudio = activeAudio;
+    loadedIndex = current;
+    activeAudio.setAttribute('fetchpriority', 'high');
+    restoreAudioPosition(current, activeAudio);
+  }
+
+  if (preloadNeighbors && adjacent.next >= 0 && adjacent.next !== current) {
+    const nextAudio = getEpisodeAudio(adjacent.next);
+    if (nextAudio) nextAudio.setAttribute('fetchpriority', 'high');
+  }
+
+  if (preloadNeighbors && adjacent.previous >= 0 && adjacent.previous !== current && adjacent.previous !== adjacent.next) {
+    previousPreloadTimer = setTimeout(() => {
+      if (generation !== audioPreloadGeneration || current < 0) return;
+      const previousAudio = getEpisodeAudio(adjacent.previous);
+      if (previousAudio) previousAudio.setAttribute('fetchpriority', 'low');
+    }, 700);
+  }
+
+  for (const [index, audio] of episodeAudioPool) {
+    if (keep.has(index)) continue;
+    if (audio === episodeAudio && index === current) continue;
+    clearAudio(audio);
+    episodeAudioPool.delete(index);
+  }
+
+  preloadAdjacentCovers(current, adjacent.next, adjacent.previous);
+}
+
+function preloadEpisodeDuration(index){
+  if (index < 0 || index >= EPISODES.length) return;
+  const audio = getEpisodeAudio(index, 'metadata');
+  if (!audio) return;
+  if (current === index) {
+    episodeAudio = audio;
+    loadedIndex = index;
+    restoreAudioPosition(index, audio);
+    refreshAudioPreloadPool(false);
+  }
 }
 
 function setLoading(v){
@@ -1853,80 +1875,87 @@ function updateIcons(){
   miniPlayIcon.innerHTML = inner;
 }
 
-function switchToEpisode(n, autoPlay){
-  if (EPISODES.length === 0) return;
-  if (n < 0 || n >= EPISODES.length) return;
-  if (autoPlay === undefined) autoPlay = playing || wantsToPlay;
+function fadeOutEpisode(callback){
+  const audio = episodeAudio;
+  if (!audio) {
+    if (callback) callback();
+    return;
+  }
+  const complete = () => {
+    try {
+      audio.pause();
+      audio.volume = 1;
+    } catch(e) {}
+    if (callback) callback();
+  };
+  if (audio.paused || audio.volume === 0) {
+    complete();
+    return;
+  }
+  const startVolume = audio.volume;
+  const duration = 220;
+  const startedAt = performance.now();
+  const step = now => {
+    if (episodeAudio !== audio) {
+      complete();
+      return;
+    }
+    const progress = Math.min(1, (now - startedAt) / duration);
+    try { audio.volume = Math.max(0, startVolume * (1 - progress)); } catch(e) {}
+    if (progress < 1) requestAnimationFrame(step);
+    else complete();
+  };
+  requestAnimationFrame(step);
+}
 
-  resolveToken++;
+function setCurrentTrack(index){
+  if (!EPISODES.length || index < 0 || index >= EPISODES.length) return;
+  savePositionForCurrent();
+  if (episodeAudio) {
+    try {
+      episodeAudio.pause();
+      episodeAudio.volume = 1;
+    } catch(e) {}
+  }
+  current = index;
+  elapsed = savedPositions[EPISODES[current].folderKey] || 0;
+  if (current >= 0 && EPISODES[current]) saveLastPlayed(EPISODES[current].folderKey);
+  if (shuffleOn) buildShuffleOrder(index);
+  episodeAudio = getEpisodeAudio(index);
+  loadedIndex = episodeAudio ? index : -1;
+  if (episodeAudio) restoreAudioPosition(index, episodeAudio);
+  updateFullUI();
+  updateMiniUI();
+  refreshAudioPreloadPool(false);
+}
+
+function switchToEpisode(index, autoPlay){
+  if (!EPISODES.length || index < 0 || index >= EPISODES.length) return;
+  if (autoPlay === undefined) autoPlay = playing || wantsToPlay;
+  const switchToken = ++resolveToken;
   playing = false;
   wantsToPlay = !!autoPlay;
   setLoading(false);
-
-  if (episodeAudio) {
-    try {
-      const t = episodeAudio.currentTime;
-      const key = current >= 0 && EPISODES[current] ? EPISODES[current].folderKey : null;
-      if (key && t > 2) savedPositions[key] = t;
-      else if (key) delete savedPositions[key];
-      persistPositions();
-    } catch(e) {}
-  }
-
-  const oldAudio = episodeAudio;
-
-  const proceed = () => {
-    if (oldAudio) {
-      try { oldAudio.pause(); } catch(e){}
-      const oldIdx = loadedIndex;
-      episodeAudio = null;
-      loadedIndex = -1;
-      if (oldIdx >= 0 && oldIdx !== n) putToCache(oldIdx, oldAudio);
-      else destroyAudio(oldAudio);
-    }
-
-    current = n;
-    elapsed = 0;
-    if (EPISODES[current]) saveLastPlayed(EPISODES[current].folderKey);
-    if (shuffleOn) buildShuffleOrder(n);
-    updateFullUI();
-    updateMiniUI();
-
-    const page = getPageForIndex(n);
+  fadeOutEpisode(() => {
+    if (switchToken !== resolveToken) return;
+    setCurrentTrack(index);
+    const page = getPageForIndex(index);
     if (page !== currentPage) goToPage(page);
-
-    if (autoPlay) {
-      play();
-    } else {
+    if (autoPlay) play();
+    else {
+      preloadEpisodeDuration(index);
       updateIcons();
       applyAmbientState();
-      scheduleNeighborPreload(n);
     }
-  };
-
-  if (oldAudio && !oldAudio.paused && oldAudio.volume > 0) {
-    const startVol = oldAudio.volume;
-    const t0 = performance.now();
-    const dur = 400;
-    const step = (now) => {
-      const p = Math.min(1, (now - t0) / dur);
-      try { oldAudio.volume = Math.max(0, startVol * (1 - p)); } catch(e){}
-      if (p < 1) requestAnimationFrame(step);
-      else proceed();
-    };
-    requestAnimationFrame(step);
-  } else {
-    proceed();
-  }
+  });
 }
 
 async function play(){
   if (current < 0) return;
   const ep = EPISODES[current];
   if (!ep) return;
-
-  const myToken = ++resolveToken;
-
+  const index = current;
+  const playToken = ++resolveToken;
   wantsToPlay = true;
   playing = true;
   setLoading(true);
@@ -1945,57 +1974,40 @@ async function play(){
     return;
   }
 
-  let a = episodeAudio;
-
-  if (!a || loadedIndex !== current) {
-    if (a && loadedIndex !== current) {
-      try { a.pause(); } catch(e){}
-      const oldIdx = loadedIndex;
-      episodeAudio = null;
-      loadedIndex = -1;
-      if (oldIdx >= 0) putToCache(oldIdx, a);
-    }
-
-    a = takeFromCache(current);
-    if (!a) {
-      a = new Audio();
-      const savedPos = savedPositions[ep.folderKey] || 0;
-      a.preload = 'auto';
-      a.src = buildSrcWithPosition(ep.audioUrl, savedPos);
-    } else {
-      a.preload = 'auto';
-      if (!a.src || a.src === '') {
-        const savedPos = savedPositions[ep.folderKey] || 0;
-        a.src = buildSrcWithPosition(ep.audioUrl, savedPos);
-      }
-    }
-
-    try { a.volume = 1; } catch(e){}
-    setupAudioListeners(a);
-    episodeAudio = a;
-    loadedIndex = current;
-
-    if (a.readyState >= 1) {
-      onAudioMetadata(a);
-    }
-  } else {
-    try { a.volume = 1; } catch(e){}
-    if (a.readyState >= 1) onAudioMetadata(a);
+  let audio = getEpisodeAudio(index);
+  if (!audio) {
+    playing = false;
+    wantsToPlay = false;
+    setLoading(false);
+    updateIcons();
+    return;
   }
+  if (audio.error) {
+    clearAudio(audio);
+    audio._positionRestoredFor = null;
+    audio.src = ep.audioUrl;
+  }
+  if (audio.preload !== 'auto') {
+    audio.preload = 'auto';
+    audio.setAttribute('preload', 'auto');
+    audio._positionRestoredFor = null;
+    try { audio.load(); } catch(e) {}
+  }
+  episodeAudio = audio;
+  loadedIndex = index;
+  restoreAudioPosition(index, audio);
+  refreshAudioPreloadPool(false);
+  try { audio.volume = 1; } catch(e) {}
 
   try {
-    await a.play();
-    if (myToken !== resolveToken) {
-      try { a.pause(); } catch(e){}
-      return;
-    }
+    await audio.play();
+    if (current !== index || episodeAudio !== audio || playToken !== resolveToken) return;
     playing = true;
     setLoading(false);
     updateIcons();
     applyAmbientState();
-    scheduleNeighborPreload(current);
   } catch(e) {
-    if (episodeAudio === a) {
+    if (current === index && episodeAudio === audio && playToken === resolveToken) {
       playing = false;
       wantsToPlay = false;
       setLoading(false);
@@ -2107,6 +2119,8 @@ function onTrackEnd(){
 }
 
 const coverCache = {};
+const coverImageCache = new Map();
+
 function makeCoverSVG(index){
   if (coverCache[index]) return coverCache[index];
   const id = 'cbg' + index;
@@ -2133,29 +2147,95 @@ function makeCoverSVG(index){
   return svg;
 }
 
-function setCoverTo(container, ep, idx){
-  const url = ep && ep.coverUrl ? ep.coverUrl : '';
-  if (coverUrlMap.get(container) === url && container.firstChild) return;
-  coverUrlMap.set(container, url);
+function preloadCoverImage(url, priority){
+  if (!url) return Promise.resolve(null);
+  let entry = coverImageCache.get(url);
+  if (entry) {
+    entry.image.fetchPriority = priority ? 'high' : 'low';
+    coverImageCache.delete(url);
+    coverImageCache.set(url, entry);
+    return entry.promise;
+  }
+  const image = new Image();
+  image.decoding = 'async';
+  image.loading = 'eager';
+  image.fetchPriority = priority ? 'high' : 'low';
+  const promise = new Promise(resolve => {
+    let settled = false;
+    const finish = value => {
+      if (settled) return;
+      settled = true;
+      resolve(value);
+    };
+    image.onload = () => finish(image);
+    image.onerror = () => finish(null);
+    image.src = url;
+    if (image.complete) finish(image.naturalWidth > 0 ? image : null);
+  });
+  coverImageCache.set(url, { image, promise });
+  while (coverImageCache.size > 18) {
+    const firstKey = coverImageCache.keys().next().value;
+    if (firstKey === url && coverImageCache.size === 1) break;
+    coverImageCache.delete(firstKey);
+  }
+  return promise;
+}
 
-  if (!url) {
-    container.innerHTML = makeCoverSVG(idx);
+function preloadPageCovers(pageIndex){
+  if (pageIndex < 0 || pageIndex >= pageSizes.length) return;
+  const start = pageStarts[pageIndex];
+  const end = Math.min(EPISODES.length, start + pageSizes[pageIndex]);
+  for (let index = start; index < end; index++) {
+    const ep = EPISODES[index];
+    if (ep && ep.coverUrl) preloadCoverImage(ep.coverUrl, false);
+  }
+}
+
+function preloadAdjacentCovers(currentIndex, nextIndex, previousIndex){
+  const indices = [currentIndex, nextIndex, previousIndex];
+  indices.forEach((index, position) => {
+    if (index < 0 || index >= EPISODES.length) return;
+    const ep = EPISODES[index];
+    if (ep && ep.coverUrl) preloadCoverImage(ep.coverUrl, position === 0 || position === 1);
+  });
+}
+
+function setCoverTo(container, ep, index){
+  if (!container) return;
+  const key = ep && ep.coverUrl ? ep.coverUrl : 'fallback:' + index;
+  if (container.dataset.coverKey === key) return;
+  container.dataset.coverKey = key;
+  container.replaceChildren();
+  if (!ep || !ep.coverUrl) {
+    container.innerHTML = makeCoverSVG(index);
     return;
   }
+  container.innerHTML = makeCoverSVG(index);
+  preloadCoverImage(ep.coverUrl, true).then(preloaded => {
+    if (!preloaded || container.dataset.coverKey !== key || !container.isConnected) return;
+    const image = preloaded.cloneNode(false);
+    image.alt = '';
+    image.decoding = 'async';
+    image.loading = 'eager';
+    container.replaceChildren(image);
+    if (typeof image.decode === 'function') image.decode().catch(() => {});
+  });
+}
 
-  container.innerHTML = makeCoverSVG(idx);
-
-  const img = new Image();
-  img.alt = '';
-  img.decoding = 'async';
-  img.style.cssText = 'display:block;width:100%;height:100%;object-fit:cover;';
-  img.onload = () => {
-    if (coverUrlMap.get(container) !== url) return;
-    container.innerHTML = '';
-    container.appendChild(img);
-  };
-  img.onerror = () => {};
-  img.src = url;
+function updateEpisodeTitle(index, title){
+  const ep = EPISODES[index];
+  if (!ep || !title) return;
+  ep.title = title;
+  const star = starEls[index];
+  if (star) {
+    star.setAttribute('aria-label', title);
+    const path = star.querySelector('.ring-text textPath');
+    if (path) path.textContent = fitRingTitle(title, innerWidth < 700 ? 42 : 52, innerWidth < 700 ? 8 : 9, innerWidth < 700 ? 0.5 : 0.7);
+  }
+  if (current === index) {
+    applyMarquee(pTitle, title);
+    if (miniPlayer.classList.contains('show')) applyMarquee(miniTitle, title);
+  }
 }
 
 function applyMarquee(el, text){
@@ -2220,7 +2300,6 @@ function updateFullUI(){
     pTitle.textContent = '—';
     pDur.textContent = '0:00';
     cover.innerHTML = '';
-    coverUrlMap.delete(cover);
     return;
   }
   const ep = EPISODES[current];
@@ -2243,7 +2322,6 @@ function openOverlay(){
   overlay.classList.add('show');
   miniPlayer.classList.remove('show');
   updateFullUI();
-  if (current >= 0) preloadCover(current);
 }
 function closeOverlay(){
   overlay.classList.remove('show');
@@ -2341,8 +2419,9 @@ function launchEpisode(index, sourceEl){
   createLaunchEffect(cx, cy);
 
   setTimeout(() => {
-    switchToEpisode(index, true);
+    setCurrentTrack(index);
     openOverlay();
+    play();
     transitioning = false;
   }, 620);
 }
@@ -2485,6 +2564,11 @@ function goToPage(n){
   currentPage = nn;
   sky.style.transform = 'translateY(-' + (nn * 100) + 'vh)';
   pageCurrentEl.textContent = nn + 1;
+  preloadPageCovers(nn);
+}
+function loadEpisode(n){
+  if (EPISODES.length === 0) return;
+  switchToEpisode(n, playing || wantsToPlay);
 }
 
 function setupBarDrag(barEl, getSeekRect, onSeek){
@@ -2614,6 +2698,7 @@ repeatBtn.addEventListener('click', () => {
 shuffleBtn.addEventListener('click', () => {
   shuffleOn = !shuffleOn;
   if (shuffleOn && current >= 0) buildShuffleOrder(current);
+  if (current >= 0) refreshAudioPreloadPool(playing || wantsToPlay);
   updateShuffleIcon();
   showToast(shuffleOn ? 'случайный порядок' : 'по порядку', 1800);
 });
@@ -2720,23 +2805,6 @@ async function init(){
   requestAnimationFrame(loop);
   loadPodcastInfo();
   buildSky();
-}
-
-function restoreLastPlayed(){
-  const key = getLastPlayed();
-  if (!key) return;
-  const idx = EPISODES.findIndex(e => e.folderKey === key);
-  if (idx < 0) return;
-  current = idx;
-  elapsed = savedPositions[key] || 0;
-  if (shuffleOn) buildShuffleOrder(idx);
-  updateFullUI();
-  updateMiniUI();
-  miniPlayer.classList.add('show');
-  preloadCover(idx);
-  preloadCover(idx + 1);
-  preloadCover(idx - 1);
-  scheduleNeighborPreload(idx);
 }
 
 init();
