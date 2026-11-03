@@ -131,8 +131,9 @@
   .timeTxt.right{text-align:right}
   .progressBar{flex:1;height:3px;position:relative;cursor:pointer;padding:9px 0;margin:-9px 0;touch-action:none}
   .progressBar::before{content:'';position:absolute;left:0;right:0;top:50%;height:3px;margin-top:-1.5px;background:rgba(255,255,255,.1);border-radius:3px}
-  .progressFill{position:absolute;left:0;top:50%;height:3px;margin-top:-1.5px;width:100%;background:#fff;border-radius:3px;transform:scaleX(0);transform-origin:left center;box-shadow:0 0 10px rgba(255,255,255,.85);transition:transform .2s linear;will-change:transform}
-  .progressKnob{position:absolute;top:50%;left:0%;width:11px;height:11px;border-radius:50%;background:#fff;transform:translate(-50%,-50%);box-shadow:0 0 12px rgba(255,255,255,.9);pointer-events:none;transition:left .2s linear}
+  .progressFill{position:absolute;left:0;top:50%;height:3px;margin-top:-1.5px;width:100%;background:#fff;border-radius:3px;transform:scaleX(0);transform-origin:left center;box-shadow:0 0 10px rgba(255,255,255,.85);transition:transform .12s linear;will-change:transform}
+  .progressKnob{position:absolute;top:50%;left:0%;width:11px;height:11px;border-radius:50%;background:#fff;transform:translate(-50%,-50%);box-shadow:0 0 12px rgba(255,255,255,.9);pointer-events:none;transition:left .12s linear}
+  .progressBar.scrubbing .progressFill,.progressBar.scrubbing .progressKnob{transition:none!important}
   .controls{width:100%;display:flex;align-items:center;justify-content:center;gap:12px}
   .ctrlBtn{width:48px;height:48px;border-radius:50%;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.03);color:rgba(255,255,255,.75);cursor:pointer;display:grid;place-items:center;transition:color .25s ease, border-color .25s ease, box-shadow .25s ease, background .25s ease;flex-shrink:0}
   .ctrlBtn svg{width:18px;height:18px;fill:currentColor}
@@ -1100,7 +1101,7 @@ async function buildSky(){
   updateActiveStars();
   preloadPageCovers(0);
   restoreLastPlayed();
-  loadEpisodeNamesInBackground().catch(() => {});
+  setTimeout(() => loadEpisodeNamesInBackground().catch(() => {}), 1400);
 }
 
 function restoreLastPlayed(){
@@ -1683,9 +1684,14 @@ let shuffleOrder = [];
 let shufflePosition = 0;
 let overlayHintShown = false;
 let resolveToken = 0;
+let isProgressScrubbing = false;
 const episodeAudioPool = new Map();
 let audioPreloadGeneration = 0;
 let previousPreloadTimer = null;
+let audioWarmGeneration = 0;
+const audioWarmCache = new Map();
+const audioWarmControllers = new Set();
+const AUDIO_WARM_BYTES = 262144;
 
 function clearAudio(audio){
   if (!audio) return;
@@ -1729,7 +1735,7 @@ function attachEpisodeAudioEvents(index, audio){
     }
   });
   audio.addEventListener('timeupdate', () => {
-    if (current !== index || episodeAudio !== audio) return;
+    if (current !== index || episodeAudio !== audio || isProgressScrubbing) return;
     elapsed = audio.currentTime;
     updateProgress();
     const now = Date.now();
@@ -1742,6 +1748,11 @@ function attachEpisodeAudioEvents(index, audio){
         persistPositions();
       }
     }
+  });
+  audio.addEventListener('seeked', () => {
+    if (current !== index || episodeAudio !== audio || isProgressScrubbing) return;
+    elapsed = audio.currentTime;
+    updateProgress();
   });
   audio.addEventListener('ended', () => {
     if (current === index && episodeAudio === audio) onTrackEnd();
@@ -1778,7 +1789,7 @@ function getEpisodeAudio(index, preloadMode){
   let audio = episodeAudioPool.get(index);
   if (audio) return audio;
   audio = new Audio();
-  const mode = preloadMode || 'auto';
+  const mode = preloadMode || (index === current ? 'auto' : 'metadata');
   audio.preload = mode;
   audio.setAttribute('preload', mode);
   audio.setAttribute('fetchpriority', index === current ? 'high' : 'low');
@@ -1808,16 +1819,79 @@ function getAdjacentEpisodeIndices(index){
   };
 }
 
+function cancelAudioWarmups(){
+  audioWarmGeneration++;
+  for (const controller of audioWarmControllers) {
+    try { controller.abort(); } catch(e) {}
+  }
+  audioWarmControllers.clear();
+}
+
+async function warmAudioPrefix(index, generation){
+  if (index < 0 || index >= EPISODES.length || generation !== audioWarmGeneration) return;
+  const ep = EPISODES[index];
+  if (!ep || !ep.audioUrl || audioWarmCache.has(ep.audioUrl)) return;
+  const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  if (connection && (connection.saveData || /^(slow-2g|2g)$/.test(connection.effectiveType || ''))) return;
+  const controller = new AbortController();
+  audioWarmControllers.add(controller);
+  try {
+    const response = await fetch(ep.audioUrl, {
+      headers: { Range: 'bytes=0-' + (AUDIO_WARM_BYTES - 1) },
+      cache: 'force-cache',
+      signal: controller.signal
+    });
+    const contentRange = response.headers.get('content-range') || '';
+    if (response.status !== 206 || !/^bytes\s+0-/i.test(contentRange)) {
+      if (response.body) {
+        try { await response.body.cancel(); } catch(e) {}
+      }
+      return;
+    }
+    const bytes = await response.arrayBuffer();
+    if (generation === audioWarmGeneration && bytes.byteLength > 0 && bytes.byteLength <= AUDIO_WARM_BYTES + 65536) {
+      audioWarmCache.set(ep.audioUrl, bytes.byteLength);
+      while (audioWarmCache.size > 24) audioWarmCache.delete(audioWarmCache.keys().next().value);
+    }
+  } catch(e) {
+  } finally {
+    audioWarmControllers.delete(controller);
+  }
+}
+
+async function warmAdjacentAudio(index, adjacent, generation){
+  await new Promise(resolve => setTimeout(resolve, 1100));
+  if (generation !== audioWarmGeneration || index !== current) return;
+  if (adjacent.next >= 0 && adjacent.next !== index) await warmAudioPrefix(adjacent.next, generation);
+  if (generation !== audioWarmGeneration || index !== current) return;
+  await new Promise(resolve => setTimeout(resolve, 180));
+  if (adjacent.previous >= 0 && adjacent.previous !== index && adjacent.previous !== adjacent.next) {
+    await warmAudioPrefix(adjacent.previous, generation);
+  }
+}
+
+function setEpisodePreloadMode(audio, mode){
+  if (!audio || audio.preload === mode) return;
+  try {
+    audio.pause();
+    audio.preload = mode;
+    audio.setAttribute('preload', mode);
+    audio.load();
+  } catch(e) {}
+}
+
 function refreshAudioPreloadPool(preloadNeighbors){
   if (current < 0 || current >= EPISODES.length) return;
   const generation = ++audioPreloadGeneration;
   clearTimeout(previousPreloadTimer);
+  cancelAudioWarmups();
+  const warmGeneration = audioWarmGeneration;
   const adjacent = getAdjacentEpisodeIndices(current);
   const keep = new Set([current]);
   if (adjacent.next >= 0) keep.add(adjacent.next);
   if (adjacent.previous >= 0) keep.add(adjacent.previous);
 
-  const activeAudio = getEpisodeAudio(current);
+  const activeAudio = getEpisodeAudio(current, 'auto');
   if (activeAudio) {
     episodeAudio = activeAudio;
     loadedIndex = current;
@@ -1826,26 +1900,33 @@ function refreshAudioPreloadPool(preloadNeighbors){
   }
 
   if (preloadNeighbors && adjacent.next >= 0 && adjacent.next !== current) {
-    const nextAudio = getEpisodeAudio(adjacent.next);
-    if (nextAudio) nextAudio.setAttribute('fetchpriority', 'high');
+    const nextAudio = getEpisodeAudio(adjacent.next, 'metadata');
+    if (nextAudio) {
+      setEpisodePreloadMode(nextAudio, 'metadata');
+      nextAudio.setAttribute('fetchpriority', 'low');
+    }
   }
 
   if (preloadNeighbors && adjacent.previous >= 0 && adjacent.previous !== current && adjacent.previous !== adjacent.next) {
-    previousPreloadTimer = setTimeout(() => {
-      if (generation !== audioPreloadGeneration || current < 0) return;
-      const previousAudio = getEpisodeAudio(adjacent.previous);
-      if (previousAudio) previousAudio.setAttribute('fetchpriority', 'low');
-    }, 700);
+    const previousAudio = getEpisodeAudio(adjacent.previous, 'metadata');
+    if (previousAudio) {
+      setEpisodePreloadMode(previousAudio, 'metadata');
+      previousAudio.setAttribute('fetchpriority', 'low');
+    }
   }
 
   for (const [index, audio] of episodeAudioPool) {
-    if (keep.has(index)) continue;
+    if (keep.has(index)) {
+      if (index !== current) setEpisodePreloadMode(audio, 'metadata');
+      continue;
+    }
     if (audio === episodeAudio && index === current) continue;
     clearAudio(audio);
     episodeAudioPool.delete(index);
   }
 
   preloadAdjacentCovers(current, adjacent.next, adjacent.previous);
+  if (preloadNeighbors) warmAdjacentAudio(current, adjacent, warmGeneration);
 }
 
 function preloadEpisodeDuration(index){
@@ -2290,10 +2371,11 @@ function updateActiveStars(){
 }
 function updateProgress(){
   const d = current >= 0 && EPISODES[current] ? EPISODES[current].dur : 0;
-  const p = d ? Math.min(1, elapsed / d) : 0;
+  const value = d > 0 ? Math.max(0, Math.min(d, elapsed)) : Math.max(0, elapsed);
+  const p = d > 0 ? value / d : 0;
   progressFill.style.transform = 'scaleX(' + p + ')';
   progressKnob.style.left = (p * 100) + '%';
-  pCur.textContent = fmt(elapsed);
+  pCur.textContent = fmt(value);
 }
 function updateFullUI(){
   if (current < 0 || !EPISODES[current]) {
@@ -2577,16 +2659,18 @@ function setupBarDrag(barEl, getSeekRect, onSeek){
 
   const handleMove = (e) => {
     if (!scrubbing || e.pointerId !== activePid) return;
-    onSeek(e.clientX, getSeekRect());
+    onSeek(e.clientX, getSeekRect(), false);
   };
   const handleUp = (e) => {
     if (!scrubbing || e.pointerId !== activePid) return;
+    onSeek(e.clientX, getSeekRect(), true);
     scrubbing = false;
     activePid = null;
+    isProgressScrubbing = false;
+    barEl.classList.remove('scrubbing');
     document.removeEventListener('pointermove', handleMove);
     document.removeEventListener('pointerup', handleUp);
     document.removeEventListener('pointercancel', handleUp);
-    onSeek(e.clientX, getSeekRect());
   };
 
   barEl.addEventListener('pointerdown', (e) => {
@@ -2596,20 +2680,25 @@ function setupBarDrag(barEl, getSeekRect, onSeek){
     e.stopPropagation();
     scrubbing = true;
     activePid = e.pointerId;
+    isProgressScrubbing = true;
+    barEl.classList.add('scrubbing');
     try { barEl.setPointerCapture(e.pointerId); } catch(err) {}
     document.addEventListener('pointermove', handleMove);
     document.addEventListener('pointerup', handleUp);
     document.addEventListener('pointercancel', handleUp);
-    onSeek(e.clientX, getSeekRect());
+    onSeek(e.clientX, getSeekRect(), false);
   });
 }
 
-function seekToClientX(clientX, rect){
-  if (!episodeAudio || !episodeAudio.duration || isNaN(episodeAudio.duration)) return;
+function seekToClientX(clientX, rect, commit){
+  const audio = episodeAudio;
+  if (!audio || !isFinite(audio.duration) || audio.duration <= 0 || rect.width <= 0) return;
   const p = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-  try { episodeAudio.currentTime = p * episodeAudio.duration; } catch(e) { return; }
-  elapsed = episodeAudio.currentTime;
+  const targetTime = p * audio.duration;
+  elapsed = targetTime;
   updateProgress();
+  if (!commit) return;
+  try { audio.currentTime = targetTime; } catch(e) { return; }
   if (current >= 0 && EPISODES[current]) {
     const key = EPISODES[current].folderKey;
     if (elapsed > 2) savedPositions[key] = elapsed;
