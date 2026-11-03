@@ -39,35 +39,50 @@
   .star{position:absolute;width:78px;height:78px;transform:translate(-50%,-50%);background:none;border:none;padding:0;cursor:grab;display:grid;place-items:center;-webkit-tap-highlight-color:transparent;touch-action:none;z-index:5;backface-visibility:hidden}
   .star.revealing{pointer-events:none}
   .star.dragging{opacity:0.15 !important;pointer-events:none}
-  .star-core{position:absolute;top:50%;left:50%;width:var(--core-size,8px);height:var(--core-size,8px);border-radius:50%;background:#fff;transform:translate(-50%,-50%);box-shadow:0 0 10px 3px rgba(255,255,255,.95), 0 0 32px 10px rgba(255,255,255,.28);animation:twinkle var(--pulse-dur,3s) ease-in-out infinite;animation-delay:var(--pulse-delay,0s);transition:transform .35s ease, box-shadow .35s ease;backface-visibility:hidden}
+  .star-core{position:absolute;top:50%;left:50%;width:var(--core-size,8px);height:var(--core-size,8px);border-radius:50%;background:#fff;transform:translate(-50%,-50%);box-shadow:0 0 10px 3px rgba(255,255,255,.95), 0 0 32px 10px rgba(255,255,255,.28);animation:twinkle var(--pulse-dur,3s) ease-in-out infinite;animation-delay:var(--pulse-delay,0s);transition:transform .35s ease, box-shadow .35s ease;backface-visibility:hidden;z-index:2}
   @keyframes twinkle{0%,100%{opacity:.45}50%{opacity:1}}
   .star:hover .star-core{transform:translate(-50%,-50%) scale(1.7);box-shadow:0 0 16px 6px rgba(255,255,255,1), 0 0 52px 18px rgba(255,255,255,.5)}
-  .star-flare{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);animation:twinkle var(--pulse-dur,3s) ease-in-out infinite;animation-delay:var(--pulse-delay,0s);pointer-events:none;opacity:.5;transition:opacity .35s ease}
+  .star-flare{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);animation:twinkle var(--pulse-dur,3s) ease-in-out infinite;animation-delay:var(--pulse-delay,0s);pointer-events:none;opacity:.5;transition:opacity .35s ease;z-index:1}
   .star-flare.h{width:var(--flare-w,44px);height:1px;background:radial-gradient(ellipse at center, rgba(255,255,255,.9) 0%, rgba(255,255,255,0) 78%)}
   .star-flare.v{width:1px;height:var(--flare-w,44px);background:radial-gradient(ellipse at center, rgba(255,255,255,.9) 0%, rgba(255,255,255,0) 78%)}
   .star:hover .star-flare{opacity:1}
-  .star-label{
-    position:absolute;top:calc(100% - 4px);left:50%;
-    transform:translate(-50%,0);
-    white-space:nowrap;
-    max-width:var(--label-max,140px);
-    overflow:hidden;text-overflow:ellipsis;
-    font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
-    font-weight:500;color:#c8c3d6;
-    opacity:1;transition:color .25s ease;
+
+  .star-ring{
+    position:absolute;
+    top:50%;left:50%;
+    transform:translate(-50%,-50%);
     pointer-events:none;
-    text-shadow:0 0 14px #000, 0 0 6px #000, 0 0 2px #000;
-    text-align:center;
+    overflow:visible;
+    opacity:.72;
+    transition:opacity .3s ease, filter .3s ease;
+    z-index:3;
   }
-  .star.active .star-label{color:#fff}
+  .ring-text{
+    font-family:'Cormorant Garamond', Georgia, serif;
+    font-weight:500;
+    fill:#c8c3d6;
+    text-transform:uppercase;
+    transition:fill .3s ease;
+  }
+  .star:hover .star-ring{opacity:1}
+  .star:hover .ring-text{fill:#e6e2f2}
+  .star.active .star-ring{
+    opacity:1;
+    filter:drop-shadow(0 0 4px rgba(255,255,255,.55));
+  }
+  .star.active .ring-text{fill:#fff}
+
   .star.active .star-core{background:#fff;box-shadow:0 0 18px 6px #fff, 0 0 62px 20px rgba(255,255,255,.6);animation-duration:1.15s !important;animation-delay:0s !important}
-  .star.unplayed::before{content:'';position:absolute;top:50%;left:50%;width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.55);transform:translate(-50%,-50%);animation:unplayedPulse 2.4s ease-in-out infinite;pointer-events:none}
+  .star.unplayed::before{content:'';position:absolute;top:50%;left:50%;width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.55);transform:translate(-50%,-50%);animation:unplayedPulse 2.4s ease-in-out infinite;pointer-events:none;z-index:0}
   .star.unplayed .star-core{box-shadow:0 0 16px 5px rgba(255,255,255,1), 0 0 48px 16px rgba(255,255,255,.5)}
   @keyframes unplayedPulse{0%,100%{opacity:.12;transform:translate(-50%,-50%) scale(.9)}50%{opacity:.85;transform:translate(-50%,-50%) scale(1.35)}}
   .star.searched .star-core{background:#fff !important;box-shadow:0 0 26px 12px #fff, 0 0 90px 32px rgba(255,255,255,.7) !important;animation:searchPulse 1s ease-in-out infinite !important;animation-delay:0s !important;transform:translate(-50%,-50%) scale(1.5) !important}
   .star.searched::after{content:'';position:absolute;top:50%;left:50%;width:50px;height:50px;border-radius:50%;border:1px solid rgba(255,255,255,.8);transform:translate(-50%,-50%);animation:searchRing 1.8s ease-out infinite;pointer-events:none}
   @keyframes searchPulse{0%,100%{opacity:.75}50%{opacity:1}}
   @keyframes searchRing{0%{transform:translate(-50%,-50%) scale(.6);opacity:1}100%{transform:translate(-50%,-50%) scale(2.2);opacity:0}}
+
+  .star-label{display:none}
+
   .map-arrow{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:210;opacity:1;transition:opacity .6s ease}
   #topBar{position:fixed;top:24px;right:20px;z-index:26;display:flex;align-items:center;gap:2px}
   #topBar button{background:none;border:none;padding:6px;width:34px;height:34px;display:grid;place-items:center;color:rgba(255,255,255,.92);cursor:pointer;transition:color .3s ease, filter .3s ease, opacity .3s ease;-webkit-tap-highlight-color:transparent;text-shadow:0 0 10px rgba(0,0,0,.9)}
@@ -221,7 +236,6 @@
     .pageNav{font-size:12px;letter-spacing:.26em;gap:6px;margin-left:4px}
     #searchBox{top:54px;right:12px;width:calc(100% - 24px);max-width:320px}
     .star{width:68px;height:68px}
-    .star-label{font-size:9.5px;letter-spacing:.13em;max-width:var(--label-max,120px)}
     .toast{font-size:10px;padding:10px 16px;letter-spacing:.18em}
     .playerCard{width:88vw;gap:20px}
     .controls{gap:8px}
@@ -405,6 +419,20 @@ function fmt(s){
   return m + ':' + (r < 10 ? '0' : '') + r;
 }
 
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
+function fitRingTitle(text, radius, fontSize, letterSpacing){
+  const maxLen = 2 * Math.PI * radius * 0.9;
+  const charW = fontSize * 0.55 + letterSpacing;
+  const maxChars = Math.max(6, Math.floor(maxLen / charW));
+  if (text.length <= maxChars) return text;
+  return text.slice(0, maxChars - 1).trim() + '…';
+}
+
 const isMobile = innerWidth < 700;
 const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2);
 const canvas = document.getElementById('bg');
@@ -576,7 +604,7 @@ function detectGitHubRepo(){
   } catch (e) { return null; }
 }
 
-const GH_TREE_KEY = 'ghTreeCache_v13';
+const GH_TREE_KEY = 'ghTreeCache_v14';
 const GH_TREE_TTL = 5 * 60 * 1000;
 
 let ghTreeCache = null;
@@ -828,6 +856,17 @@ function getExclusionZones(){
       y2: Math.min(1, (r.bottom + 8) / vh + pad)
     });
   }
+  const infoRect = infoBtn.getBoundingClientRect();
+  if (infoRect.width) {
+    const vw = innerWidth, vh = innerHeight;
+    const pad = 0.02;
+    zones.push({
+      x1: Math.max(0, (infoRect.left - 8) / vw - pad),
+      y1: Math.max(0, (infoRect.top - 8) / vh - pad),
+      x2: Math.min(1, (infoRect.right + 8) / vw + pad),
+      y2: Math.min(1, (infoRect.bottom + 8) / vh + pad)
+    });
+  }
   return zones;
 }
 function inZone(x, y, z){ return x >= z.x1 && x <= z.x2 && y >= z.y1 && y <= z.y2; }
@@ -838,16 +877,16 @@ function generateChaoticPositions(count){
   const zones = getExclusionZones();
   const vw = innerWidth;
 
-  const labelW = Math.min(180, vw * 0.55);
-  const baseMinDx = (labelW / vw) * 0.85;
-  const baseMinDy = 0.22;
+  const ringSize = vw < 700 ? 108 : 132;
+  const baseMinDx = ringSize / vw;
+  const baseMinDy = vw < 700 ? 0.25 : 0.24;
   let density = 1;
-  if (count > 10) density = 0.65;
-  else if (count > 8) density = 0.75;
-  else if (count > 6) density = 0.85;
+  if (count > 10) density = 0.7;
+  else if (count > 8) density = 0.8;
+  else if (count > 6) density = 0.88;
 
-  const minDx = Math.max(0.075, baseMinDx * density);
-  const minDy = Math.max(0.13, baseMinDy * density);
+  const minDx = Math.max(0.1, baseMinDx * density);
+  const minDy = Math.max(0.16, baseMinDy * density);
 
   let attempts = 0;
   const maxAttempts = count * 400;
@@ -910,17 +949,37 @@ function createStarEl(ep, idx, pos){
   star.dataset.key = ep.folderKey;
   star.style.left = (pos[0] * 100) + '%';
   star.style.top = (pos[1] * 100) + '%';
-  star.style.setProperty('--label-max', Math.min(180, innerWidth * 0.55) + 'px');
   star.style.setProperty('--pulse-dur', (2.4 + Math.random() * 3.2).toFixed(2) + 's');
   star.style.setProperty('--pulse-delay', (Math.random() * 4).toFixed(2) + 's');
   star.style.setProperty('--core-size', (6 + Math.random() * 4.5).toFixed(1) + 'px');
   star.style.setProperty('--flare-w', (36 + Math.random() * 22).toFixed(0) + 'px');
+  star.setAttribute('aria-label', ep.title);
   if (!playedSet.has(ep.folderKey)) star.classList.add('unplayed');
+
+  const small = innerWidth < 700;
+  const ringSize = small ? 108 : 132;
+  const radius = small ? 42 : 52;
+  const center = ringSize / 2;
+  const fontSize = small ? 8 : 9;
+  const letterSpacing = small ? 0.5 : 0.7;
+
+  const shortTitle = fitRingTitle(ep.title, radius, fontSize, letterSpacing);
+  const pathId = 'ringPath-' + idx;
+  const pathD = 'M ' + center + ' ' + (center + radius) +
+                ' a ' + radius + ' ' + radius + ' 0 1 1 0 -' + (radius * 2) +
+                ' a ' + radius + ' ' + radius + ' 0 1 1 0 ' + (radius * 2);
+
   star.innerHTML =
     '<span class="star-flare h"></span>' +
     '<span class="star-flare v"></span>' +
     '<span class="star-core"></span>' +
-    '<span class="star-label">' + ep.title + '</span>';
+    '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="star-ring" viewBox="0 0 ' + ringSize + ' ' + ringSize + '" style="width:' + ringSize + 'px;height:' + ringSize + 'px" aria-hidden="true">' +
+      '<defs><path id="' + pathId + '" d="' + pathD + '"/></defs>' +
+      '<text class="ring-text" font-size="' + fontSize + '" letter-spacing="' + letterSpacing + '">' +
+        '<textPath href="#' + pathId + '" xlink:href="#' + pathId + '" startOffset="50%" text-anchor="middle">' + escapeHtml(shortTitle) + '</textPath>' +
+      '</text>' +
+    '</svg>';
+
   star.addEventListener('pointerdown', (e) => {
     if (!e.isPrimary) return;
     startDrag(idx, star, e);
@@ -980,7 +1039,6 @@ async function buildSky(){
 
   let globalIdx = 0;
   let resolveIndex = 0;
-  const resolvedList = [];
 
   while (resolveIndex < entries.length) {
     const batch = entries.slice(resolveIndex, resolveIndex + 2);
@@ -1035,8 +1093,25 @@ function restoreLastPlayed(){
   if (shuffleOn) buildShuffleOrder(idx);
   updateFullUI();
   updateMiniUI();
-  updateProgress();
   miniPlayer.classList.add('show');
+
+  const ep = EPISODES[idx];
+  if (ep && ep.audioUrl) {
+    const a = new Audio();
+    a.preload = 'metadata';
+    a.src = ep.audioUrl;
+    a.addEventListener('loadedmetadata', () => {
+      if (isFinite(a.duration) && a.duration > 0 && !EPISODES[idx].dur) {
+        EPISODES[idx].dur = a.duration;
+        if (current === idx) {
+          pDur.textContent = fmt(EPISODES[idx].dur);
+          updateProgress();
+        }
+      }
+      try { a.removeAttribute('src'); a.load(); } catch(e){}
+    });
+    a.addEventListener('error', () => { try { a.removeAttribute('src'); } catch(e){} });
+  }
 }
 
 let ambientActive = false;
@@ -1439,7 +1514,7 @@ function renderSuggestions(rawQuery){
     return;
   }
   searchSuggestions.innerHTML = list.map(r =>
-    '<div class="suggestion" data-index="' + r.index + '">' + r.title + '</div>'
+    '<div class="suggestion" data-index="' + r.index + '">' + escapeHtml(r.title) + '</div>'
   ).join('');
   searchSuggestions.classList.add('show');
 }
