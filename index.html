@@ -4,13 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#000000">
+<meta name="application-name" content="Страшилки">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Страшилки">
 <title>Страшилки</title>
-<link rel="icon" type="image/jpeg" href="DATA/Logo.jpg">
-<link rel="apple-touch-icon" href="DATA/Logo.jpg">
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
+<link rel="manifest" href="./manifest.json">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Special+Elite&display=swap');
   *{margin:0;padding:0;box-sizing:border-box}
@@ -23,7 +25,7 @@
     -webkit-tap-highlight-color:transparent;overscroll-behavior:none;
   }
   button, input{font-family:inherit;font-weight:inherit}
-  canvas#bg{position:fixed;inset:0;z-index:0;display:block;background:#000;pointer-events:none}
+  canvas#bg{position:fixed;inset:0;z-index:0;display:block;background:radial-gradient(ellipse at 24% 72%,rgba(55,7,20,.16),transparent 56%),radial-gradient(ellipse at 78% 24%,rgba(90,90,110,.08),transparent 58%),#000;pointer-events:none}
   #dragTrail{position:fixed;inset:0;z-index:201;display:block;width:100%;height:100%;pointer-events:none}
   .grain{
     position:fixed;inset:-60%;z-index:2;pointer-events:none;opacity:.026;
@@ -239,6 +241,13 @@
   .info-empty{font-family:'IM Fell English', Georgia, serif;font-weight:400;font-size:14px;letter-spacing:.04em;color:#5e596f;text-align:center;font-style:italic;line-height:1.7}
   .info-link{color:#fff;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;text-decoration-color:rgba(255,255,255,.55);cursor:pointer;transition:text-decoration-color .25s ease, text-shadow .25s ease;margin:0 3px;word-break:break-all}
   .info-link:hover{text-decoration-color:#fff;text-shadow:0 0 14px rgba(255,255,255,.5)}
+
+  .installAppArea{margin-top:24px;padding-top:18px;border-top:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;align-items:center;gap:10px}
+  .installAppArea[hidden]{display:none}
+  #installAppBtn{min-height:42px;padding:11px 22px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.28);border-radius:2px;color:#eae6f2;font-family:'Special Elite','Courier New',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;transition:border-color .25s ease,background .25s ease,color .25s ease}
+  #installAppBtn:hover{border-color:rgba(255,255,255,.72);background:rgba(255,255,255,.07);color:#fff}
+  #installAppHint{display:none;max-width:360px;text-align:center;color:#9d96aa;font-size:13px;line-height:1.65;letter-spacing:.02em}
+  #installAppHint.show{display:block}
   #externalWarning{position:fixed;inset:0;z-index:90;display:grid;place-items:center;background:rgba(0,0,0,.94);opacity:0;pointer-events:none;transition:opacity .35s ease;padding:24px}
   #externalWarning.show{opacity:1;pointer-events:auto}
   .extCard{width:min(420px, 100%);padding:38px 30px 30px;text-align:center;border:1px solid rgba(255,255,255,.1);border-radius:4px;background:rgba(8,6,10,.85)}
@@ -328,6 +337,8 @@
     .ageEnter{padding:13px 50px;font-size:11px;letter-spacing:.44em;text-indent:.44em}
     .ageEnter:hover{letter-spacing:.5em}
     .infoCard{padding:38px 24px 30px}
+    #installAppBtn{width:100%;max-width:280px}
+    #installAppHint{font-size:12.5px}
     .infoHeading{font-size:14px;margin-bottom:22px}
     .info-line{font-size:14px}
     .extCard{padding:32px 24px 26px}
@@ -436,6 +447,10 @@
   <div class="infoCard">
     <button class="infoClose" id="infoClose" aria-label="Закрыть">×</button>
     <div id="infoContent"></div>
+    <div class="installAppArea" id="installAppArea">
+      <button type="button" id="installAppBtn">Как установить приложение</button>
+      <p id="installAppHint" aria-live="polite"></p>
+    </div>
   </div>
 </div>
 <div id="externalWarning">
@@ -475,28 +490,6 @@
   </div>
 </div>
 <script>
-(function setupPWA(){
-  try {
-    const base = location.href.split('#')[0];
-    const scope = base.replace(/[^/]*$/, '');
-    const manifest = {
-      name: 'Страшилки', short_name: 'Страшилки',
-      description: 'Хоррор-подкасты в ночном небе',
-      start_url: base, scope: scope,
-      display: 'standalone', orientation: 'portrait',
-      background_color: '#000000', theme_color: '#000000',
-      icons: [
-        { src: 'DATA/Logo.jpg', sizes: '192x192', type: 'image/jpeg', purpose: 'any' },
-        { src: 'DATA/Logo.jpg', sizes: '512x512', type: 'image/jpeg', purpose: 'any' },
-        { src: 'DATA/Logo.jpg', sizes: '512x512', type: 'image/jpeg', purpose: 'maskable' }
-      ]
-    };
-    const link = document.createElement('link');
-    link.rel = 'manifest';
-    link.href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest));
-    document.head.appendChild(link);
-  } catch (e) {}
-})();
 
 function fmt(s){
   if (!isFinite(s) || s < 0) s = 0;
@@ -521,17 +514,28 @@ function fitRingTitle(text, radius, fontSize, letterSpacing){
 }
 
 const isMobile = innerWidth < 700;
-const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2);
+const reducedMotionQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
+const lowPowerDevice = isMobile && ((navigator.hardwareConcurrency || 4) <= 4 || !!(navigator.connection && navigator.connection.saveData));
+const bgFrameInterval = reducedMotionQuery.matches ? 0 : (lowPowerDevice ? 1000 / 10 : (isMobile ? 1000 / 12 : 1000 / 20));
+function getCanvasScale(maxScale, pixelBudget){
+  const area = Math.max(1, innerWidth * innerHeight);
+  return Math.min(window.devicePixelRatio || 1, maxScale, Math.sqrt(pixelBudget / area));
+}
+let dpr = getCanvasScale(isMobile ? 1.1 : 1.45, isMobile ? 1100000 : 2100000);
 const canvas = document.getElementById('bg');
-const ctx = canvas.getContext('2d');
+let ctx = null;
+try { ctx = canvas ? canvas.getContext('2d', { alpha: false, desynchronized: true }) : null; } catch (e) { try { ctx = canvas ? canvas.getContext('2d') : null; } catch (err) {} }
+let bgContextLost = false;
 const dragTrailCanvas = document.getElementById('dragTrail');
-const dragTrailCtx = dragTrailCanvas.getContext('2d', { alpha: true, desynchronized: true });
+let dragTrailCtx = null;
+try { dragTrailCtx = dragTrailCanvas ? dragTrailCanvas.getContext('2d', { alpha: true, desynchronized: true }) : null; } catch (e) { try { dragTrailCtx = dragTrailCanvas ? dragTrailCanvas.getContext('2d') : null; } catch (err) {} }
 const skyWrap = document.getElementById('skyWrap');
 let pageTurnCleanupTimer = 0;
 const pageNavBtn = document.getElementById('pageNavBtn');
 const pageMapPanel = document.getElementById('pageMapPanel');
 const pageMapCanvas = document.getElementById('pageMapCanvas');
-const pageMapCtx = pageMapCanvas.getContext('2d');
+let pageMapCtx = null;
+try { pageMapCtx = pageMapCanvas ? pageMapCanvas.getContext('2d', { alpha: true, desynchronized: true }) : null; } catch (e) { try { pageMapCtx = pageMapCanvas ? pageMapCanvas.getContext('2d') : null; } catch (err) {} }
 const pageMapSlider = document.getElementById('pageMapSlider');
 const pageMapPageLabel = document.getElementById('pageMapPageLabel');
 const sky = document.getElementById('sky');
@@ -680,7 +684,7 @@ let dragTrailTrackFrame = 0;
 let dragTrailTrackedAnimation = null;
 function resizeDragTrail(){
   if (!dragTrailCanvas || !dragTrailCtx) return;
-  dragTrailDpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.1 : 1.5);
+  dragTrailDpr = getCanvasScale(isMobile ? .95 : 1.2, isMobile ? 750000 : 1450000);
   dragTrailCanvas.width = Math.max(1, Math.floor(innerWidth * dragTrailDpr));
   dragTrailCanvas.height = Math.max(1, Math.floor(innerHeight * dragTrailDpr));
   dragTrailCanvas.style.width = innerWidth + 'px';
@@ -689,11 +693,17 @@ function resizeDragTrail(){
   dragTrailCtx.clearRect(0, 0, innerWidth, innerHeight);
 }
 function resize(){
-  W = canvas.width = Math.floor(innerWidth * dpr);
-  H = canvas.height = Math.floor(innerHeight * dpr);
-  canvas.style.width = innerWidth + 'px';
-  canvas.style.height = innerHeight + 'px';
+  dpr = getCanvasScale(isMobile ? 1.1 : 1.45, isMobile ? 1100000 : 2100000);
+  W = canvas ? Math.max(1, Math.floor(innerWidth * dpr)) : 0;
+  H = canvas ? Math.max(1, Math.floor(innerHeight * dpr)) : 0;
+  if (canvas) {
+    canvas.width = W;
+    canvas.height = H;
+    canvas.style.width = innerWidth + 'px';
+    canvas.style.height = innerHeight + 'px';
+  }
   resizeDragTrail();
+  if (ctx && !bgContextLost) drawBg(performance.now());
 }
 function addDragTrailPoint(x, y){
   const now = performance.now();
@@ -1833,24 +1843,69 @@ for (let i = 0; i < sphereCount; i++) {
   });
 }
 function drawBg(t){
+  if (!ctx || bgContextLost || !W || !H) return;
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
   ctx.fillStyle = '#000';
   ctx.fillRect(0, 0, W, H);
   ctx.globalCompositeOperation = 'lighter';
-  spheres.forEach(s => {
-    const x = (s.x + Math.sin(t * s.fx + s.ph) * 0.07) * W;
-    const y = (s.y + Math.cos(t * s.fy + s.ph) * 0.06) * H;
-    const r = s.r * Math.max(W, H);
-    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-    const c = s.color;
-    g.addColorStop(0, 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + s.a + ')');
-    g.addColorStop(0.55, 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + (s.a * 0.3) + ')');
-    g.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = g;
+  for (let i = 0; i < spheres.length; i++) {
+    const sphere = spheres[i];
+    const x = (sphere.x + Math.sin(t * sphere.fx + sphere.ph) * 0.07) * W;
+    const y = (sphere.y + Math.cos(t * sphere.fy + sphere.ph) * 0.06) * H;
+    const r = sphere.r * Math.max(W, H);
+    const gradient = ctx.createRadialGradient(x, y, 0, x, y, r);
+    const color = sphere.color;
+    gradient.addColorStop(0, 'rgba(' + color[0] + ',' + color[1] + ',' + color[2] + ',' + sphere.a + ')');
+    gradient.addColorStop(0.55, 'rgba(' + color[0] + ',' + color[1] + ',' + color[2] + ',' + (sphere.a * 0.3) + ')');
+    gradient.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = gradient;
     ctx.beginPath();
-    ctx.arc(x, y, r, 0, 6.2832);
+    ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.fill();
-  });
+  }
   ctx.globalCompositeOperation = 'source-over';
+}
+
+let bgActive = false;
+let bgTimer = 0;
+let bgRaf = 0;
+function stopBgLoop(){
+  bgActive = false;
+  if (bgTimer) clearTimeout(bgTimer);
+  if (bgRaf) cancelAnimationFrame(bgRaf);
+  bgTimer = 0;
+  bgRaf = 0;
+}
+function scheduleBgFrame(){
+  if (!bgActive || document.hidden || bgContextLost || !ctx || bgFrameInterval <= 0 || bgTimer || bgRaf) return;
+  bgTimer = setTimeout(() => {
+    bgTimer = 0;
+    bgRaf = requestAnimationFrame((time) => {
+      bgRaf = 0;
+      if (!bgActive || document.hidden || bgContextLost) return;
+      drawBg(time);
+      scheduleBgFrame();
+    });
+  }, bgFrameInterval);
+}
+function startBgLoop(){
+  if (!ctx || bgContextLost || document.hidden) return;
+  bgActive = true;
+  drawBg(performance.now());
+  if (bgFrameInterval > 0) scheduleBgFrame();
+}
+if (canvas) {
+  canvas.addEventListener('contextlost', (event) => {
+    if (event && event.preventDefault) event.preventDefault();
+    bgContextLost = true;
+    stopBgLoop();
+  });
+  canvas.addEventListener('contextrestored', () => {
+    bgContextLost = false;
+    resize();
+    startBgLoop();
+  });
 }
 
 let episodeAudio = null;
@@ -3017,7 +3072,7 @@ function drawPageMap(){
   const rect = pageMapCanvas.getBoundingClientRect();
   const width = Math.max(1, Math.floor(rect.width));
   const height = Math.max(1, Math.floor(rect.height));
-  const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
+  const ratio = getCanvasScale(isMobile ? 1 : 1.2, isMobile ? 650000 : 1100000);
   pageMapCanvas.width = Math.floor(width * ratio);
   pageMapCanvas.height = Math.floor(height * ratio);
   const g = pageMapCtx;
@@ -3384,16 +3439,23 @@ window.addEventListener('touchend', (e) => {
   }
 }, { passive: true });
 
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden) savePositionForCurrent();
-});
-window.addEventListener('pagehide', () => { savePositionForCurrent(); clearDragTrail(); });
+window.addEventListener('pagehide', () => { savePositionForCurrent(); clearDragTrail(); stopBgLoop(); });
 window.addEventListener('beforeunload', savePositionForCurrent);
 
-function loop(t){
-  drawBg(t);
-  requestAnimationFrame(loop);
-}
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    savePositionForCurrent();
+    stopBgLoop();
+    clearDragTrail();
+  } else {
+    resize();
+    startBgLoop();
+    if (pageMapPanel.classList.contains('show')) updatePageMap();
+  }
+});
+window.addEventListener('pageshow', () => {
+  if (!document.hidden) startBgLoop();
+});
 
 window.addEventListener('resize', () => {
   resize();
@@ -3408,6 +3470,69 @@ window.addEventListener('resize', () => {
   }
 });
 
+let deferredInstallPrompt = null;
+const installAppArea = document.getElementById('installAppArea');
+const installAppBtn = document.getElementById('installAppBtn');
+const installAppHint = document.getElementById('installAppHint');
+function isAppInstalled(){
+  return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+}
+function getInstallInstructions(){
+  const ua = navigator.userAgent || '';
+  const appleMobile = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (appleMobile) return 'Откройте меню «Поделиться» и выберите «На экран Домой», затем нажмите «Добавить». На новых версиях iOS можно оставить включённым «Открыть как веб-приложение».';
+  if (/Android/i.test(ua)) return 'Откройте меню браузера и выберите «Установить приложение» или «Добавить на главный экран». Название пункта зависит от браузера.';
+  if (/Macintosh|Mac OS X/i.test(ua)) return 'В Safari выберите «Файл» → «Добавить в Dock». В Chrome или Edge используйте значок установки в адресной строке либо пункт установки в меню браузера.';
+  if (/Windows/i.test(ua)) return 'В Chrome или Edge откройте меню браузера и выберите «Установить Страшилки» или «Установить приложение». В других браузерах используйте доступный пункт создания ярлыка или добавления сайта на экран.';
+  return 'Откройте меню браузера и найдите пункт «Установить приложение», «Добавить на главный экран» или «Создать ярлык». Доступный вариант зависит от браузера и системы.';
+}
+function updateInstallUI(){
+  if (!installAppArea || !installAppBtn || !installAppHint) return;
+  if (isAppInstalled()) {
+    installAppArea.hidden = true;
+    return;
+  }
+  installAppArea.hidden = false;
+  installAppBtn.textContent = deferredInstallPrompt ? 'Установить приложение' : 'Как установить приложение';
+}
+if (installAppBtn) {
+  installAppBtn.addEventListener('click', async () => {
+    if (deferredInstallPrompt) {
+      const promptEvent = deferredInstallPrompt;
+      deferredInstallPrompt = null;
+      try {
+        await promptEvent.prompt();
+        const choice = await promptEvent.userChoice;
+        if (choice && choice.outcome === 'accepted') showToast('установка приложения запущена', 2200);
+      } catch (e) {}
+      updateInstallUI();
+      return;
+    }
+    installAppHint.textContent = getInstallInstructions();
+    installAppHint.classList.toggle('show');
+  });
+}
+window.addEventListener('beforeinstallprompt', (event) => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  updateInstallUI();
+});
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  updateInstallUI();
+  showToast('Страшилки установлены', 2200);
+});
+function registerAppServiceWorker(){
+  if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
+  try {
+    const base = new URL('./', document.baseURI);
+    const scriptUrl = new URL('sw.js', base);
+    navigator.serviceWorker.register(scriptUrl.href, { scope: base.pathname })
+      .then(registration => { if (navigator.onLine && registration.update) registration.update().catch(() => {}); })
+      .catch(() => {});
+  } catch (e) {}
+}
+
 async function init(){
   resize();
   updateMuteIcon();
@@ -3417,7 +3542,9 @@ async function init(){
   loadPlayedState();
   updatePageMap();
   loadPositions();
-  requestAnimationFrame(loop);
+  startBgLoop();
+  registerAppServiceWorker();
+  updateInstallUI();
   loadPodcastInfo();
   buildSky();
 }
