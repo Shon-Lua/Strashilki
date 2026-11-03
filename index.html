@@ -108,7 +108,14 @@
 
   .star-label{display:none}
 
-  .map-arrow{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:210;opacity:1;transition:opacity .6s ease}
+  .map-arrow{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:210;opacity:1;overflow:hidden;transition:opacity .6s ease}
+  .map-arrow .arrow-ink{fill:none;stroke:rgba(67,25,43,.82);stroke-width:6.6;stroke-linecap:round;stroke-linejoin:round}
+  .map-arrow .arrow-face{fill:none;stroke:var(--arrow-color,#f0e6da);stroke-width:3.1;stroke-linecap:round;stroke-linejoin:round}
+  .map-arrow .arrow-accent{fill:none;stroke:var(--arrow-color,#f0e6da);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;opacity:.86}
+  .map-arrow .arrow-spark{fill:var(--arrow-color,#f0e6da);stroke:rgba(67,25,43,.68);stroke-width:1.2;stroke-linejoin:round;opacity:0;transition:opacity .35s ease}
+  .map-arrow .arrow-wobble{transform-box:fill-box;transform-origin:center;animation:mapArrowWobble 1.8s ease-in-out infinite}
+  @keyframes mapArrowWobble{0%,100%{transform:translateY(0) rotate(0)}35%{transform:translateY(-1.2px) rotate(.35deg)}70%{transform:translateY(.6px) rotate(-.25deg)}}
+  @media (prefers-reduced-motion:reduce){.map-arrow .arrow-wobble{animation:none}}
   #topBar{position:fixed;top:24px;right:20px;z-index:26;display:flex;align-items:center;gap:2px}
   #topBar button{background:none;border:none;padding:6px;width:34px;height:34px;display:grid;place-items:center;color:rgba(255,255,255,.92);cursor:pointer;transition:color .3s ease, filter .3s ease, opacity .3s ease;-webkit-tap-highlight-color:transparent;text-shadow:0 0 10px rgba(0,0,0,.9)}
   #topBar button:hover{color:#fff;filter:drop-shadow(0 0 8px rgba(255,255,255,.65))}
@@ -171,9 +178,10 @@
   #playerOverlay.show{opacity:1;pointer-events:auto}
   .playerCard{position:relative;width:min(440px, 88vw);display:flex;flex-direction:column;align-items:center;gap:22px;padding:0 4px;transform-origin:50% 100%;transform:translateY(35vh) scale(.35);opacity:0;transition:transform .65s cubic-bezier(.2,.9,.3,1.25), opacity .4s ease;will-change:transform,opacity}
   #playerOverlay.show .playerCard{transform:translateY(0) scale(1);opacity:1}
-  .cover{width:100%;aspect-ratio:1/1;border-radius:14px;overflow:hidden;position:relative;box-shadow:0 30px 80px -20px rgba(0,0,0,.95), 0 0 0 1px rgba(255,255,255,.06), 0 0 70px -10px rgba(255,255,255,.08);background:#050505;touch-action:pan-y;cursor:grab}
+  .cover{width:100%;aspect-ratio:1/1;border-radius:14px;overflow:hidden;position:relative;isolation:isolate;contain:paint;box-shadow:0 30px 80px -20px rgba(0,0,0,.95), 0 0 0 1px rgba(255,255,255,.06), 0 0 70px -10px rgba(255,255,255,.08);background:#050505;touch-action:pan-y;cursor:grab}
   .cover:active{cursor:grabbing}
-  .cover svg, .cover img{display:block;width:100%;height:100%;object-fit:cover;-webkit-user-drag:none;user-select:none}
+  .cover svg, .cover img{display:block;width:100%;height:100%;object-fit:cover;-webkit-user-drag:none;user-select:none;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+  .cover img.coverDecoded{animation:none;transition:none;opacity:1}
   .titleBlock{width:100%;text-align:center;overflow:hidden}
   .titleBlock h2{font-family:'Special Elite', 'Courier New', monospace;font-weight:400;font-size:clamp(18px, 4.6vw, 23px);letter-spacing:.08em;color:#eae6f2;line-height:1.3;text-shadow:0 0 22px rgba(255,255,255,.14);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;width:100%;position:relative}
   .progressRow{width:100%;display:flex;align-items:center;gap:12px}
@@ -270,21 +278,59 @@
   .ageEnter{padding:14px 60px;background:transparent;border:1px solid rgba(255,255,255,.4);color:#eae6f2;font-family:'Special Elite', 'Courier New', monospace;font-weight:400;font-size:12px;letter-spacing:.48em;text-indent:.48em;text-transform:uppercase;cursor:pointer;transition:color .3s ease, border-color .3s ease, box-shadow .3s ease, letter-spacing .3s ease;border-radius:2px;-webkit-tap-highlight-color:transparent}
   .ageEnter:hover{color:#fff;border-color:#fff;box-shadow:0 0 50px rgba(255,255,255,.24);letter-spacing:.56em}
   .ageEnter:active{box-shadow:0 0 30px rgba(255,255,255,.35), inset 0 0 26px rgba(255,255,255,.1)}
-  #skyHintBanner{position:fixed;inset:0;z-index:70;display:grid;place-items:center;background:rgba(0,0,0,.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .45s ease;padding:24px}
-  #skyHintBanner.show{opacity:1;pointer-events:auto}
-  .skyHintCard{width:min(440px, 100%);padding:34px 30px 30px;border:1px solid rgba(255,255,255,.14);border-radius:4px;background:rgba(8,6,10,.94);box-shadow:0 20px 60px rgba(0,0,0,.85), 0 0 60px -10px rgba(255,255,255,.1);text-align:center}
-  .skyHintList{list-style:none;text-align:left;margin:0 auto 24px;padding:14px 18px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);border-radius:3px;max-width:340px}
-  .skyHintList li{position:relative;padding-left:20px;font-family:'IM Fell English', Georgia, serif;font-weight:400;font-size:14px;letter-spacing:.03em;line-height:1.65;color:#b8b2c5;margin-bottom:10px}
-  .skyHintList li:last-child{margin-bottom:0}
-  .skyHintList li::before{content:'';position:absolute;left:2px;top:.72em;width:8px;height:1px;background:rgba(255,255,255,.55)}
-  .skyHintList b{color:#eae6f2;font-weight:600}
-  .skyHintCheck{display:inline-flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;margin-bottom:22px;font-family:'IM Fell English', Georgia, serif;font-weight:400;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.5);user-select:none;-webkit-tap-highlight-color:transparent}
-  .skyHintCheck:hover{color:rgba(255,255,255,.8)}
-  .skyHintCheckBox{position:relative;width:16px;height:16px;border:1px solid rgba(255,255,255,.4);border-radius:2px;flex-shrink:0;transition:border-color .2s ease, background .2s ease}
-  .skyHintCheck.checked .skyHintCheckBox{border-color:#fff;background:rgba(255,255,255,.12)}
-  .skyHintCheck.checked .skyHintCheckBox::after{content:'';position:absolute;left:50%;top:46%;width:9px;height:5px;border-left:1.6px solid #fff;border-bottom:1.6px solid #fff;transform:translate(-50%,-50%) rotate(-45deg)}
-  .skyHintBtn{padding:13px 56px;background:transparent;border:1px solid rgba(255,255,255,.42);color:#eae6f2;font-family:'Special Elite', 'Courier New', monospace;font-weight:400;font-size:11px;letter-spacing:.46em;text-indent:.46em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:color .3s ease, border-color .3s ease, box-shadow .3s ease, letter-spacing .3s ease;-webkit-tap-highlight-color:transparent}
-  .skyHintBtn:hover{color:#fff;border-color:#fff;box-shadow:0 0 40px rgba(255,255,255,.22);letter-spacing:.54em}
+  #skyHintBanner{position:fixed;inset:0;z-index:90;display:grid;place-items:center;padding:20px;background:radial-gradient(ellipse at 50% 46%,rgba(28,17,31,.76),rgba(0,0,0,.96) 72%);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .45s ease,visibility .45s ease}
+  #skyHintBanner.show{opacity:1;visibility:visible;pointer-events:auto}
+  .tutorialCard{width:min(470px,100%);padding:22px 24px 24px;border:1px solid rgba(205,190,218,.2);border-radius:4px;background:radial-gradient(ellipse at 50% 0%,rgba(95,55,91,.13),transparent 55%),linear-gradient(160deg,rgba(13,10,16,.98),rgba(3,3,5,.99));box-shadow:0 24px 80px rgba(0,0,0,.9),inset 0 0 42px rgba(125,90,140,.045);text-align:center;overflow:hidden}
+  .tutorialScene{--drag-x:178px;--drag-y:76px;position:relative;width:100%;height:230px;overflow:hidden;border:1px solid rgba(200,185,210,.13);border-radius:3px;background:radial-gradient(ellipse at 50% 52%,rgba(87,64,96,.18),transparent 62%),radial-gradient(ellipse at 20% 80%,rgba(93,15,33,.12),transparent 46%),#020203;isolation:isolate}
+  .tutorialScene::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.7;background-image:radial-gradient(circle at 13% 22%,rgba(255,255,255,.72) 0 1px,transparent 1.5px),radial-gradient(circle at 77% 18%,rgba(255,255,255,.55) 0 1px,transparent 1.5px),radial-gradient(circle at 61% 78%,rgba(255,255,255,.52) 0 1px,transparent 1.5px),radial-gradient(circle at 32% 68%,rgba(255,255,255,.38) 0 1px,transparent 1.5px),radial-gradient(circle at 88% 58%,rgba(255,255,255,.55) 0 1px,transparent 1.5px)}
+  .tutorialScene::after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 45%,rgba(0,0,0,.5) 100%)}
+  .tutorialLayer{position:absolute;inset:0;display:none}
+  .tutorialScene[data-stage="swipe"] .tutorialSwipeLayer,.tutorialScene[data-stage="drag"] .tutorialDragLayer,.tutorialScene[data-stage="tap"] .tutorialTapLayer{display:block}
+  .tutorialPage{position:absolute;left:50%;width:76%;height:106px;border:1px solid rgba(205,195,220,.18);border-radius:3px;background:radial-gradient(ellipse at 50% 65%,rgba(105,85,120,.1),transparent 65%),rgba(4,4,7,.82);transform:translateX(-50%);box-shadow:0 10px 24px rgba(0,0,0,.5)}
+  .tutorialPage.one{top:24px}
+  .tutorialPage.two{top:148px;opacity:.42}
+  .tutorialScene.run[data-stage="swipe"] .tutorialPage.one{animation:tutorialPageOut 2.8s ease-in-out infinite}
+  .tutorialScene.run[data-stage="swipe"] .tutorialPage.two{animation:tutorialPageIn 2.8s ease-in-out infinite}
+  .tutorialDot{position:absolute;width:5px;height:5px;border-radius:50%;background:#f4efff;box-shadow:0 0 10px 3px rgba(230,220,255,.72)}
+  .tutorialDot.d1{left:22%;top:32%}.tutorialDot.d2{left:49%;top:62%;width:7px;height:7px}.tutorialDot.d3{left:73%;top:38%;width:4px;height:4px}.tutorialDot.d4{left:35%;top:75%;width:3px;height:3px}
+  .tutorialArrow{position:absolute;left:50%;top:50%;width:24px;height:24px;border-right:1px solid rgba(230,220,245,.6);border-bottom:1px solid rgba(230,220,245,.6);transform:translate(-50%,-50%) rotate(45deg);opacity:.35}
+  .tutorialFinger{position:absolute;width:54px;height:70px;z-index:5;filter:drop-shadow(0 4px 10px rgba(0,0,0,.85));overflow:visible}
+  .tutorialFinger path{fill:#eee9f2;stroke:#514958;stroke-width:1.7;stroke-linejoin:round}
+  .tutorialScene.run[data-stage="swipe"] .tutorialFinger{left:68%;top:68%;animation:tutorialFingerSwipe 2.8s ease-in-out infinite}
+  .tutorialDragStar,.tutorialTapStar{position:absolute;width:76px;height:76px;display:grid;place-items:center}
+  .tutorialDragStar{left:23%;top:18%}
+  .tutorialTapStar{left:50%;top:34%;transform:translateX(-50%)}
+  .tutorialStarCore{position:absolute;width:9px;height:9px;border-radius:50%;background:#fff;box-shadow:0 0 12px 5px rgba(255,255,255,.95),0 0 35px 12px rgba(220,205,255,.38)}
+  .tutorialStarRing{position:absolute;width:72px;height:72px;border:1px solid rgba(225,215,240,.58);border-radius:50%;box-shadow:0 0 15px rgba(205,190,225,.12)}
+  .tutorialRingLabel{position:absolute;inset:-5px;display:grid;place-items:center;font-family:'IM Fell English',Georgia,serif;font-size:7px;letter-spacing:.14em;color:rgba(235,228,245,.76);text-transform:uppercase}
+  .tutorialDropTarget{position:absolute;right:15%;bottom:12%;width:88px;height:88px;border:1px dashed rgba(225,215,240,.48);border-radius:50%;box-shadow:0 0 24px rgba(165,125,185,.13),inset 0 0 22px rgba(165,125,185,.08)}
+  .tutorialDropTarget::before,.tutorialDropTarget::after{content:'';position:absolute;inset:13px;border:1px solid rgba(230,220,245,.2);border-radius:50%}
+  .tutorialDropTarget::after{inset:29px;background:radial-gradient(circle,rgba(235,230,245,.18),transparent 70%)}
+  .tutorialDragTrail{position:absolute;left:36%;top:43%;width:46%;height:28%;border-top:2px solid rgba(220,210,245,.46);border-radius:50%;transform:rotate(31deg);filter:drop-shadow(0 0 5px rgba(220,210,245,.4));opacity:0}
+  .tutorialScene.run[data-stage="drag"] .tutorialDragStar{animation:tutorialStarDrag 3s cubic-bezier(.5,.05,.2,1) infinite}
+  .tutorialScene.run[data-stage="drag"] .tutorialDragTrail{animation:tutorialTrailDraw 3s ease-in-out infinite}
+  .tutorialScene.run[data-stage="drag"] .tutorialFinger{left:25%;top:25%;animation:tutorialFingerDrag 3s cubic-bezier(.5,.05,.2,1) infinite}
+  .tutorialScene.run[data-stage="tap"] .tutorialTapStar .tutorialStarCore{animation:tutorialTapPulse 2.1s ease-in-out infinite}
+  .tutorialScene.run[data-stage="tap"] .tutorialTapStar .tutorialStarRing{animation:tutorialTapRing 2.1s ease-out infinite}
+  .tutorialScene.run[data-stage="tap"] .tutorialFinger{left:46%;top:43%;animation:tutorialFingerTap 2.1s ease-in-out infinite}
+  .tutorialStageCount{margin:18px 0 8px;font-family:'Special Elite','Courier New',monospace;font-size:10px;letter-spacing:.32em;color:rgba(215,205,225,.48);font-variant-numeric:tabular-nums}
+  .tutorialTitle{font-family:'Special Elite','Courier New',monospace;font-size:clamp(17px,4.2vw,21px);font-weight:400;letter-spacing:.1em;color:#eee9f4;text-transform:uppercase;margin:0 0 9px;text-shadow:0 0 22px rgba(230,220,245,.14)}
+  .tutorialDescription{min-height:44px;max-width:360px;margin:0 auto 16px;font-family:'IM Fell English',Georgia,serif;font-size:14px;line-height:1.6;letter-spacing:.025em;color:#aaa3b5}
+  .tutorialProgress{display:flex;justify-content:center;gap:9px;margin:0 0 17px}
+  .tutorialProgress span{width:5px;height:5px;border-radius:50%;background:rgba(220,210,235,.2);transition:background .3s ease,box-shadow .3s ease,transform .3s ease}
+  .tutorialProgress span.active{background:#e9e1f0;box-shadow:0 0 10px rgba(230,220,245,.8);transform:scale(1.35)}
+  .skyHintBtn{min-width:170px;padding:12px 34px;background:transparent;border:1px solid rgba(225,215,238,.48);color:#eae6f2;font-family:'Special Elite','Courier New',monospace;font-size:11px;letter-spacing:.38em;text-indent:.38em;text-transform:uppercase;cursor:pointer;border-radius:2px;opacity:0;visibility:hidden;pointer-events:none;transform:translateY(8px);transition:opacity .35s ease,transform .35s ease,border-color .3s ease,box-shadow .3s ease; -webkit-tap-highlight-color:transparent}
+  .skyHintBtn.ready{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0)}
+  .skyHintBtn:hover{color:#fff;border-color:#fff;box-shadow:0 0 34px rgba(255,255,255,.2)}
+  @keyframes tutorialPageOut{0%,12%{transform:translate(-50%,0);opacity:1}48%,62%{transform:translate(-50%,-88px);opacity:.08}100%{transform:translate(-50%,0);opacity:1}}
+  @keyframes tutorialPageIn{0%,12%{transform:translate(-50%,0);opacity:.12}48%,62%{transform:translate(-50%,-88px);opacity:1}100%{transform:translate(-50%,0);opacity:.12}}
+  @keyframes tutorialFingerSwipe{0%,10%{transform:translate(-50%,-50%)}45%,60%{transform:translate(-50%,-115%)}100%{transform:translate(-50%,-50%)}}
+  @keyframes tutorialStarDrag{0%,12%{transform:translate(0,0) scale(1)}55%,72%{transform:translate(var(--drag-x),var(--drag-y)) scale(.72)}100%{transform:translate(0,0) scale(1)}}
+  @keyframes tutorialTrailDraw{0%,12%{opacity:0;transform:rotate(31deg) scaleX(.1)}45%,70%{opacity:.8;transform:rotate(31deg) scaleX(1)}100%{opacity:0;transform:rotate(31deg) scaleX(.1)}}
+  @keyframes tutorialFingerDrag{0%,12%{transform:translate(0,0)}55%,72%{transform:translate(var(--drag-x),var(--drag-y))}100%{transform:translate(0,0)}}
+  @keyframes tutorialTapPulse{0%,25%,100%{transform:scale(1);opacity:.9}35%,50%{transform:scale(3);opacity:1}}
+  @keyframes tutorialTapRing{0%,25%{transform:scale(.7);opacity:.2}45%{transform:scale(1.5);opacity:1}75%,100%{transform:scale(2.1);opacity:0}}
+  @keyframes tutorialFingerTap{0%,22%,100%{transform:translate(-50%,-50%)}32%,45%{transform:translate(-50%,-36%)}58%,70%{transform:translate(-50%,-50%)}}
   @media (max-width:768px){
     .grain{animation:none}
     #playerOverlay{backdrop-filter:none;-webkit-backdrop-filter:none;background:radial-gradient(circle at 50% 42%, rgba(16,16,20,.94) 0%, rgba(0,0,0,.985) 72%)}
@@ -345,17 +391,18 @@
     .extGo{padding:14px 44px;font-size:11px}
     #searchInput{padding:11px 15px;font-size:14px}
     .suggestion{padding:10px 14px;font-size:13.5px}
-    .skyHintCard{padding:28px 22px 26px}
-    .skyHintList{padding:12px 14px;margin:0 auto 20px}
-    .skyHintList li{font-size:13px;padding-left:18px}
-    .skyHintCheck{font-size:10px;letter-spacing:.18em;margin-bottom:20px}
-    .skyHintBtn{padding:12px 48px;font-size:10.5px;letter-spacing:.42em;text-indent:.42em}
+    .tutorialCard{padding:16px 14px 18px}
+    .tutorialScene{height:205px;--drag-x:98px;--drag-y:64px}
+    .tutorialDescription{font-size:13px;min-height:42px}
+    .tutorialStageCount{margin-top:14px}
+    .skyHintBtn{padding:11px 30px;font-size:10.5px}
   }
 
   @media (max-width:768px){
     #skyWrap::after{filter:none;background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(42,30,48,.08) 47%,rgba(215,201,222,.12) 50%,rgba(0,0,0,.34) 51%,rgba(0,0,0,0) 100%)}
   }
   @media (prefers-reduced-motion: reduce){
+    .tutorialScene.run .tutorialPage.one,.tutorialScene.run .tutorialPage.two,.tutorialScene.run .tutorialFinger,.tutorialScene.run .tutorialDragStar,.tutorialScene.run .tutorialDragTrail,.tutorialScene.run .tutorialTapStar .tutorialStarCore,.tutorialScene.run .tutorialTapStar .tutorialStarRing{animation-duration:1.2s!important;animation-iteration-count:1!important}
     #sky{transition-duration:.28s}
     #skyWrap.page-turn-forward::after{animation-duration:.3s}
     #skyWrap.page-turn-back::after{animation-duration:.3s}
@@ -462,18 +509,33 @@
     <div class="extCancel" id="extCancelBtn">отмена</div>
   </div>
 </div>
-<div id="skyHintBanner">
-  <div class="skyHintCard">
-    <ul class="skyHintList">
-      <li>Листайте небо вверх и вниз. Так вы переключаете страницы с выпусками</li>
-      <li>Нажмите на звезду, чтобы открыть плеер и начать слушать</li>
-      <li>Звезду можно <b>перетащить вниз в круг</b>. Так выпуск тоже запустится</li>
-    </ul>
-    <div class="skyHintCheck" id="skyHintCheck">
-      <span class="skyHintCheckBox"></span>
-      <span>больше не показывать</span>
+<div id="skyHintBanner" role="dialog" aria-modal="true" aria-label="Обучение управлению сайтом">
+  <div class="tutorialCard">
+    <div class="tutorialScene" id="tutorialScene" data-stage="swipe" aria-hidden="true">
+      <div class="tutorialLayer tutorialSwipeLayer">
+        <div class="tutorialPage one">
+          <span class="tutorialDot d1"></span><span class="tutorialDot d2"></span><span class="tutorialDot d3"></span><span class="tutorialDot d4"></span>
+          <span class="tutorialArrow"></span>
+        </div>
+        <div class="tutorialPage two">
+          <span class="tutorialDot d1"></span><span class="tutorialDot d2"></span><span class="tutorialDot d3"></span><span class="tutorialDot d4"></span>
+        </div>
+      </div>
+      <div class="tutorialLayer tutorialDragLayer">
+        <div class="tutorialDragTrail"></div>
+        <div class="tutorialDragStar"><span class="tutorialStarRing"></span><span class="tutorialRingLabel">СТРАШИЛКИ · ВЫПУСК</span><span class="tutorialStarCore"></span></div>
+        <div class="tutorialDropTarget"></div>
+      </div>
+      <div class="tutorialLayer tutorialTapLayer">
+        <div class="tutorialTapStar"><span class="tutorialStarRing"></span><span class="tutorialRingLabel">ОТКРЫТЬ ИСТОРИЮ</span><span class="tutorialStarCore"></span></div>
+      </div>
+      <svg class="tutorialFinger" viewBox="0 0 54 70" aria-hidden="true"><path d="M18 38V13.5c0-3.2 2.1-5.4 4.8-5.4s4.8 2.2 4.8 5.4v17.1l3.5-4c1.8-2 5.2-1.8 6.5.8l5.2 10.2c2.4 4.7 1.9 10.2-1.4 14.1-2.7 3.2-6.7 5-10.9 5h-6.4c-3.9 0-7.5-1.9-9.8-5.1L7.6 41.2c-1.7-2.3-1.2-5.5 1.1-7.2 2-1.5 4.8-1.1 6.5.8L18 38Z"/></svg>
     </div>
-    <button class="skyHintBtn" id="skyHintOk">Понятно</button>
+    <div class="tutorialStageCount" id="tutorialStageCount" aria-live="polite">01 / 03</div>
+    <h2 class="tutorialTitle" id="tutorialTitle">Перелистывайте небо</h2>
+    <p class="tutorialDescription" id="tutorialDescription">Смахните вверх или вниз, чтобы переходить между страницами выпусков.</p>
+    <div class="tutorialProgress" aria-hidden="true"><span class="active"></span><span></span><span></span></div>
+    <button class="skyHintBtn" id="skyHintOk" type="button" disabled>Понятно</button>
   </div>
 </div>
 <div id="ageGate" role="dialog" aria-modal="true">
@@ -571,7 +633,14 @@ const infoBtn = document.getElementById('infoBtn');
 const searchSuggestions = document.getElementById('searchSuggestions');
 const muteBtn = document.getElementById('muteBtn');
 const skyHintBanner = document.getElementById('skyHintBanner');
-const skyHintCheck = document.getElementById('skyHintCheck');
+const tutorialScene = document.getElementById('tutorialScene');
+const tutorialStageCount = document.getElementById('tutorialStageCount');
+const tutorialTitle = document.getElementById('tutorialTitle');
+const tutorialDescription = document.getElementById('tutorialDescription');
+const tutorialProgress = skyHintBanner.querySelector('.tutorialProgress');
+let tutorialTimer = 0;
+let tutorialButtonTimer = 0;
+let tutorialStage = -1;
 const skyHintOk = document.getElementById('skyHintOk');
 
 const ICON_PLAY = '<path d="M8 5v14l11-7z"/>';
@@ -657,24 +726,55 @@ function markPlayed(folderKey){
   if (idx >= 0 && starEls[idx]) starEls[idx].classList.remove('unplayed');
 }
 
-const SKY_HINT_KEY = 'hideSkyHint_v1';
+const SKY_HINT_KEY = 'skyTutorialCompleted_v2';
 function shouldShowSkyHint(){
-  try { return localStorage.getItem(SKY_HINT_KEY) !== '1'; } catch (e) { return true; }
+  try {
+    return localStorage.getItem(SKY_HINT_KEY) !== '1';
+  } catch (e) { return true; }
 }
-let skyHintChecked = false;
-skyHintCheck.addEventListener('click', () => {
-  skyHintChecked = !skyHintChecked;
-  skyHintCheck.classList.toggle('checked', skyHintChecked);
-});
-function openSkyHint(){ skyHintBanner.classList.add('show'); }
-function closeSkyHint(){
-  if (skyHintChecked) {
-    try { localStorage.setItem(SKY_HINT_KEY, '1'); } catch (e) {}
+const tutorialStages = [
+  { title: 'Путешествуйте по небу', description: 'Смахните вверх или вниз, чтобы переходить между страницами выпусков.' },
+  { title: 'Следуйте за звездой', description: 'Перетащите звезду вниз, в светящийся круг, чтобы запустить выпуск.' },
+  { title: 'Выберите историю', description: 'Нажмите на звезду, чтобы открыть плеер и начать прослушивание.' }
+];
+function runTutorialStage(index){
+  clearTimeout(tutorialTimer);
+  clearTimeout(tutorialButtonTimer);
+  tutorialStage = index;
+  const stage = tutorialStages[index];
+  if (!stage) return;
+  tutorialScene.classList.remove('run');
+  tutorialScene.dataset.stage = ['swipe','drag','tap'][index];
+  tutorialStageCount.textContent = '0' + (index + 1) + ' / 03';
+  tutorialTitle.textContent = stage.title;
+  tutorialDescription.textContent = stage.description;
+  Array.from(tutorialProgress.children).forEach((dot, dotIndex) => dot.classList.toggle('active', dotIndex === index));
+  skyHintOk.classList.remove('ready');
+  skyHintOk.disabled = true;
+  requestAnimationFrame(() => tutorialScene.classList.add('run'));
+  if (index < tutorialStages.length - 1) {
+    tutorialTimer = setTimeout(() => runTutorialStage(index + 1), 3600);
+  } else {
+    tutorialButtonTimer = setTimeout(() => {
+      skyHintOk.disabled = false;
+      skyHintOk.classList.add('ready');
+    }, 2900);
   }
+}
+function openSkyHint(){
+  if (!shouldShowSkyHint()) return;
+  runTutorialStage(0);
+  skyHintBanner.classList.add('show');
+}
+function closeSkyHint(){
+  if (tutorialStage !== tutorialStages.length - 1 || skyHintOk.disabled) return;
+  try { localStorage.setItem(SKY_HINT_KEY, '1'); } catch (e) {}
+  clearTimeout(tutorialTimer);
+  clearTimeout(tutorialButtonTimer);
   skyHintBanner.classList.remove('show');
+  tutorialScene.classList.remove('run');
 }
 skyHintOk.addEventListener('click', closeSkyHint);
-skyHintBanner.addEventListener('click', (e) => { if (e.target === skyHintBanner) closeSkyHint(); });
 
 let W = 0, H = 0;
 let dragTrailDpr = 1;
@@ -1086,6 +1186,20 @@ function getExclusionZones(){
       y1: Math.max(0, (infoRect.top - 8) / vh - pad),
       x2: Math.min(1, (infoRect.right + 8) / vw + pad),
       y2: Math.min(1, (infoRect.bottom + 8) / vh + pad)
+    });
+  }
+  if (innerWidth < 700 && miniPlayer) {
+    const vw = innerWidth, vh = innerHeight;
+    const playerWidth = miniPlayer.offsetWidth || Math.min(420, vw - 32);
+    const playerHeight = miniPlayer.offsetHeight || 60;
+    const playerLeft = (vw - playerWidth) / 2;
+    const playerTop = vh - 22 - playerHeight;
+    const starClearance = 42;
+    zones.push({
+      x1: Math.max(0, (playerLeft - starClearance) / vw),
+      y1: Math.max(0, (playerTop - starClearance) / vh),
+      x2: Math.min(1, (playerLeft + playerWidth + starClearance) / vw),
+      y2: Math.min(1, (vh - 22 + starClearance) / vh)
     });
   }
   return zones;
@@ -1743,70 +1857,164 @@ function clearSearchedState(){
 }
 function showMapArrow(starEl){
   removeMapArrow();
-  if (!starEl) return;
+  if (!starEl || !starEl.isConnected) return;
+
   const rect = starEl.getBoundingClientRect();
+  const vw = Math.max(1, innerWidth);
+  const vh = Math.max(1, innerHeight);
   const tx = rect.left + rect.width / 2;
   const ty = rect.top + rect.height / 2;
-  const vw = innerWidth, vh = innerHeight;
-  const hDir = tx < vw / 2 ? -1 : 1;
-  const vDir = ty < vh / 2 ? 1 : -1;
-  let sx = tx + hDir * 120;
-  let sy = ty + vDir * 140;
-  sx = Math.max(30, Math.min(vw - 30, sx));
-  sy = Math.max(30, Math.min(vh - 30, sy));
-  const ctrlX = (sx + tx) / 2 + hDir * 40;
-  const ctrlY = (sy + ty) / 2 - vDir * 30;
-  const angle = Math.atan2(ty - ctrlY, tx - ctrlX);
-  const ahLen = 16, ahW = 9, tipDist = 44;
-  const tipX = tx - Math.cos(angle) * tipDist;
-  const tipY = ty - Math.sin(angle) * tipDist;
-  const baseX = tipX - Math.cos(angle) * ahLen;
-  const baseY = tipY - Math.sin(angle) * ahLen;
-  const perpX = -Math.sin(angle) * ahW;
-  const perpY = Math.cos(angle) * ahW;
+  const margin = 22;
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+
+  const directions = [
+    [1, 0], [-1, 0], [0, 1], [0, -1],
+    [.707, .707], [.707, -.707], [-.707, .707], [-.707, -.707]
+  ];
+  const candidates = directions.map(([dx, dy]) => {
+    let maxX = Infinity;
+    let maxY = Infinity;
+    if (dx > 0) maxX = (vw - margin - tx) / dx;
+    else if (dx < 0) maxX = (margin - tx) / dx;
+    if (dy > 0) maxY = (vh - margin - ty) / dy;
+    else if (dy < 0) maxY = (margin - ty) / dy;
+    return { dx, dy, max: Math.max(0, Math.min(maxX, maxY)) };
+  }).filter(item => item.max > 82);
+
+  if (!candidates.length) return;
+  candidates.sort((a, b) => b.max - a.max);
+  const usable = candidates.filter(item => item.max >= Math.min(108, candidates[0].max));
+  const direction = usable[Math.floor(Math.random() * usable.length)] || candidates[0];
+  const distance = Math.max(58, Math.min(148, direction.max - 22));
+  const dirX = direction.dx;
+  const dirY = direction.dy;
+  const forwardX = -dirX;
+  const forwardY = -dirY;
+  const perpX = -forwardY;
+  const perpY = forwardX;
+
+  const sx = clamp(tx + dirX * distance, margin, vw - margin);
+  const sy = clamp(ty + dirY * distance, margin, vh - margin);
+  const tipDistance = Math.min(18, Math.max(10, distance * .12));
+  const tipX = clamp(tx + dirX * tipDistance, margin, vw - margin);
+  const tipY = clamp(ty + dirY * tipDistance, margin, vh - margin);
+  const headLength = 22 + Math.random() * 4;
+  const baseX = clamp(tipX + dirX * headLength, margin, vw - margin);
+  const baseY = clamp(tipY + dirY * headLength, margin, vh - margin);
+  const bodyDx = baseX - sx;
+  const bodyDy = baseY - sy;
+  const bodyLen = Math.max(1, Math.hypot(bodyDx, bodyDy));
+  const bodyPX = -bodyDy / bodyLen;
+  const bodyPY = bodyDx / bodyLen;
+  const bend = (Math.random() - .5) * 78;
+  const bend2 = bend * (.45 + Math.random() * .75);
+  const style = Math.floor(Math.random() * 4);
+  let bodyD;
+
+  if (style === 0) {
+    const c1x = clamp(sx + bodyDx * .28 + bodyPX * bend, margin, vw - margin);
+    const c1y = clamp(sy + bodyDy * .28 + bodyPY * bend, margin, vh - margin);
+    const c2x = clamp(sx + bodyDx * .72 - bodyPX * bend2, margin, vw - margin);
+    const c2y = clamp(sy + bodyDy * .72 - bodyPY * bend2, margin, vh - margin);
+    bodyD = 'M ' + sx + ' ' + sy + ' C ' + c1x + ' ' + c1y + ' ' + c2x + ' ' + c2y + ' ' + baseX + ' ' + baseY;
+  } else if (style === 1) {
+    const qx = clamp((sx + baseX) / 2 + bodyPX * bend, margin, vw - margin);
+    const qy = clamp((sy + baseY) / 2 + bodyPY * bend, margin, vh - margin);
+    bodyD = 'M ' + sx + ' ' + sy + ' Q ' + qx + ' ' + qy + ' ' + baseX + ' ' + baseY;
+  } else if (style === 2) {
+    const p1x = clamp(sx + bodyDx * .34 + bodyPX * bend * .45, margin, vw - margin);
+    const p1y = clamp(sy + bodyDy * .34 + bodyPY * bend * .45, margin, vh - margin);
+    const p2x = clamp(sx + bodyDx * .67 - bodyPX * bend2 * .3, margin, vw - margin);
+    const p2y = clamp(sy + bodyDy * .67 - bodyPY * bend2 * .3, margin, vh - margin);
+    bodyD = 'M ' + sx + ' ' + sy + ' L ' + p1x + ' ' + p1y + ' Q ' + p2x + ' ' + p2y + ' ' + baseX + ' ' + baseY;
+  } else {
+    const c1x = clamp(sx + bodyDx * .22 + bodyPX * (bend + 20), margin, vw - margin);
+    const c1y = clamp(sy + bodyDy * .22 + bodyPY * (bend + 20), margin, vh - margin);
+    const c2x = clamp(sx + bodyDx * .82 + bodyPX * (bend2 - 16), margin, vw - margin);
+    const c2y = clamp(sy + bodyDy * .82 + bodyPY * (bend2 - 16), margin, vh - margin);
+    bodyD = 'M ' + sx + ' ' + sy + ' C ' + c1x + ' ' + c1y + ' ' + c2x + ' ' + c2y + ' ' + baseX + ' ' + baseY;
+  }
+
+  const headSpread = 13 + Math.random() * 4;
+  const head1x = clamp(baseX + perpX * headSpread, margin, vw - margin);
+  const head1y = clamp(baseY + perpY * headSpread, margin, vh - margin);
+  const head2x = clamp(baseX - perpX * headSpread, margin, vw - margin);
+  const head2y = clamp(baseY - perpY * headSpread, margin, vh - margin);
+  const headD1 = 'M ' + tipX + ' ' + tipY + ' Q ' +
+    clamp(tipX + dirX * 8 + perpX * 5, margin, vw - margin) + ' ' +
+    clamp(tipY + dirY * 8 + perpY * 5, margin, vh - margin) + ' ' + head1x + ' ' + head1y;
+  const headD2 = 'M ' + tipX + ' ' + tipY + ' Q ' +
+    clamp(tipX + dirX * 8 - perpX * 5, margin, vw - margin) + ' ' +
+    clamp(tipY + dirY * 8 - perpY * 5, margin, vh - margin) + ' ' + head2x + ' ' + head2y;
+
+  const palette = ['#f3e8d9', '#ead9e5', '#e5e9f3', '#f0d2c8', '#e5dfbd'];
+  const arrowColor = palette[Math.floor(Math.random() * palette.length)];
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('class', 'map-arrow');
   svg.setAttribute('viewBox', '0 0 ' + vw + ' ' + vh);
   svg.setAttribute('preserveAspectRatio', 'none');
-  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  path.setAttribute('d', 'M ' + sx + ' ' + sy + ' Q ' + ctrlX + ' ' + ctrlY + ' ' + baseX + ' ' + baseY);
-  path.setAttribute('fill', 'none');
-  path.setAttribute('stroke', '#fff');
-  path.setAttribute('stroke-width', '2');
-  path.setAttribute('stroke-linecap', 'round');
-  path.style.filter = 'drop-shadow(0 0 6px rgba(255,255,255,.75))';
-  const approxLen = Math.hypot(baseX - sx, baseY - sy) + 60;
-  path.setAttribute('stroke-dasharray', approxLen);
-  path.setAttribute('stroke-dashoffset', approxLen);
-  path.style.transition = 'stroke-dashoffset .85s cubic-bezier(.4,0,.2,1)';
-  const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-  polygon.setAttribute('points',
-    tipX + ',' + tipY + ' ' +
-    (baseX + perpX) + ',' + (baseY + perpY) + ' ' +
-    (baseX - perpX) + ',' + (baseY - perpY)
-  );
-  polygon.setAttribute('fill', '#fff');
-  polygon.style.filter = 'drop-shadow(0 0 6px rgba(255,255,255,.75))';
-  polygon.style.opacity = '0';
-  polygon.style.transition = 'opacity .35s ease';
-  svg.appendChild(path);
-  svg.appendChild(polygon);
+  svg.style.setProperty('--arrow-color', arrowColor);
+
+  const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  group.setAttribute('class', 'arrow-wobble');
+  svg.appendChild(group);
+
+  const animatedPaths = [];
+  const addPath = (d, className, delay, width) => {
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', d);
+    path.setAttribute('class', className);
+    if (width) path.style.strokeWidth = width;
+    path._arrowDelay = delay;
+    path.style.transition = 'none';
+    group.appendChild(path);
+    animatedPaths.push(path);
+    return path;
+  };
+
+  addPath(bodyD, 'arrow-ink', 0, 6.6);
+  addPath(bodyD, 'arrow-face', 0, 3.1);
+  addPath(headD1, 'arrow-ink', .58, 6.2);
+  addPath(headD1, 'arrow-face', .58, 2.9);
+  addPath(headD2, 'arrow-ink', .64, 6.2);
+  addPath(headD2, 'arrow-face', .64, 2.9);
+
+  const accentOffset = 9 + Math.random() * 7;
+  const accentX = clamp(sx + forwardX * accentOffset, margin, vw - margin);
+  const accentY = clamp(sy + forwardY * accentOffset, margin, vh - margin);
+  const accentD = 'M ' + clamp(accentX + perpX * 7, margin, vw - margin) + ' ' + clamp(accentY + perpY * 7, margin, vh - margin) +
+    ' Q ' + clamp(accentX + forwardX * 5 + perpX * 10, margin, vw - margin) + ' ' + clamp(accentY + forwardY * 5 + perpY * 10, margin, vh - margin) +
+    ' ' + clamp(accentX + forwardX * 13, margin, vw - margin) + ' ' + clamp(accentY + forwardY * 13, margin, vh - margin);
+  const accent = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  accent.setAttribute('d', accentD);
+  accent.setAttribute('class', 'arrow-accent');
+  accent.style.opacity = '0';
+  accent.style.transition = 'opacity .35s ease .72s';
+  group.appendChild(accent);
+
   document.body.appendChild(svg);
   currentArrow = svg;
+  animatedPaths.forEach(path => {
+    let length = 100;
+    try { length = Math.max(1, path.getTotalLength()); } catch (e) {}
+    path.style.strokeDasharray = String(length);
+    path.style.strokeDashoffset = String(length);
+    path.style.transition = 'stroke-dashoffset ' + (style === 2 ? '.72s' : '.88s') + ' cubic-bezier(.2,.8,.2,1) ' + path._arrowDelay + 's';
+  });
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      path.setAttribute('stroke-dashoffset', '0');
-      setTimeout(() => { polygon.style.opacity = '1'; }, 680);
+      animatedPaths.forEach(path => { path.style.strokeDashoffset = '0'; });
+      accent.style.opacity = '.86';
     });
   });
+
   setTimeout(() => {
-    if (svg.parentNode) {
-      svg.style.opacity = '0';
-      setTimeout(() => {
-        if (svg.parentNode) svg.remove();
-        if (currentArrow === svg) currentArrow = null;
-      }, 650);
-    }
+    if (!svg.parentNode) return;
+    svg.style.opacity = '0';
+    setTimeout(() => {
+      if (svg.parentNode) svg.remove();
+      if (currentArrow === svg) currentArrow = null;
+    }, 650);
   }, 4600);
 }
 function performSearch(rawQuery){
@@ -2008,7 +2216,10 @@ function attachEpisodeAudioEvents(index, audio){
       playing = true;
       setLoading(false);
       updateIcons();
-      refreshAudioPreloadPool(true);
+      if (audio._neighborWarmStartedFor !== index) {
+        audio._neighborWarmStartedFor = index;
+        refreshAudioPreloadPool(true);
+      }
     }
   });
   audio.addEventListener('waiting', () => {
@@ -2303,6 +2514,7 @@ async function play(){
   if (audio.error) {
     clearAudio(audio);
     audio._positionRestoredFor = null;
+    audio._neighborWarmStartedFor = null;
     audio.src = ep.audioUrl;
   }
   if (audio.preload !== 'auto') {
@@ -2523,21 +2735,44 @@ function setCoverTo(container, ep, index){
   const key = ep && ep.coverUrl ? ep.coverUrl : 'fallback:' + index;
   if (container.dataset.coverKey === key) return;
   container.dataset.coverKey = key;
-  container.replaceChildren();
+  container.dataset.coverIndex = String(index);
   if (!ep || !ep.coverUrl) {
+    container.replaceChildren();
     container.innerHTML = makeCoverSVG(index);
     return;
   }
-  container.innerHTML = makeCoverSVG(index);
-  preloadCoverImage(ep.coverUrl, true).then(preloaded => {
-    if (!preloaded || container.dataset.coverKey !== key || !container.isConnected) return;
-    const image = preloaded.cloneNode(false);
+  if (!container.querySelector('img,svg')) container.innerHTML = makeCoverSVG(index);
+  preloadCoverImage(ep.coverUrl, true).then(async preloaded => {
+    if (container.dataset.coverKey !== key || !container.isConnected) return;
+    if (!preloaded) {
+      container.replaceChildren();
+      container.innerHTML = makeCoverSVG(index);
+      return;
+    }
+    const image = new Image();
     image.alt = '';
     image.draggable = false;
     image.decoding = 'async';
     image.loading = 'eager';
+    image.src = preloaded.currentSrc || preloaded.src;
+    try {
+      if (typeof image.decode === 'function') await image.decode();
+      else if (!image.complete) await new Promise(resolve => { image.onload = resolve; image.onerror = resolve; });
+    } catch(e) {
+      if (container.dataset.coverKey === key && container.isConnected) {
+        container.replaceChildren();
+        container.innerHTML = makeCoverSVG(index);
+      }
+      return;
+    }
+    if (container.dataset.coverKey !== key || !container.isConnected) return;
+    if (!image.naturalWidth) {
+      container.replaceChildren();
+      container.innerHTML = makeCoverSVG(index);
+      return;
+    }
+    image.className = 'coverDecoded';
     container.replaceChildren(image);
-    if (typeof image.decode === 'function') image.decode().catch(() => {});
   });
 }
 
@@ -3387,7 +3622,7 @@ document.addEventListener('keydown', (e) => {
   if (ageGateActive) return;
   if (e.key === 'Escape') {
     if (pageMapPanel.classList.contains('show')) { closePageMap(); return; }
-    if (skyHintBanner.classList.contains('show')) { closeSkyHint(); return; }
+    if (skyHintBanner.classList.contains('show')) return;
     if (externalWarning.classList.contains('show')) { closeExternalWarning(); return; }
     if (infoPanel.classList.contains('show')) { closeInfoPanel(); return; }
     if (overlay.classList.contains('show')) { closeOverlay(); return; }
