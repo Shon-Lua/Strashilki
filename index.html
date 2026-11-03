@@ -39,7 +39,7 @@
   .star{position:absolute;width:78px;height:78px;transform:translate(-50%,-50%);background:none;border:none;padding:0;cursor:grab;display:grid;place-items:center;-webkit-tap-highlight-color:transparent;touch-action:none;z-index:5}
   .star.revealing{pointer-events:none}
   .star.dragging{opacity:0.08 !important;pointer-events:none}
-  .star.drag-proxy{position:fixed!important;left:0!important;top:0!important;width:var(--drag-size,78px)!important;height:var(--drag-size,78px)!important;opacity:1!important;z-index:202!important;pointer-events:none!important;cursor:grabbing;transform:translate3d(var(--drag-x,0px),var(--drag-y,0px),0) translate(-50%,-50%) scale(1.08);will-change:transform;contain:layout;overflow:visible}
+  .star.drag-proxy{position:fixed!important;width:var(--drag-size,78px)!important;height:var(--drag-size,78px)!important;opacity:1!important;z-index:202!important;pointer-events:none!important;cursor:grabbing;transform:translate(-50%,-50%) scale(1.08);will-change:left,top,transform;contain:layout;overflow:visible}
   .star.drag-proxy .star-core{animation:none!important;opacity:1!important;transform:translate(-50%,-50%) scale(1.25);box-shadow:0 0 13px 4px rgba(255,255,255,.98),0 0 30px 9px rgba(255,255,255,.38)}
   .star.drag-proxy .star-flare{animation:none;opacity:.95}
   .star.drag-proxy .star-ring{opacity:1;filter:none}
@@ -50,10 +50,10 @@
   .star.drag-proxy.absorbing .star-core{animation:starAbsorbCore .54s cubic-bezier(.13,.78,.18,1) both!important}
   .star.drag-proxy.absorbing .star-ring{animation:starAbsorbRing .54s cubic-bezier(.13,.78,.18,1) both}
   @keyframes starLaunchPulse{0%{transform:translate(-50%,-50%) scale(1);opacity:1}30%{transform:translate(-50%,-50%) scale(7.2);opacity:1}56%{transform:translate(-50%,-50%) scale(3.1);opacity:1}78%{transform:translate(-50%,-50%) scale(.62);opacity:.82}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
-  @keyframes starLaunchOrbit{0%{transform:translate(-50%,-50%) rotate(0deg) scale(1)}38%{transform:translate(-50%,-50%) rotate(145deg) scale(2.05)}72%{transform:translate(-50%,-50%) rotate(265deg) scale(.82)}100%{transform:translate(-50%,-50%) rotate(330deg) scale(1)}}
+  @keyframes starLaunchOrbit{0%{transform:translate(-50%,-50%) scale(1);opacity:1}38%{transform:translate(-50%,-50%) scale(1.48);opacity:1}72%{transform:translate(-50%,-50%) scale(.9);opacity:.88}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
   @keyframes starLaunchFlare{0%{transform:translate(-50%,-50%) scale(1);opacity:.55}30%{transform:translate(-50%,-50%) scale(6.4);opacity:1}68%{transform:translate(-50%,-50%) scale(2);opacity:.86}100%{transform:translate(-50%,-50%) scale(1);opacity:.5}}
   @keyframes starAbsorbCore{0%{transform:translate(-50%,-50%) scale(1.25);opacity:1}48%{transform:translate(-50%,-50%) scale(6.4);opacity:1}100%{transform:translate(-50%,-50%) scale(.08);opacity:0}}
-  @keyframes starAbsorbRing{0%{transform:translate(-50%,-50%) rotate(0deg) scale(1);opacity:1}58%{transform:translate(-50%,-50%) rotate(210deg) scale(2.3);opacity:1}100%{transform:translate(-50%,-50%) rotate(360deg) scale(.08);opacity:0}}
+  @keyframes starAbsorbRing{0%{transform:translate(-50%,-50%) scale(1);opacity:1}58%{transform:translate(-50%,-50%) scale(2.3);opacity:1}100%{transform:translate(-50%,-50%) scale(.08);opacity:0}}
   .star-core{position:absolute;top:50%;left:50%;width:var(--core-size,8px);height:var(--core-size,8px);border-radius:50%;background:#fff;transform:translate(-50%,-50%);box-shadow:0 0 10px 3px rgba(255,255,255,.95), 0 0 32px 10px rgba(255,255,255,.28);animation:twinkle var(--pulse-dur,3s) ease-in-out infinite;animation-delay:var(--pulse-delay,0s);transition:transform .35s ease, box-shadow .35s ease;z-index:2}
   @keyframes twinkle{0%,100%{opacity:.45}50%{opacity:1}}
   .star:hover .star-core{transform:translate(-50%,-50%) scale(1.7);box-shadow:0 0 16px 6px rgba(255,255,255,1), 0 0 52px 18px rgba(255,255,255,.5)}
@@ -314,7 +314,9 @@
   }
 
   @media (prefers-reduced-motion: reduce){
-    .star.launching .star-core,.star.launching .star-ring,.star.launching .star-flare,
+    .star.launching .star-core{animation:starLaunchPulse 280ms ease-out both!important}
+    .star.launching .star-ring{animation:starLaunchOrbit 280ms ease-out both!important}
+    .star.launching .star-flare{animation:none!important;opacity:.85}
     .star.drag-proxy.absorbing .star-core,.star.drag-proxy.absorbing .star-ring{animation:none!important}
     .dropzone.visible.hover::before{animation:none!important;opacity:0}
   }
@@ -2462,9 +2464,7 @@ function updateShuffleIcon(){ shuffleBtn.classList.toggle('active', shuffleOn); 
 
 function createLaunchEffect(cx, cy, sourceEl){
   const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (reduced) return 0;
-
-  const duration = isMobile ? 680 : 920;
+  const duration = reduced ? 280 : (isMobile ? 680 : 920);
   if (sourceEl) {
     sourceEl.classList.remove('launching');
     sourceEl.style.setProperty('--launch-duration', duration + 'ms');
@@ -2484,7 +2484,7 @@ function createLaunchEffect(cx, cy, sourceEl){
     animation.oncancel = () => element.remove();
   };
 
-  if (isMobile) {
+  if (reduced || isMobile) {
     const wave = document.createElement('div');
     wave.className = 'launchWave mobile';
     wave.style.left = cx + 'px';
@@ -2501,13 +2501,13 @@ function createLaunchEffect(cx, cy, sourceEl){
 
     const waveAnimation = wave.animate([
       { transform: 'translate(-50%,-50%) scale(.12)', opacity: .95 },
-      { transform: 'translate(-50%,-50%) scale(12.5)', opacity: 0 }
+      { transform: 'translate(-50%,-50%) scale(' + (reduced ? 6.5 : 12.5) + ')', opacity: 0 }
     ], { duration, easing: 'cubic-bezier(.1,.78,.16,1)', fill: 'forwards' });
     removeWhenDone(waveAnimation, wave);
 
     const coreAnimation = core.animate([
       { transform: 'translate(-50%,-50%) scale(.12)', opacity: 1 },
-      { transform: 'translate(-50%,-50%) scale(6.2)', opacity: 1, offset: .34 },
+      { transform: 'translate(-50%,-50%) scale(' + (reduced ? 3.8 : 6.2) + ')', opacity: 1, offset: .34 },
       { transform: 'translate(-50%,-50%) scale(2.1)', opacity: .84, offset: .68 },
       { transform: 'translate(-50%,-50%) scale(.45)', opacity: 0 }
     ], { duration: duration * .82, easing: 'cubic-bezier(.14,.78,.18,1)', fill: 'forwards' });
@@ -2610,6 +2610,7 @@ function launchEpisode(index, sourceEl, impactPoint){
   if (transitioning) return;
   if (index < 0 || index >= EPISODES.length) return;
   transitioning = true;
+  miniPlayer.classList.remove('show');
 
   let cx, cy;
   if (impactPoint && Number.isFinite(impactPoint.x) && Number.isFinite(impactPoint.y)) {
@@ -2625,21 +2626,19 @@ function launchEpisode(index, sourceEl, impactPoint){
   }
 
   const effectDuration = createLaunchEffect(cx, cy, sourceEl);
-  const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
   setTimeout(() => {
     setCurrentTrack(index);
     openOverlay();
     play();
     transitioning = false;
-  }, reduced ? 80 : effectDuration + 40);
+  }, effectDuration + 40);
 }
 
 let dragState = null;
 let dragRenderFrame = 0;
 
-function dragTransform(x, y, scale){
-  return 'translate3d(' + x + 'px,' + y + 'px,0) translate(-50%,-50%) scale(' + scale + ')';
+function dragTransform(scale){
+  return 'translate(-50%,-50%) scale(' + scale + ')';
 }
 
 function createDragProxy(starEl, index, x, y){
@@ -2649,10 +2648,14 @@ function createDragProxy(starEl, index, x, y){
   proxy.setAttribute('aria-hidden', 'true');
   proxy.removeAttribute('id');
   proxy.tabIndex = -1;
-  const size = Math.max(starEl.getBoundingClientRect().width, starEl.getBoundingClientRect().height);
+  const rect = starEl.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height);
+  proxy.style.removeProperty('left');
+  proxy.style.removeProperty('top');
+  proxy.style.left = x + 'px';
+  proxy.style.top = y + 'px';
   proxy.style.setProperty('--drag-size', size + 'px');
-  proxy.style.setProperty('--drag-x', x + 'px');
-  proxy.style.setProperty('--drag-y', y + 'px');
+  proxy.style.transform = dragTransform(1.08);
   proxy.style.transition = 'none';
   proxy.style.overflow = 'visible';
 
@@ -2666,19 +2669,17 @@ function createDragProxy(starEl, index, x, y){
   }
 
   document.body.appendChild(proxy);
-  if (!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) {
-    proxy.animate([
-      { transform: dragTransform(x, y, .88) },
-      { transform: dragTransform(x, y, 1.34) },
-      { transform: dragTransform(x, y, 1.12) }
-    ], { duration: isMobile ? 300 : 360, easing: 'cubic-bezier(.16,.82,.2,1)' });
-  }
+  const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  proxy.animate([
+    { transform: dragTransform(.92) },
+    { transform: dragTransform(reduced ? 1.12 : 1.34) },
+    { transform: dragTransform(1.08) }
+  ], { duration: reduced ? 220 : (isMobile ? 300 : 360), easing: 'cubic-bezier(.16,.82,.2,1)' });
   return proxy;
 }
-
-function restoreDraggedStar(state){
+function restoreDraggedStar(state, restoreMini){
   if (state && state.starEl) state.starEl.classList.remove('dragging');
-  if (current >= 0) miniPlayer.classList.add('show');
+  if (restoreMini !== false && current >= 0) miniPlayer.classList.add('show');
 }
 
 function finishDragProxy(state, animation){
@@ -2701,6 +2702,7 @@ function startDrag(index, starEl, e){
   const cx = rect.left + rect.width / 2;
   const cy = rect.top + rect.height / 2;
   const proxy = createDragProxy(starEl, index, cx, cy);
+  try { starEl.setPointerCapture(e.pointerId); } catch (err) {}
 
   starEl.classList.add('dragging');
   dropzone.classList.add('visible');
@@ -2732,8 +2734,8 @@ function renderDragFrame(){
   if (!state) return;
   state.lastX = state.pendingX;
   state.lastY = state.pendingY;
-  state.proxy.style.setProperty('--drag-x', state.lastX + 'px');
-  state.proxy.style.setProperty('--drag-y', state.lastY + 'px');
+  state.proxy.style.left = state.lastX + 'px';
+  state.proxy.style.top = state.lastY + 'px';
   const r = state.dropRect;
   const over = state.lastX > r.left && state.lastX < r.right && state.lastY > r.top && state.lastY < r.bottom;
   dropzone.classList.toggle('hover', over);
@@ -2764,23 +2766,16 @@ function onDragCancel(e){
   dragState = null;
   dropzone.classList.remove('visible', 'hover');
 
-  const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (reduced) {
-    state.proxy.remove();
-    restoreDraggedStar(state);
-    return;
-  }
-
   const rect = state.starEl.getBoundingClientRect();
   const originX = rect.left + rect.width / 2;
   const originY = rect.top + rect.height / 2;
+  const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const animation = state.proxy.animate([
-    { transform: dragTransform(state.pendingX, state.pendingY, 1.12), opacity: 1 },
-    { transform: dragTransform(originX, originY, .62), opacity: 0 }
-  ], { duration: isMobile ? 260 : 340, easing: 'cubic-bezier(.12,.82,.16,1)', fill: 'forwards' });
+    { left: state.pendingX + 'px', top: state.pendingY + 'px', transform: dragTransform(1.12), opacity: 1 },
+    { left: originX + 'px', top: originY + 'px', transform: dragTransform(.72), opacity: 0 }
+  ], { duration: reduced ? 180 : (isMobile ? 260 : 340), easing: 'cubic-bezier(.12,.82,.16,1)', fill: 'forwards' });
   finishDragProxy(state, animation);
 }
-
 function onDragUp(e){
   if (!dragState || e.pointerId !== dragState.pid) return;
   window.removeEventListener('pointermove', onDragMove);
@@ -2795,13 +2790,13 @@ function onDragUp(e){
   dragState = null;
   state.lastX = e.clientX;
   state.lastY = e.clientY;
-  state.proxy.style.setProperty('--drag-x', state.lastX + 'px');
-  state.proxy.style.setProperty('--drag-y', state.lastY + 'px');
+  state.proxy.style.left = state.lastX + 'px';
+  state.proxy.style.top = state.lastY + 'px';
   dropzone.classList.remove('hover');
 
   if (!state.moved) {
     state.proxy.remove();
-    restoreDraggedStar(state);
+    restoreDraggedStar(state, false);
     dropzone.classList.remove('visible');
     launchEpisode(state.index, state.starEl);
     return;
@@ -2813,19 +2808,14 @@ function onDragUp(e){
 
   if (!over) {
     dropzone.classList.remove('visible');
-    if (reduced) {
-      state.proxy.remove();
-      restoreDraggedStar(state);
-      return;
-    }
     const rect = state.starEl.getBoundingClientRect();
     const originX = rect.left + rect.width / 2;
     const originY = rect.top + rect.height / 2;
     const animation = state.proxy.animate([
-      { transform: dragTransform(state.lastX, state.lastY, 1.12), opacity: 1 },
-      { transform: dragTransform((state.lastX + originX) / 2, (state.lastY + originY) / 2, 1.52), opacity: 1, offset: .38 },
-      { transform: dragTransform(originX, originY, .62), opacity: 0 }
-    ], { duration: isMobile ? 380 : 480, easing: 'cubic-bezier(.12,.82,.16,1)', fill: 'forwards' });
+      { left: state.lastX + 'px', top: state.lastY + 'px', transform: dragTransform(1.12), opacity: 1 },
+      { left: ((state.lastX + originX) / 2) + 'px', top: ((state.lastY + originY) / 2) + 'px', transform: dragTransform(reduced ? 1.08 : 1.52), opacity: 1, offset: .38 },
+      { left: originX + 'px', top: originY + 'px', transform: dragTransform(.62), opacity: 0 }
+    ], { duration: reduced ? 220 : (isMobile ? 380 : 480), easing: 'cubic-bezier(.12,.82,.16,1)', fill: 'forwards' });
     finishDragProxy(state, animation);
     return;
   }
@@ -2833,37 +2823,27 @@ function onDragUp(e){
   dropzone.classList.add('hover');
   const targetX = r.left + r.width / 2;
   const targetY = r.top + r.height / 2;
-  const duration = isMobile ? 500 : 640;
-
-  if (reduced) {
-    state.proxy.remove();
-    restoreDraggedStar(state);
-    dropzone.classList.remove('visible', 'hover');
-    launchEpisode(state.index, state.starEl);
-    return;
-  }
-
+  const duration = reduced ? 260 : (isMobile ? 500 : 640);
   state.proxy.classList.add('absorbing');
   const animation = state.proxy.animate([
-    { transform: dragTransform(state.lastX, state.lastY, 1.12), opacity: 1, offset: 0 },
-    { transform: dragTransform(targetX, targetY, 2.05), opacity: 1, offset: .48 },
-    { transform: dragTransform(targetX, targetY, 1.52), opacity: .98, offset: .72 },
-    { transform: dragTransform(targetX, targetY, .045), opacity: 0, offset: 1 }
+    { left: state.lastX + 'px', top: state.lastY + 'px', transform: dragTransform(1.12), opacity: 1, offset: 0 },
+    { left: targetX + 'px', top: targetY + 'px', transform: dragTransform(2.05), opacity: 1, offset: .48 },
+    { left: targetX + 'px', top: targetY + 'px', transform: dragTransform(1.52), opacity: .98, offset: .72 },
+    { left: targetX + 'px', top: targetY + 'px', transform: dragTransform(.045), opacity: 0, offset: 1 }
   ], { duration, easing: 'cubic-bezier(.1,.82,.14,1)', fill: 'forwards' });
 
   animation.onfinish = () => {
     state.proxy.remove();
-    restoreDraggedStar(state);
+    restoreDraggedStar(state, false);
     dropzone.classList.remove('visible', 'hover');
     launchEpisode(state.index, state.starEl, { x: targetX, y: targetY });
   };
   animation.oncancel = () => {
     state.proxy.remove();
-    restoreDraggedStar(state);
+    restoreDraggedStar(state, false);
     dropzone.classList.remove('visible', 'hover');
   };
 }
-
 function goToPage(n){
   removeMapArrow();
   const nn = Math.max(0, Math.min(totalPages - 1, n));
