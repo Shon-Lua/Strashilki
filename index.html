@@ -403,6 +403,7 @@
 <div id="quickMenu" aria-hidden="true">
   <button class="quickMenuItem" id="muteBtn" type="button" aria-label="Отключить фоновый звук"><span class="quickMenuIcon" aria-hidden="true">♫</span><span id="muteMenuLabel">Отключить звук фона</span></button>
   <button class="quickMenuItem" id="menuInfoBtn" type="button"><span class="quickMenuIcon" aria-hidden="true">i</span><span>Информация</span></button>
+  <button class="quickMenuItem" id="markAllPlayedBtn" type="button"><span class="quickMenuIcon" aria-hidden="true">✓</span><span>Отметить все прослушанным</span></button>
   <button class="quickMenuItem" id="menuArtsBtn" type="button"><span class="quickMenuIcon" aria-hidden="true">✧</span><span>Арты</span></button>
 </div>
 <div id="toastContainer" aria-live="polite"></div>
@@ -711,6 +712,22 @@ function markPlayed(folderKey){
   if (idx >= 0 && starEls[idx]) starEls[idx].classList.remove('unplayed');
 }
 
+function markAllEpisodesPlayed(){
+  if (!EPISODES.length) return;
+  let changed = false;
+  for (const episode of EPISODES) {
+    if (!episode || !episode.folderKey || playedSet.has(episode.folderKey)) continue;
+    playedSet.add(episode.folderKey);
+    changed = true;
+  }
+  starEls.forEach(star => {
+    if (star) star.classList.remove('unplayed');
+  });
+  if (changed) savePlayedState();
+  closeQuickMenu();
+  showToast('все выпуски отмечены прослушанными', 2200);
+}
+
 const TUTORIAL_MODE = 0;
 const SKY_HINT_KEY = 'skyTutorialCompleted_v3';
 function shouldShowSkyHint(){
@@ -991,12 +1008,7 @@ function detectNewEpisodeRelease(){
   if (!latest || !latest.folderKey) return;
   let previous = '';
   try { previous = localStorage.getItem(NEW_RELEASE_SEEN_KEY) || ''; } catch(e) {}
-  if (!previous) {
-    try { localStorage.setItem(NEW_RELEASE_SEEN_KEY, latest.folderKey); } catch(e) {}
-    pendingNewRelease = null;
-    return;
-  }
-  if (previous !== latest.folderKey) {
+  if (!previous || previous !== latest.folderKey) {
     pendingNewRelease = { key:latest.folderKey, title:latest.title || latest.folderName || latest.folderKey };
   }
 }
@@ -2129,6 +2141,10 @@ document.getElementById('menuInfoBtn').addEventListener('click', () => {
   if (tutorialIsActive()) return;
   closeQuickMenu();
   openInfoPanel();
+});
+document.getElementById('markAllPlayedBtn').addEventListener('click', () => {
+  if (tutorialIsActive()) return;
+  markAllEpisodesPlayed();
 });
 quickMenu.addEventListener('pointerdown', e => e.stopPropagation());
 document.addEventListener('pointerdown', e => {
