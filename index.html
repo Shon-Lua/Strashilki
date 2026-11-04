@@ -146,7 +146,6 @@
   .quickMenuItem + .quickMenuItem{border-top:1px solid rgba(255,255,255,.045)}
   .quickMenuIcon{width:17px;min-width:17px;height:18px;display:grid;place-items:center;color:rgba(220,190,195,.68);font-family:Georgia,serif;font-size:17px}
   #muteBtn.muted .quickMenuIcon{opacity:.45}
-  #quickMenu .quickMenuStatus{margin-left:auto;color:rgba(220,185,190,.55);font-size:10px;letter-spacing:.1em;text-transform:uppercase}
   #artsPanel{position:fixed;inset:0;z-index:84;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 50% 34%,rgba(70,4,15,.98),rgba(24,0,5,.99) 58%,#000 100%);opacity:0;pointer-events:none;visibility:hidden;transition:opacity .3s ease,visibility .3s ease;overflow-y:auto;-webkit-overflow-scrolling:touch}
   #artsPanel.show{opacity:1;pointer-events:auto;visibility:visible}
   .artsCard{width:min(920px,100%);max-height:min(82vh,760px);overflow:auto;padding:28px;border:1px solid rgba(130,40,52,.32);background:rgba(5,1,3,.78);box-shadow:0 24px 70px rgba(0,0,0,.75)}
@@ -274,6 +273,19 @@
   .ageEnter{padding:14px 60px;background:transparent;border:1px solid rgba(255,255,255,.4);color:#eae6f2;font-family:'Special Elite', 'Courier New', monospace;font-weight:400;font-size:12px;letter-spacing:.48em;text-indent:.48em;text-transform:uppercase;cursor:pointer;transition:color .3s ease, border-color .3s ease, box-shadow .3s ease, letter-spacing .3s ease;border-radius:2px;-webkit-tap-highlight-color:transparent}
   .ageEnter:hover{color:#fff;border-color:#fff;box-shadow:0 0 50px rgba(255,255,255,.24);letter-spacing:.56em}
   .ageEnter:active{box-shadow:0 0 30px rgba(255,255,255,.35), inset 0 0 26px rgba(255,255,255,.1)}
+  #newReleaseIntro{position:fixed;inset:0;z-index:320;display:grid;place-items:center;overflow:hidden;background:radial-gradient(ellipse at 50% 48%,rgba(38,34,43,.72) 0%,rgba(7,6,10,.97) 54%,#000 100%);opacity:0;visibility:hidden;pointer-events:none;perspective:1100px;}
+  #newReleaseIntro.show{opacity:1;visibility:visible;pointer-events:auto;}
+  .newReleaseSpace{position:absolute;inset:-20%;background-image:radial-gradient(1px 1px at 12% 22%,rgba(255,255,255,.72) 50%,transparent 100%),radial-gradient(1.5px 1.5px at 75% 18%,rgba(255,255,255,.64) 50%,transparent 100%),radial-gradient(1px 1px at 82% 73%,rgba(255,255,255,.6) 50%,transparent 100%),radial-gradient(1px 1px at 34% 82%,rgba(255,255,255,.55) 50%,transparent 100%),radial-gradient(1px 1px at 56% 11%,rgba(255,255,255,.46) 50%,transparent 100%),radial-gradient(1px 1px at 19% 66%,rgba(255,255,255,.44) 50%,transparent 100%);opacity:.7;}
+  .newReleaseStar{position:absolute;left:50%;top:46%;width:min(58vw,58vh,540px);aspect-ratio:1;opacity:0;transform:translate(-50%,-50%) scale(.02) rotateY(72deg) rotateZ(-24deg);transform-style:preserve-3d;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 94%,50% 73%,21% 94%,32% 57%,2% 35%,39% 35%);background:radial-gradient(circle at 34% 26%,#fff 0%,#f2edf5 8%,#b5acbf 21%,#504a5a 44%,#16131c 70%,#030205 100%);filter:drop-shadow(0 0 18px rgba(255,255,255,.8)) drop-shadow(0 0 66px rgba(191,174,215,.42));will-change:transform,opacity;}
+  .newReleaseStar::before{content:'';position:absolute;inset:0;clip-path:inherit;background:linear-gradient(132deg,rgba(255,255,255,.95) 0%,rgba(255,255,255,.2) 22%,transparent 42%,rgba(0,0,0,.5) 78%,rgba(255,255,255,.12) 100%);transform:translateZ(18px);}
+  .newReleaseStar::after{content:'';position:absolute;inset:8%;border:1px solid rgba(255,255,255,.3);clip-path:inherit;transform:translate3d(-8px,9px,-16px);opacity:.75;}
+  .newReleaseTitle{position:absolute;left:50%;bottom:max(42px,env(safe-area-inset-bottom,0px) + 28px);width:min(88vw,760px);transform:translateX(-50%) translateY(18px);opacity:0;text-align:center;color:#f1edf5;font-family:'Special Elite','Courier New',monospace;font-size:clamp(17px,3.6vw,26px);letter-spacing:.12em;line-height:1.4;text-shadow:0 0 24px rgba(255,255,255,.24);}
+  .star.new-release-arrival .star-core{animation:newReleaseArrival 1.45s cubic-bezier(.16,.72,.24,1) both!important;}
+  .star.new-release-arrival .star-ring{animation:newReleaseRing 1.45s ease-out both;}
+  .star.new-release-arrival::after{content:'';position:absolute;left:50%;top:50%;width:58px;height:58px;border:1px solid rgba(255,255,255,.88);border-radius:50%;transform:translate(-50%,-50%);animation:newReleasePulse 1.5s ease-out both;pointer-events:none;}
+  @keyframes newReleaseArrival{0%{transform:translate(-50%,-50%) scale(.08);opacity:.2}34%{transform:translate(-50%,-50%) scale(2.9);opacity:1}70%{transform:translate(-50%,-50%) scale(.82);opacity:1}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
+  @keyframes newReleaseRing{0%{transform:translate(-50%,-50%) scale(.15);opacity:0}38%{transform:translate(-50%,-50%) scale(1.8);opacity:1}100%{transform:translate(-50%,-50%) scale(1);opacity:.85}}
+  @keyframes newReleasePulse{0%{transform:translate(-50%,-50%) scale(.35);opacity:1}100%{transform:translate(-50%,-50%) scale(3.2);opacity:0}}
   #tutorialHand{position:fixed;left:0;top:0;width:64px;height:64px;z-index:260;pointer-events:none;opacity:0;visibility:hidden;transform-origin:32px 32px;will-change:left,top,transform,opacity;transition:opacity .24s ease,visibility .24s ease}
   #tutorialHand.active{opacity:1;visibility:visible}
   #tutorialHand svg{display:block;width:64px;height:64px;overflow:visible;transform-origin:32px 32px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.98))}
@@ -389,7 +401,7 @@
   <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.65" fill="currentColor"/><circle cx="12" cy="12" r="1.65" fill="currentColor"/><circle cx="12" cy="19" r="1.65" fill="currentColor"/></svg>
 </button>
 <div id="quickMenu" aria-hidden="true">
-  <button class="quickMenuItem" id="muteBtn" type="button" aria-label="Отключить фоновый звук"><span class="quickMenuIcon" aria-hidden="true">♫</span><span id="muteMenuLabel">Отключить звук фона</span><span class="quickMenuStatus" id="muteMenuStatus"></span></button>
+  <button class="quickMenuItem" id="muteBtn" type="button" aria-label="Отключить фоновый звук"><span class="quickMenuIcon" aria-hidden="true">♫</span><span id="muteMenuLabel">Отключить звук фона</span></button>
   <button class="quickMenuItem" id="menuInfoBtn" type="button"><span class="quickMenuIcon" aria-hidden="true">i</span><span>Информация</span></button>
   <button class="quickMenuItem" id="menuArtsBtn" type="button"><span class="quickMenuIcon" aria-hidden="true">✧</span><span>Арты</span></button>
 </div>
@@ -453,6 +465,11 @@
     <button class="extGo" id="extGoBtn">Перейти</button>
     <div class="extCancel" id="extCancelBtn">отмена</div>
   </div>
+</div>
+<div id="newReleaseIntro" aria-hidden="true">
+  <div class="newReleaseSpace"></div>
+  <div class="newReleaseStar" id="newReleaseStar" aria-hidden="true"></div>
+  <div class="newReleaseTitle" id="newReleaseTitle"></div>
 </div>
 <div id="tutorialHand" aria-hidden="true">
   <svg viewBox="0 0 64 64" role="presentation" aria-hidden="true">
@@ -549,7 +566,6 @@ const infoPanel = document.getElementById('infoPanel');
 const infoContent = document.getElementById('infoContent');
 const quickMenu = document.getElementById('quickMenu');
 const muteMenuLabel = document.getElementById('muteMenuLabel');
-const muteMenuStatus = document.getElementById('muteMenuStatus');
 const artsPanel = document.getElementById('artsPanel');
 const artsGrid = document.getElementById('artsGrid');
 const artsEmpty = document.getElementById('artsEmpty');
@@ -562,6 +578,9 @@ const infoBtn = document.getElementById('infoBtn');
 const searchSuggestions = document.getElementById('searchSuggestions');
 const muteBtn = document.getElementById('muteBtn');
 const tutorialHand = document.getElementById('tutorialHand');
+const newReleaseIntro = document.getElementById('newReleaseIntro');
+const newReleaseStar = document.getElementById('newReleaseStar');
+const newReleaseTitle = document.getElementById('newReleaseTitle');
 let tutorialStage = 'idle';
 let tutorialStartRequested = false;
 let tutorialCompletedThisSession = false;
@@ -570,6 +589,11 @@ let tutorialDemoAnimations = [];
 let tutorialDemoNode = null;
 let tutorialDemoTimer = 0;
 let tutorialTargetStar = null;
+const TUTORIAL_EVER_KEY = 'skyTutorialEverCompleted_v1';
+const NEW_RELEASE_SEEN_KEY = 'latestEpisodeSeen_v1';
+let pendingNewRelease = null;
+let newReleaseIntroRunning = false;
+let newReleaseShownThisSession = false;
 
 function tutorialIsActive(){
   return tutorialStage !== 'idle' && tutorialStage !== 'done';
@@ -583,11 +607,11 @@ function tutorialTargetAllowed(target, eventType){
     return !!star && !!tutorialTargetStar && star === tutorialTargetStar;
   }
   if (tutorialStage === 'close' || tutorialStage === 'closeAgain') return target === overlay;
-  if (tutorialStage === 'pages') return pageNavBtn.contains(target);
+  if (tutorialStage === 'pages') return true;
   return false;
 }
 function blockTutorialInput(event){
-  if (!tutorialIsActive() || tutorialTargetAllowed(event.target, event.type)) return;
+  if (!tutorialIsActive() || tutorialStage === 'pages' || tutorialTargetAllowed(event.target, event.type)) return;
   event.preventDefault();
   event.stopPropagation();
   if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
@@ -598,7 +622,7 @@ document.addEventListener('dblclick', blockTutorialInput, true);
 document.addEventListener('auxclick', blockTutorialInput, true);
 document.addEventListener('contextmenu', blockTutorialInput, true);
 document.addEventListener('keydown', (event) => {
-  if (!tutorialIsActive()) return;
+  if (!tutorialIsActive() || tutorialStage === 'pages') return;
   event.preventDefault();
   event.stopPropagation();
   event.stopImmediatePropagation();
@@ -961,8 +985,99 @@ function setTutorialStage(stage){
     cancelTutorialMotion(true);
   }
 }
+function detectNewEpisodeRelease(){
+  if (!EPISODES.length) return;
+  const latest = EPISODES[0];
+  if (!latest || !latest.folderKey) return;
+  let previous = '';
+  try { previous = localStorage.getItem(NEW_RELEASE_SEEN_KEY) || ''; } catch(e) {}
+  if (!previous) {
+    try { localStorage.setItem(NEW_RELEASE_SEEN_KEY, latest.folderKey); } catch(e) {}
+    pendingNewRelease = null;
+    return;
+  }
+  if (previous !== latest.folderKey) {
+    pendingNewRelease = { key:latest.folderKey, title:latest.title || latest.folderName || latest.folderKey };
+  }
+}
+function tutorialWasEverCompleted(){
+  try { return localStorage.getItem(TUTORIAL_EVER_KEY) === '1'; } catch(e) { return false; }
+}
+function releaseDelay(ms){ return new Promise(resolve => setTimeout(resolve, ms)); }
+async function maybeStartNewReleaseIntro(){
+  if (!pendingNewRelease || newReleaseIntroRunning || newReleaseShownThisSession || ageGateActive || document.hidden) return;
+  if (!tutorialWasEverCompleted()) return;
+  if (tutorialIsActive() && tutorialStage !== 'done') return;
+  const episodeIndex = EPISODES.findIndex(ep => ep.folderKey === pendingNewRelease.key);
+  if (episodeIndex < 0) return;
+  const star = starEls[episodeIndex];
+  if (!star || !star.isConnected) return;
+
+  newReleaseIntroRunning = true;
+  newReleaseShownThisSession = true;
+  closeQuickMenu();
+  closePageMap();
+  closeInfoPanel();
+  artsPanel.classList.remove('show');
+  closeSearch();
+  overlay.classList.remove('show');
+  miniPlayer.classList.remove('show');
+  dropzone.classList.remove('visible', 'hover');
+
+  const targetPage = getPageForIndex(episodeIndex);
+  if (targetPage !== currentPage) goToPage(targetPage);
+  newReleaseTitle.textContent = pendingNewRelease.title || EPISODES[episodeIndex].title || 'Новый выпуск';
+  newReleaseIntro.classList.add('show');
+  newReleaseIntro.setAttribute('aria-hidden', 'false');
+  newReleaseStar.style.opacity = '1';
+
+  const firstAnimation = newReleaseStar.animate([
+    { transform:'translate(-50%,-50%) perspective(900px) rotateY(78deg) rotateZ(-28deg) scale(.025)', opacity:0, filter:'brightness(2.2) blur(12px)' },
+    { transform:'translate(-50%,-50%) perspective(900px) rotateY(-18deg) rotateZ(12deg) scale(1.16)', opacity:1, filter:'brightness(1.35) blur(0)', offset:.68 },
+    { transform:'translate(-50%,-50%) perspective(900px) rotateY(0deg) rotateZ(0deg) scale(1)', opacity:1, filter:'brightness(1) blur(0)' }
+  ], { duration:1450, easing:'cubic-bezier(.16,.76,.22,1)', fill:'forwards' });
+  const titleAnimation = newReleaseTitle.animate([
+    { opacity:0, transform:'translateX(-50%) translateY(24px)', letterSpacing:'.22em' },
+    { opacity:1, transform:'translateX(-50%) translateY(0)', letterSpacing:'.12em' }
+  ], { duration:650, delay:650, easing:'ease-out', fill:'forwards' });
+  try { await firstAnimation.finished; } catch(e) {}
+  try { await titleAnimation.finished; } catch(e) {}
+  await releaseDelay(1500);
+
+  const rect = star.getBoundingClientRect();
+  const targetX = rect.left + rect.width / 2;
+  const targetY = rect.top + rect.height / 2;
+  const dx = targetX - innerWidth / 2;
+  const dy = targetY - innerHeight * .46;
+  const travel = newReleaseStar.animate([
+    { transform:'translate(-50%,-50%) perspective(900px) rotateY(0deg) rotateZ(0deg) scale(1)', opacity:1, filter:'brightness(1) blur(0)' },
+    { transform:'translate(calc(-50% + ' + dx + 'px),calc(-50% + ' + dy + 'px)) perspective(900px) rotateY(540deg) rotateZ(210deg) scale(.035)', opacity:.98, filter:'brightness(2.3) blur(2px)' }
+  ], { duration:900, easing:'cubic-bezier(.55,.02,.82,.4)', fill:'forwards' });
+  try { await travel.finished; } catch(e) {}
+
+  newReleaseIntro.classList.remove('show');
+  newReleaseIntro.setAttribute('aria-hidden', 'true');
+  newReleaseStar.style.opacity = '0';
+  newReleaseStar.getAnimations().forEach(animation => { try { animation.cancel(); } catch(e) {} });
+  star.classList.add('new-release-arrival');
+  setTimeout(() => star.classList.remove('new-release-arrival'), 1800);
+
+  try { localStorage.setItem(NEW_RELEASE_SEEN_KEY, pendingNewRelease.key); } catch(e) {}
+  pendingNewRelease = null;
+  newReleaseIntroRunning = false;
+  if (tutorialStartRequested && !tutorialIsActive()) setTimeout(maybeStartTutorial, 180);
+}
+
 function maybeStartTutorial(){
-  if (!tutorialStartRequested || ageGateActive || !EPISODES.length || !shouldShowSkyHint() || tutorialStage !== 'idle') return;
+  if (ageGateActive || !EPISODES.length) return;
+  if (pendingNewRelease && tutorialWasEverCompleted() && !newReleaseShownThisSession) {
+    maybeStartNewReleaseIntro();
+    return;
+  }
+  if (!tutorialStartRequested || !shouldShowSkyHint() || tutorialStage !== 'idle') {
+    maybeStartNewReleaseIntro();
+    return;
+  }
   tutorialStartRequested = false;
   setTutorialStage('swipe');
 }
@@ -973,12 +1088,14 @@ function completeTutorial(){
   if (tutorialStage === 'done') return;
   tutorialCompletedThisSession = true;
   tutorialStartRequested = false;
+  try { localStorage.setItem(TUTORIAL_EVER_KEY, '1'); } catch (e) {}
   if (TUTORIAL_MODE === 1) {
     try { localStorage.setItem(SKY_HINT_KEY, '1'); } catch (e) {}
   } else {
     try { localStorage.removeItem(SKY_HINT_KEY); } catch (e) {}
   }
   setTutorialStage('done');
+  setTimeout(maybeStartNewReleaseIntro, 180);
 }
 function pauseTutorialForUserDrag(){
   if (tutorialStage === 'drag' || tutorialStage === 'tap') cancelTutorialMotion(false);
@@ -1612,6 +1729,7 @@ async function buildSky(){
   EPISODES = entries.map(([key, val]) => resolveOneEpisode(key, val, fileIndex)).filter(Boolean);
   starEls = [];
   if (!EPISODES.length) return;
+  detectNewEpisodeRelease();
 
   computePageSizes(EPISODES.length);
   totalPages = pageSizes.length;
@@ -1729,7 +1847,6 @@ function fadeVolume(audio, target, dur, onDone){
 function updateMuteIcon(){
   if (!muteBtn) return;
   muteMenuLabel.textContent = ambientMuted ? 'Включить звук фона' : 'Отключить звук фона';
-  muteMenuStatus.textContent = ambientMuted ? 'выкл.' : 'вкл.';
   muteBtn.setAttribute('aria-label', ambientMuted ? 'Включить фоновый звук' : 'Отключить фоновый звук');
   muteBtn.classList.toggle('muted', ambientMuted);
 }
@@ -3071,6 +3188,7 @@ function updateEpisodeTitle(index, title){
   const ep = EPISODES[index];
   if (!ep || !title) return;
   ep.title = title;
+  if (index === 0 && pendingNewRelease && pendingNewRelease.key === ep.folderKey) pendingNewRelease.title = title;
   const star = starEls[index];
   if (star) {
     star.setAttribute('aria-label', title);
