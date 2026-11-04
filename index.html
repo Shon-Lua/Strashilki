@@ -269,14 +269,15 @@
   .ageEnter{padding:14px 60px;background:transparent;border:1px solid rgba(255,255,255,.4);color:#eae6f2;font-family:'Special Elite', 'Courier New', monospace;font-weight:400;font-size:12px;letter-spacing:.48em;text-indent:.48em;text-transform:uppercase;cursor:pointer;transition:color .3s ease, border-color .3s ease, box-shadow .3s ease, letter-spacing .3s ease;border-radius:2px;-webkit-tap-highlight-color:transparent}
   .ageEnter:hover{color:#fff;border-color:#fff;box-shadow:0 0 50px rgba(255,255,255,.24);letter-spacing:.56em}
   .ageEnter:active{box-shadow:0 0 30px rgba(255,255,255,.35), inset 0 0 26px rgba(255,255,255,.1)}
-  #tutorialHand{position:fixed;left:0;top:0;width:64px;height:64px;z-index:260;pointer-events:none;opacity:0;visibility:hidden;transform-origin:38px 18px;will-change:left,top,transform,opacity;transition:opacity .24s ease,visibility .24s ease}
+  #tutorialHand{position:fixed;left:0;top:0;width:64px;height:64px;z-index:260;pointer-events:none;opacity:0;visibility:hidden;transform-origin:32px 32px;will-change:left,top,transform,opacity;transition:opacity .24s ease,visibility .24s ease}
   #tutorialHand.active{opacity:1;visibility:visible}
-  #tutorialHand svg{display:block;width:64px;height:64px;overflow:visible;transform-origin:38px 18px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.95))}
-  #tutorialHand.mirror{transform-origin:26px 18px}
+  #tutorialHand svg{display:block;width:64px;height:64px;overflow:visible;transform-origin:32px 32px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.98))}
+  #tutorialHand.mirror{transform-origin:32px 32px}
   #tutorialHand.mirror svg{transform:scaleX(-1)}
-  #tutorialHand.bottom-approach{transform-origin:38px 18px}
-  #tutorialHand.bottom-approach svg{transform:none;transform-origin:38px 18px}
-  #tutorialHand .tutorial-tail{fill:none;stroke:#fff;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:42 10;animation:tutorialTailFlow .72s linear infinite;filter:drop-shadow(0 0 2px rgba(255,255,255,.7))}#tutorialHand .tutorial-dot-halo{fill:#09090b;stroke:rgba(255,255,255,.8);stroke-width:2.5}#tutorialHand .tutorial-dot-core{fill:#fff;filter:drop-shadow(0 0 5px rgba(255,255,255,.95))}@keyframes tutorialTailFlow{to{stroke-dashoffset:-52}}
+  #tutorialHand.bottom-approach{transform-origin:32px 32px}
+  #tutorialHand.bottom-approach svg{transform:none;transform-origin:32px 32px}
+  #tutorialHand .tutorial-dot-halo{fill:#050505;stroke:#fff;stroke-width:2.6}
+  #tutorialHand .tutorial-dot-core{fill:#fff;stroke:#fff;stroke-width:1;filter:drop-shadow(0 0 5px rgba(255,255,255,.9))}
   .star.tutorial-target .star-core{animation:tutorialStarGuidePulse 1.6s ease-in-out infinite!important;box-shadow:0 0 20px 7px rgba(255,255,255,.98),0 0 56px 18px rgba(220,205,255,.52)!important}
   .tutorial-demo-proxy{position:fixed!important;z-index:258!important;pointer-events:none!important;opacity:1!important;transition:none!important;animation:none!important;overflow:visible!important;will-change:left,top,transform,opacity;}
   .tutorial-demo-proxy .star-core,.tutorial-demo-proxy .star-flare{animation:none!important}
@@ -447,9 +448,8 @@
 </div>
 <div id="tutorialHand" aria-hidden="true">
   <svg viewBox="0 0 64 64" role="presentation" aria-hidden="true">
-    <path class="tutorial-tail" d="M5 59 C13 51 18 48 23 40 C27 33 31 28 38 18"/>
-    <circle class="tutorial-dot-halo" cx="38" cy="18" r="10.5"/>
-    <circle class="tutorial-dot-core" cx="38" cy="18" r="6.2"/>
+    <circle class="tutorial-dot-halo" cx="32" cy="32" r="16"/>
+    <circle class="tutorial-dot-core" cx="32" cy="32" r="9.5"/>
   </svg>
 </div>
 <div id="ageGate" role="dialog" aria-modal="true">
@@ -556,6 +556,39 @@ let tutorialDemoAnimations = [];
 let tutorialDemoNode = null;
 let tutorialDemoTimer = 0;
 let tutorialTargetStar = null;
+
+function tutorialIsActive(){
+  return tutorialStage !== 'idle' && tutorialStage !== 'done';
+}
+function tutorialTargetAllowed(target, eventType){
+  if (!tutorialIsActive()) return true;
+  if (!(target instanceof Element)) return false;
+  if (tutorialStage === 'swipe') return eventType === 'pointerdown' && skyWrap.contains(target) && !(target.closest && target.closest('.star'));
+  if (tutorialStage === 'drag' || tutorialStage === 'tap') {
+    const star = target.closest('.star');
+    return !!star && !!tutorialTargetStar && star === tutorialTargetStar;
+  }
+  if (tutorialStage === 'close' || tutorialStage === 'closeAgain') return target === overlay;
+  if (tutorialStage === 'pages') return pageNavBtn.contains(target);
+  return false;
+}
+function blockTutorialInput(event){
+  if (!tutorialIsActive() || tutorialTargetAllowed(event.target, event.type)) return;
+  event.preventDefault();
+  event.stopPropagation();
+  if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
+}
+document.addEventListener('pointerdown', blockTutorialInput, true);
+document.addEventListener('click', blockTutorialInput, true);
+document.addEventListener('dblclick', blockTutorialInput, true);
+document.addEventListener('auxclick', blockTutorialInput, true);
+document.addEventListener('contextmenu', blockTutorialInput, true);
+document.addEventListener('keydown', (event) => {
+  if (!tutorialIsActive()) return;
+  event.preventDefault();
+  event.stopPropagation();
+  event.stopImmediatePropagation();
+}, true);
 
 const ICON_PLAY = '<path d="M8 5v14l11-7z"/>';
 const ICON_PAUSE = '<path d="M6 5h4v14H6zm8 0h4v14h-4z"/>';
@@ -666,9 +699,9 @@ function cancelTutorialMotion(hideDropzone){
 }
 const TUTORIAL_HAND_WIDTH = 64;
 const TUTORIAL_HAND_HEIGHT = 64;
-const TUTORIAL_HAND_TIP_X = 38;
+const TUTORIAL_HAND_TIP_X = 32;
 const TUTORIAL_HAND_MIRROR_TIP_X = TUTORIAL_HAND_WIDTH - TUTORIAL_HAND_TIP_X;
-const TUTORIAL_HAND_TIP_Y = 18;
+const TUTORIAL_HAND_TIP_Y = 32;
 const TUTORIAL_HAND_BOTTOM_TIP_X = TUTORIAL_HAND_TIP_X;
 const TUTORIAL_HAND_BOTTOM_TIP_Y = TUTORIAL_HAND_TIP_Y;
 let tutorialHandScale = 1;
@@ -815,11 +848,11 @@ function startTutorialCloseDemo(){
   const point = { x:Math.max(18, Math.min(innerWidth - 18, targetX)), y:Math.max(20, Math.min(safeBottom, targetY)) };
   placeTutorialHand(point.x, point.y);
   const animation = tutorialHand.animate([
-    { transform:'translateY(0) scale(1)', opacity:1, offset:0 },
-    { transform:'translateY(7px) scale(.78)', opacity:1, offset:.22 },
-    { transform:'translateY(1px) scale(.96)', opacity:1, offset:.43 },
-    { transform:'translateY(0) scale(1)', opacity:1, offset:.6 },
-    { transform:'translateY(0) scale(1)', opacity:1, offset:1 }
+    { transform:'scale(1)', opacity:1, offset:0 },
+    { transform:'scale(.78)', opacity:1, offset:.22 },
+    { transform:'scale(1.06)', opacity:1, offset:.43 },
+    { transform:'scale(1)', opacity:1, offset:.6 },
+    { transform:'scale(1)', opacity:1, offset:1 }
   ], { duration:1450, iterations:Infinity, easing:'ease-in-out' });
   tutorialHandAnimations = [animation];
 }
@@ -3862,6 +3895,7 @@ document.addEventListener('keydown', (e) => {
 let wheelAccum = 0;
 let wheelTimer = null;
 window.addEventListener('wheel', (e) => {
+  if (tutorialIsActive() && tutorialStage !== 'swipe') return;
   if (ageGateActive || overlay.classList.contains('show') ||
       infoPanel.classList.contains('show') || externalWarning.classList.contains('show') ||
       searchOpen || pageMapPanel.classList.contains('show') || dragState) return;
@@ -3877,21 +3911,27 @@ window.addEventListener('wheel', (e) => {
 }, { passive: true });
 
 let touchY = 0;
+let touchX = 0;
 let touchActive = false;
 window.addEventListener('touchstart', (e) => {
+  if (tutorialIsActive()) {
+    if (tutorialStage !== 'swipe' || !skyWrap.contains(e.target) || (e.target.closest && e.target.closest('.star'))) return;
+  }
   if (pageMapPanel.classList.contains('show')) return;
   if (ageGateActive || overlay.classList.contains('show') ||
       infoPanel.classList.contains('show') || externalWarning.classList.contains('show') ||
       searchOpen || dragState) return;
   if (miniPlayer.contains(e.target) || pageMapPanel.contains(e.target) || pageNavBtn.contains(e.target) || document.getElementById('topBar').contains(e.target)) return;
   touchY = e.touches[0].clientY;
+  touchX = e.touches[0].clientX;
   touchActive = true;
 }, { passive: true });
 window.addEventListener('touchend', (e) => {
   if (!touchActive || dragState) return;
   touchActive = false;
   const dy = touchY - e.changedTouches[0].clientY;
-  if (Math.abs(dy) > 55) {
+  const dx = touchX - e.changedTouches[0].clientX;
+  if (Math.abs(dy) > 55 && Math.abs(dy) > Math.abs(dx) * 1.2) {
     if (dy > 0) goToPage(currentPage + 1);
     else goToPage(currentPage - 1);
     tutorialSwipePerformed();
