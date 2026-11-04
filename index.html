@@ -648,6 +648,7 @@ let loadingSpinner = false;
 let pageSizes = [];
 let pageStarts = [0];
 
+let storageResetPending = false;
 const POSITIONS_KEY = 'episodePositions_v2';
 const LAST_KEY = 'lastPlayedKey_v1';
 let savedPositions = {};
@@ -663,10 +664,11 @@ function loadPositions(){
   } catch (e) {}
 }
 function persistPositions(){
+  if (storageResetPending) return;
   try { localStorage.setItem(POSITIONS_KEY, JSON.stringify(savedPositions)); } catch (e) {}
 }
 function savePositionForCurrent(){
-  if (!episodeAudio || current < 0 || !EPISODES[current]) return;
+  if (storageResetPending || !episodeAudio || current < 0 || !EPISODES[current]) return;
   try {
     const t = episodeAudio.currentTime;
     const key = EPISODES[current].folderKey;
@@ -683,7 +685,7 @@ function clearPosition(folderKey){
 }
 
 function saveLastPlayed(folderKey){
-  if (!folderKey) return;
+  if (storageResetPending || !folderKey) return;
   try { localStorage.setItem(LAST_KEY, folderKey); } catch (e) {}
 }
 function getLastPlayed(){
@@ -701,6 +703,7 @@ function loadPlayedState(){
   } catch (e) {}
 }
 function savePlayedState(){
+  if (storageResetPending) return;
   try { localStorage.setItem('playedEpisodes', JSON.stringify([...playedSet])); } catch (e) {}
 }
 function markPlayed(folderKey){
@@ -725,7 +728,7 @@ function markAllEpisodesPlayed(){
   });
   if (changed) savePlayedState();
   closeQuickMenu();
-  showToast('все выпуски отмечены прослушанными', 2200);
+  showToast('Все отмечено прослушанным', 2200);
 }
 
 const TUTORIAL_MODE = 1;
@@ -1076,7 +1079,9 @@ async function maybeStartNewReleaseIntro(){
   star.classList.add('new-release-arrival');
   setTimeout(() => star.classList.remove('new-release-arrival'), 1800);
 
-  try { localStorage.setItem(NEW_RELEASE_SEEN_KEY, pendingNewRelease.key); } catch(e) {}
+  if (!storageResetPending) {
+    try { localStorage.setItem(NEW_RELEASE_SEEN_KEY, pendingNewRelease.key); } catch(e) {}
+  }
   pendingNewRelease = null;
   newReleaseIntroRunning = false;
   if (tutorialStartRequested && !tutorialIsActive()) setTimeout(maybeStartTutorial, 180);
@@ -1102,9 +1107,13 @@ function completeTutorial(){
   if (tutorialStage === 'done') return;
   tutorialCompletedThisSession = true;
   tutorialStartRequested = false;
-  try { localStorage.setItem(TUTORIAL_EVER_KEY, '1'); } catch (e) {}
+  if (!storageResetPending) {
+    try { localStorage.setItem(TUTORIAL_EVER_KEY, '1'); } catch (e) {}
+  }
   if (TUTORIAL_MODE === 1) {
-    try { localStorage.setItem(SKY_HINT_KEY, '1'); } catch (e) {}
+    if (!storageResetPending) {
+      try { localStorage.setItem(SKY_HINT_KEY, '1'); } catch (e) {}
+    }
   } else {
     try { localStorage.removeItem(SKY_HINT_KEY); } catch (e) {}
   }
@@ -1266,6 +1275,7 @@ function loadTreeFromLS(){
   } catch (e) { return null; }
 }
 function saveTreeToLS(tree){
+  if (storageResetPending) return;
   try { localStorage.setItem(GH_TREE_KEY, JSON.stringify({ t: Date.now(), tree })); } catch (e) {}
 }
 
@@ -1975,7 +1985,9 @@ async function startAmbient(){
 
 function toggleMute(){
   ambientMuted = !ambientMuted;
-  try { localStorage.setItem('ambientMuted', ambientMuted ? '1' : '0'); } catch(e){}
+  if (!storageResetPending) {
+    try { localStorage.setItem('ambientMuted', ambientMuted ? '1' : '0'); } catch(e){}
+  }
   updateMuteIcon();
   applyAmbientState();
 }
@@ -2444,10 +2456,17 @@ function performSearch(rawQuery){
   if (raw === 'localStorage_RST') {
     closeSearch();
     try {
+      storageResetPending = true;
+      savedPositions = {};
+      lastPositionSave = 0;
       localStorage.clear();
+      if (episodeAudio) {
+        try { episodeAudio.pause(); } catch (pauseError) {}
+      }
       showToast('локальное хранилище очищено', 1800);
       setTimeout(() => location.reload(), 650);
     } catch (e) {
+      storageResetPending = false;
       showToast('не удалось очистить локальное хранилище', 2600);
     }
     return;
@@ -3868,15 +3887,16 @@ function openPageMap(){
   pageNavBtn.setAttribute('aria-expanded', 'true');
 }
 function closePageMap(){
+  const wasOpen = pageMapPanel.classList.contains('show');
   pageMapPanel.classList.remove('show');
   pageMapPanel.setAttribute('aria-hidden', 'true');
   pageNavBtn.setAttribute('aria-expanded', 'false');
+  if (wasOpen && tutorialStage === 'pages') completeTutorial();
 }
 pageNavBtn.addEventListener('click', (e) => {
   e.stopPropagation();
   if (pageMapPanel.classList.contains('show')) closePageMap();
   else openPageMap();
-  if (tutorialStage === 'pages') completeTutorial();
 });
 pageMapPanel.addEventListener('pointerdown', (e) => e.stopPropagation());
 pageMapSlider.addEventListener('input', () => goToPage(Number(pageMapSlider.value), true));
