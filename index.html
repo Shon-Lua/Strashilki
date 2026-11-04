@@ -254,6 +254,9 @@
 
   .installAppArea{margin-top:24px;padding-top:18px;border-top:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;align-items:center;gap:10px}
   .installAppArea[hidden]{display:none}
+  .tutorialReplayArea{margin-top:14px;display:flex;justify-content:center}
+  #tutorialReplayBtn{min-height:38px;padding:9px 18px;background:transparent;border:1px solid rgba(255,255,255,.18);border-radius:2px;color:rgba(234,230,242,.72);font-family:'Special Elite','Courier New',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;cursor:pointer;transition:border-color .25s ease,color .25s ease,background .25s ease}
+  #tutorialReplayBtn:hover{border-color:rgba(255,255,255,.62);color:#fff;background:rgba(255,255,255,.045)}
   #installAppBtn{min-height:42px;padding:11px 22px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.28);border-radius:2px;color:#eae6f2;font-family:'Special Elite','Courier New',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;transition:border-color .25s ease,background .25s ease,color .25s ease}
   #installAppBtn:hover{border-color:rgba(255,255,255,.72);background:rgba(255,255,255,.07);color:#fff}
   #installAppHint{display:none;max-width:360px;text-align:center;color:#9d96aa;font-size:13px;line-height:1.65;letter-spacing:.02em}
@@ -280,20 +283,20 @@
   .ageEnter{padding:14px 60px;background:transparent;border:1px solid rgba(255,255,255,.4);color:#eae6f2;font-family:'Special Elite', 'Courier New', monospace;font-weight:400;font-size:12px;letter-spacing:.48em;text-indent:.48em;text-transform:uppercase;cursor:pointer;transition:color .3s ease, border-color .3s ease, box-shadow .3s ease, letter-spacing .3s ease;border-radius:2px;-webkit-tap-highlight-color:transparent}
   .ageEnter:hover{color:#fff;border-color:#fff;box-shadow:0 0 50px rgba(255,255,255,.24);letter-spacing:.56em}
   .ageEnter:active{box-shadow:0 0 30px rgba(255,255,255,.35), inset 0 0 26px rgba(255,255,255,.1)}
-  #tutorialHand{position:fixed;left:0;top:0;width:104px;height:134px;z-index:260;pointer-events:none;opacity:0;visibility:hidden;transform-origin:39px 14px;will-change:left,top,transform,opacity;transition:opacity .24s ease,visibility .24s ease}
+  #tutorialHand{position:fixed;left:0;top:0;width:104px;height:134px;z-index:260;pointer-events:none;opacity:0;visibility:hidden;transform-origin:51px 10px;will-change:left,top,transform,opacity;transition:opacity .24s ease,visibility .24s ease}
   #tutorialHand.active{opacity:1;visibility:visible}
-  #tutorialHand svg{display:block;width:104px;height:134px;overflow:visible;transform-origin:50% 12%}
-  #tutorialHand.mirror:not(.bottom-approach){transform-origin:65px 14px}
+  #tutorialHand svg{display:block;width:104px;height:134px;overflow:visible;transform-origin:50% 50%}
+  #tutorialHand.mirror:not(.bottom-approach){transform-origin:53px 10px}
   #tutorialHand.mirror svg{transform:scaleX(-1)}
-  #tutorialHand.bottom-approach{transform-origin:65px 120px}
-  #tutorialHand.bottom-approach svg{transform:rotate(180deg)}
-  #tutorialHand .hand-outline{fill:url(#tutorialHandSkin);stroke:#171319;stroke-width:3.2;stroke-linejoin:round;stroke-linecap:round}
-  #tutorialHand .hand-shadow{fill:url(#tutorialHandShadow);opacity:.82}
-  #tutorialHand .hand-nail{fill:url(#tutorialHandNail);stroke:#211821;stroke-width:1.8;stroke-linejoin:round}
-  #tutorialHand .hand-crease{fill:none;stroke:#59434c;stroke-width:1.7;stroke-linecap:round;opacity:.78}
-  #tutorialHand .hand-vein{fill:none;stroke:#6d3443;stroke-width:1.5;stroke-linecap:round;opacity:.68}
-  #tutorialHand .finger-glint{fill:none;stroke:rgba(239,225,224,.55);stroke-width:1.25;stroke-linecap:round}
-  #tutorialHand .hand-knuckle{fill:#6d515e;opacity:.33}
+  #tutorialHand.bottom-approach{transform-origin:54px 125px}
+  #tutorialHand.bottom-approach svg{transform:rotate(180deg);transform-origin:50% 50%}
+  #tutorialHand .hand-outline{fill:url(#tutorialHandSkin);stroke:#171219;stroke-width:3.4;stroke-linejoin:round;stroke-linecap:round}
+  #tutorialHand .hand-shadow{fill:url(#tutorialHandShadow);opacity:.72}
+  #tutorialHand .hand-nail{fill:url(#tutorialHandNail);stroke:#19131a;stroke-width:1.8;stroke-linejoin:round}
+  #tutorialHand .hand-crease{fill:none;stroke:#493a43;stroke-width:1.8;stroke-linecap:round;opacity:.82}
+  #tutorialHand .hand-vein{fill:none;stroke:#51323d;stroke-width:1.45;stroke-linecap:round;opacity:.68}
+  #tutorialHand .finger-glint{fill:none;stroke:rgba(226,215,218,.4);stroke-width:1.15;stroke-linecap:round}
+  #tutorialHand .hand-knuckle{fill:#55444e;opacity:.34}
   .star.tutorial-target .star-core{animation:tutorialStarGuidePulse 1.6s ease-in-out infinite!important;box-shadow:0 0 20px 7px rgba(255,255,255,.98),0 0 56px 18px rgba(220,205,255,.52)!important}
   .tutorial-demo-proxy{position:fixed!important;z-index:258!important;pointer-events:none!important;opacity:1!important;transition:none!important;animation:none!important;overflow:visible!important;will-change:left,top,transform,opacity;}
   .tutorial-demo-proxy .star-core,.tutorial-demo-proxy .star-flare{animation:none!important}
@@ -351,6 +354,7 @@
     .infoCard{padding:38px 24px 30px}
     #installAppBtn{width:100%;max-width:280px}
     #installAppHint{font-size:12.5px}
+    #tutorialReplayBtn{width:100%;max-width:280px}
     .infoHeading{font-size:14px;margin-bottom:22px}
     .info-line{font-size:14px}
     .extCard{padding:32px 24px 26px}
@@ -457,6 +461,9 @@
       <button type="button" id="installAppBtn">Как установить приложение</button>
       <p id="installAppHint" aria-live="polite"></p>
     </div>
+    <div class="tutorialReplayArea">
+      <button type="button" id="tutorialReplayBtn">Повторить обучение</button>
+    </div>
   </div>
 </div>
 <div id="externalWarning">
@@ -471,32 +478,32 @@
 <div id="tutorialHand" aria-hidden="true">
   <svg viewBox="0 0 112 144" role="presentation">
     <defs>
-      <linearGradient id="tutorialHandSkin" x1=".15" y1=".05" x2=".86" y2=".95">
-        <stop offset="0" stop-color="#d1c2c0"/>
-        <stop offset=".28" stop-color="#928187"/>
-        <stop offset=".62" stop-color="#62515b"/>
-        <stop offset="1" stop-color="#302832"/>
+      <linearGradient id="tutorialHandSkin" x1=".18" y1=".02" x2=".82" y2="1">
+        <stop offset="0" stop-color="#c9c2c1"/>
+        <stop offset=".24" stop-color="#9a8b91"/>
+        <stop offset=".58" stop-color="#665761"/>
+        <stop offset="1" stop-color="#29242d"/>
       </linearGradient>
-      <radialGradient id="tutorialHandShadow" cx=".46" cy=".43" r=".7">
-        <stop offset="0" stop-color="#17131b" stop-opacity="0"/>
-        <stop offset=".72" stop-color="#241b27" stop-opacity=".22"/>
-        <stop offset="1" stop-color="#09070d" stop-opacity=".92"/>
-      </radialGradient>
+      <linearGradient id="tutorialHandShadow" x1=".1" y1="0" x2=".9" y2="1">
+        <stop offset="0" stop-color="#110e17" stop-opacity=".08"/>
+        <stop offset=".55" stop-color="#1a1420" stop-opacity=".3"/>
+        <stop offset="1" stop-color="#08060c" stop-opacity=".86"/>
+      </linearGradient>
       <linearGradient id="tutorialHandNail" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#d9c8c4"/>
-        <stop offset=".48" stop-color="#7d6870"/>
-        <stop offset="1" stop-color="#211820"/>
+        <stop offset="0" stop-color="#d5c5c2"/>
+        <stop offset=".38" stop-color="#75646d"/>
+        <stop offset="1" stop-color="#151019"/>
       </linearGradient>
     </defs>
-    <path class="hand-outline" d="M29 137c-5-6-8-14-10-23L7.2 88.4c-3.4-7.1-.8-13.1 5-15.7 5.4-2.4 10.4.2 13.4 6.2l5.2 10.2-2.1-55.2c-.3-8.4 4-14.2 11-14.7 7.3-.5 12.2 4.7 12.5 12.8l1.5 47.1 4.4-27.8c1.3-7.5 6.3-11.5 12.2-10.3 6.5 1.3 9.1 6.4 7.8 13.6l-4.5 29.2 7.2-18.2c2.6-6.6 7.6-9.1 12.7-6.6 5.7 2.8 6.6 8.1 3.9 14.4L86.5 111c-5.8 15.3-17.6 23.7-33.1 24.9l-10.8.8c-5.3.4-9.8.1-13.6.3Z"/>
-    <path class="hand-shadow" d="M29 137c-5-6-8-14-10-23L7.2 88.4c-3.4-7.1-.8-13.1 5-15.7 5.4-2.4 10.4.2 13.4 6.2l5.2 10.2-2.1-55.2c-.3-8.4 4-14.2 11-14.7 7.3-.5 12.2 4.7 12.5 12.8l1.5 47.1 4.4-27.8c1.3-7.5 6.3-11.5 12.2-10.3 6.5 1.3 9.1 6.4 7.8 13.6l-4.5 29.2 7.2-18.2c2.6-6.6 7.6-9.1 12.7-6.6 5.7 2.8 6.6 8.1 3.9 14.4L86.5 111c-5.8 15.3-17.6 23.7-33.1 24.9l-10.8.8c-5.3.4-9.8.1-13.6.3Z"/>
-    <path class="hand-nail" d="M32.2 34.1c-.4-7.4 2.2-12.4 7.1-12.8 5.4-.4 8.5 4.1 8.8 11.4-4.7 3.2-10.7 3.7-15.9 1.4Z"/>
-    <path class="hand-nail" d="M59.5 55.8c1.7-6.3 5.1-9.3 9.2-8.3 4.2 1 5.7 4.8 4.1 10.5-4.4 1.4-9.2.6-13.3-2.2Z"/>
-    <path class="hand-nail" d="M84.3 75.1c2.8-5.4 6.4-7.1 9.8-5.2 3.6 2 4 5.4 1.5 10.1-4.2.4-8.2-1.3-11.3-4.9Z"/>
-    <path class="hand-knuckle" d="M26 91c7-7 15-8 22-3 4 3 7 8 7 14-8 5-18 5-26 1-3-4-4-8-3-12Z"/>
-    <path class="hand-crease" d="M32 44c4 3 9 3 14 1M33 52c4 3 9 3 14 1M35 63c4 3 9 3 14 1M59 66c4 2 8 2 12 0M57 75c4 2 8 2 12 0M25 103c7 4 14 4 21 1M31 114c7 4 15 4 22 1M48 124c7 1 13 0 18-3"/>
-    <path class="hand-vein" d="M43 24c-3-5-2-9 1-13M51 83c-1 8 2 12 7 16M24 87c-5 0-8 3-9 7M73 96c4-2 8-1 11 2M60 116c-2 4-1 7 2 10"/>
-    <path class="finger-glint" d="M37 37l.7 34M63 61l-1.4 13M88 77l-4.2 10M18 81l7 13"/>
+    <path class="hand-outline" d="M35 141c-4-5-7-13-8-22l-3-15c-1.5-7 1.2-12.5 7-14.3 5.7-1.8 10.1 1.3 12.5 7.8l3.1 8.1-3.4-77.1C40.8 18.1 45 10 53.5 9.8c8.2-.2 12.4 5.8 12.7 15.7l1.2 52.6 3.8-12.6c2.1-7 7.9-10.1 13.6-7.3 5.2 2.6 6.1 8 3.1 15.1l-4 9.5 4.9-6.3c4.3-5.6 10-6.2 14-2.1 4.1 4.1 3.2 9.5-.8 14.6l-9.8 13.2c-8.4 12-18.1 18.1-32.4 19.1l-12.5.9c-5.2.4-9.4.2-11.3-.3Z"/>
+    <path class="hand-shadow" d="M35 141c-4-5-7-13-8-22l-3-15c-1.5-7 1.2-12.5 7-14.3 5.7-1.8 10.1 1.3 12.5 7.8l3.1 8.1-3.4-77.1C40.8 18.1 45 10 53.5 9.8c8.2-.2 12.4 5.8 12.7 15.7l1.2 52.6 3.8-12.6c2.1-7 7.9-10.1 13.6-7.3 5.2 2.6 6.1 8 3.1 15.1l-4 9.5 4.9-6.3c4.3-5.6 10-6.2 14-2.1 4.1 4.1 3.2 9.5-.8 14.6l-9.8 13.2c-8.4 12-18.1 18.1-32.4 19.1l-12.5.9c-5.2.4-9.4.2-11.3-.3Z"/>
+    <path class="hand-nail" d="M47.2 25.8c-.4-8.6 1.6-13.6 6.1-14 5.2-.4 8 4.4 8.3 12.6-4.3 3.1-9.7 3.7-14.4 1.4Z"/>
+    <path class="hand-nail" d="M73.1 68.2c2.4-5.8 6.4-8 10-6 3.8 2.1 4.1 6 .8 11.7-4.2.5-8-1.6-10.8-5.7Z"/>
+    <path class="hand-nail" d="M91.4 82.6c3.2-4.6 6.8-5.6 9.8-3.1 3 2.6 2.8 6.1-.8 10.2-4 .1-7.4-2.4-9-7.1Z"/>
+    <path class="hand-knuckle" d="M28 104c5.9-5.5 13.9-5.8 19.7-.2l2.1 12.9c-6.8 5.1-15.9 4.6-21.2-.7-1.2-4.1-1.4-8.1-.6-12Z"/>
+    <path class="hand-crease" d="M48 39c4 2.1 8.6 2.1 13-.2M48.8 49.5c4.2 2.1 8.5 2 12.8-.1M49.4 60.3c4.2 2 8.3 1.8 12.4-.2M71.2 83.5c3.2 2 7 2.3 10.8.7M68.8 91.2c3.3 1.7 6.9 1.8 10.5.1M29.5 120c6.1 3.4 13.6 3.7 20 .8M44 131c6.3 1.4 12.8.9 18.3-1.4"/>
+    <path class="hand-vein" d="M51 18c-2.5-4.2-2.1-7.3.6-10.4M66 103c4.2-3.4 8.2-3.8 12.2-1.5M30 91c-3.2-1-6.1.4-8 3.5M82 111c3.3-2 6.6-2.5 9.8-1.3"/>
+    <path class="finger-glint" d="M48.1 34l1.2 40M70 74l-1.8 9M96 88l-6 8M29 102l6.5 12"/>
   </svg>
 </div>
 <div id="ageGate" role="dialog" aria-modal="true">
@@ -594,6 +601,7 @@ const infoBtn = document.getElementById('infoBtn');
 const searchSuggestions = document.getElementById('searchSuggestions');
 const muteBtn = document.getElementById('muteBtn');
 const tutorialHand = document.getElementById('tutorialHand');
+const tutorialReplayBtn = document.getElementById('tutorialReplayBtn');
 let tutorialStage = 'idle';
 let tutorialStartRequested = false;
 let tutorialCompletedThisSession = false;
@@ -706,15 +714,17 @@ function cancelTutorialMotion(hideDropzone){
 }
 const TUTORIAL_HAND_WIDTH = 104;
 const TUTORIAL_HAND_HEIGHT = 134;
-const TUTORIAL_HAND_TIP_X = 39;
+const TUTORIAL_HAND_TIP_X = 50;
 const TUTORIAL_HAND_MIRROR_TIP_X = TUTORIAL_HAND_WIDTH - TUTORIAL_HAND_TIP_X;
-const TUTORIAL_HAND_TIP_Y = 14;
+const TUTORIAL_HAND_TIP_Y = 10;
+const TUTORIAL_HAND_BOTTOM_TIP_X = 54;
+const TUTORIAL_HAND_BOTTOM_TIP_Y = 125;
 function tutorialHandPosition(x, y){
   const mirrored = tutorialHand.classList.contains('mirror');
   const fromBottom = tutorialHand.classList.contains('bottom-approach');
-  const normalTipX = fromBottom ? TUTORIAL_HAND_WIDTH - TUTORIAL_HAND_TIP_X : TUTORIAL_HAND_TIP_X;
+  const normalTipX = fromBottom ? TUTORIAL_HAND_BOTTOM_TIP_X : TUTORIAL_HAND_TIP_X;
   const tipX = mirrored ? TUTORIAL_HAND_WIDTH - normalTipX : normalTipX;
-  const tipY = fromBottom ? TUTORIAL_HAND_HEIGHT - TUTORIAL_HAND_TIP_Y : TUTORIAL_HAND_TIP_Y;
+  const tipY = fromBottom ? TUTORIAL_HAND_BOTTOM_TIP_Y : TUTORIAL_HAND_TIP_Y;
   const left = Math.max(3, Math.min(innerWidth - TUTORIAL_HAND_WIDTH - 3, x - tipX));
   const top = Math.max(3, Math.min(innerHeight - TUTORIAL_HAND_HEIGHT - 3, y - tipY));
   return { left, top };
@@ -822,7 +832,7 @@ function startTutorialCloseDemo(){
   if (isMobile) {
     mirrored = false;
     tutorialHand.classList.add('bottom-approach');
-    point = { x:innerWidth * .5, y:innerHeight - 28 };
+    point = { x:innerWidth * .5, y:innerHeight - 12 };
   } else {
     tutorialHand.classList.remove('bottom-approach');
     const leftSpace = rect.left;
@@ -868,6 +878,20 @@ function startTutorialTapDemo(){
   ], { duration:1580, iterations:Infinity, easing:'ease-in-out' });
   tutorialHandAnimations = [animation];
 }
+function startTutorialPagesDemo(){
+  const rect = pageNavBtn.getBoundingClientRect();
+  const x = rect.left + rect.width * .5;
+  const y = rect.top + rect.height * .5;
+  tutorialHand.classList.remove('mirror', 'bottom-approach');
+  placeTutorialHand(x, y);
+  const animation = tutorialHand.animate([
+    { transform:'translateY(0) rotate(-8deg) scale(1)', opacity:1, offset:0 },
+    { transform:'translateY(8px) rotate(-3deg) scale(.94)', opacity:1, offset:.2 },
+    { transform:'translateY(1px) rotate(-7deg) scale(1)', opacity:1, offset:.42 },
+    { transform:'translateY(0) rotate(-8deg) scale(1)', opacity:1, offset:1 }
+  ], { duration:1520, iterations:Infinity, easing:'ease-in-out' });
+  tutorialHandAnimations = [animation];
+}
 function setTutorialStage(stage){
   cancelTutorialMotion(true);
   tutorialStage = stage;
@@ -909,6 +933,8 @@ function setTutorialStage(stage){
     tutorialDemoTimer = setTimeout(startTutorialCloseDemo, 700);
   } else if (stage === 'tap') {
     tutorialDemoTimer = setTimeout(startTutorialTapDemo, 320);
+  } else if (stage === 'pages') {
+    tutorialDemoTimer = setTimeout(startTutorialPagesDemo, 320);
   } else if (stage === 'done') {
     cancelTutorialMotion(true);
   }
@@ -924,9 +950,19 @@ function tutorialSwipePerformed(){
 function completeTutorial(){
   if (tutorialStage === 'done') return;
   tutorialCompletedThisSession = true;
+  tutorialStartRequested = false;
   try { localStorage.setItem(SKY_HINT_KEY, '1'); } catch (e) {}
   setTutorialStage('done');
 }
+function replayTutorial(){
+  cancelTutorialMotion(true);
+  try { localStorage.removeItem(SKY_HINT_KEY); } catch (e) {}
+  tutorialCompletedThisSession = false;
+  tutorialStartRequested = false;
+  closeInfoPanel();
+  setTutorialStage('swipe');
+}
+if (tutorialReplayBtn) tutorialReplayBtn.addEventListener('click', replayTutorial);
 function pauseTutorialForUserDrag(){
   if (tutorialStage === 'drag' || tutorialStage === 'tap') cancelTutorialMotion(false);
 }
@@ -3036,13 +3072,13 @@ function openOverlay(){
   miniPlayer.classList.remove('show');
   updateFullUI();
   if (tutorialStage === 'drag') setTutorialStage('close');
-  else if (tutorialStage === 'tap') cancelTutorialMotion(true);
+  else if (tutorialStage === 'tap') setTutorialStage('closeAgain');
 }
 function closeOverlay(){
   if (!overlay.classList.contains('show')) return;
   overlay.classList.remove('show');
   if (tutorialStage === 'close') setTutorialStage('tap');
-  else if (tutorialStage === 'tap') setTutorialStage('tap');
+  else if (tutorialStage === 'closeAgain') setTutorialStage('pages');
   if (current >= 0) {
     updateMiniUI();
     setTimeout(() => {
@@ -3421,7 +3457,6 @@ function onDragUp(e){
       resumeTutorialAfterFailedDrag();
       return;
     }
-    if (tutorialStage === 'tap') completeTutorial();
     launchEpisode(state.index, state.starEl);
     return;
   }
@@ -3582,6 +3617,7 @@ pageNavBtn.addEventListener('click', (e) => {
   e.stopPropagation();
   if (pageMapPanel.classList.contains('show')) closePageMap();
   else openPageMap();
+  if (tutorialStage === 'pages') completeTutorial();
 });
 pageMapPanel.addEventListener('pointerdown', (e) => e.stopPropagation());
 pageMapSlider.addEventListener('input', () => goToPage(Number(pageMapSlider.value)));
