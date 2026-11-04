@@ -136,21 +136,26 @@
   #pageMapSlider::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:14px;height:14px;margin-top:-6px;border-radius:50%;border:1px solid rgba(245,238,250,.9);background:#c9c0d2;box-shadow:0 0 10px rgba(210,195,225,.72),0 0 24px rgba(125,35,55,.32)}
   #pageMapSlider::-moz-range-thumb{width:13px;height:13px;border-radius:50%;border:1px solid rgba(245,238,250,.9);background:#c9c0d2;box-shadow:0 0 10px rgba(210,195,225,.72),0 0 24px rgba(125,35,55,.32)}
   #pageMapSlider:focus-visible{outline:1px solid rgba(225,215,240,.6);outline-offset:3px}
-  #infoBtn{
-    position:fixed;
-    top:24px;left:20px;
-    z-index:26;
-    background:none;border:none;
-    padding:6px;width:34px;height:34px;
-    display:grid;place-items:center;
-    color:rgba(255,255,255,.85);
-    cursor:pointer;
-    transition:color .3s ease, filter .3s ease;
-    -webkit-tap-highlight-color:transparent;
-    text-shadow:0 0 10px rgba(0,0,0,.9);
-  }
-  #infoBtn:hover{color:#fff;filter:drop-shadow(0 0 8px rgba(255,255,255,.65))}
+  #infoBtn{position:fixed;top:24px;left:20px;z-index:82;background:none;border:0;padding:6px;width:36px;height:36px;display:grid;place-items:center;color:rgba(255,255,255,.88);cursor:pointer;-webkit-tap-highlight-color:transparent;text-shadow:0 0 10px rgba(0,0,0,.9);transition:color .2s ease}
+  #infoBtn:hover{color:#fff}
   #infoBtn svg{width:20px;height:20px;display:block}
+  #quickMenu{position:fixed;top:22px;left:64px;width:204px;z-index:83;padding:6px;background:linear-gradient(145deg,rgba(24,3,8,.98),rgba(5,2,4,.985));border:1px solid rgba(160,65,77,.28);border-radius:4px;box-shadow:0 16px 42px rgba(0,0,0,.78),inset 0 0 24px rgba(110,8,22,.1);opacity:0;visibility:hidden;pointer-events:none;transform:translateX(-7px);transform-origin:left center;transition:opacity .18s ease,transform .22s ease,visibility .18s ease}
+  #quickMenu.show{opacity:1;visibility:visible;pointer-events:auto;transform:translateX(0)}
+  .quickMenuItem{display:flex;align-items:center;gap:11px;width:100%;min-height:42px;padding:9px 11px;border:0;border-radius:2px;background:transparent;color:#d8c5c8;text-align:left;font-family:'IM Fell English',Georgia,serif;font-size:14px;letter-spacing:.035em;cursor:pointer;transition:background .18s ease,color .18s ease}
+  .quickMenuItem:hover,.quickMenuItem:focus-visible{background:rgba(115,15,32,.22);color:#fff;outline:none}
+  .quickMenuItem + .quickMenuItem{border-top:1px solid rgba(255,255,255,.045)}
+  .quickMenuIcon{width:17px;min-width:17px;height:18px;display:grid;place-items:center;color:rgba(220,190,195,.68);font-family:Georgia,serif;font-size:17px}
+  #muteBtn.muted .quickMenuIcon{opacity:.45}
+  #quickMenu .quickMenuStatus{margin-left:auto;color:rgba(220,185,190,.55);font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+  #artsPanel{position:fixed;inset:0;z-index:84;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 50% 34%,rgba(70,4,15,.98),rgba(24,0,5,.99) 58%,#000 100%);opacity:0;pointer-events:none;visibility:hidden;transition:opacity .3s ease,visibility .3s ease;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  #artsPanel.show{opacity:1;pointer-events:auto;visibility:visible}
+  .artsCard{width:min(920px,100%);max-height:min(82vh,760px);overflow:auto;padding:28px;border:1px solid rgba(130,40,52,.32);background:rgba(5,1,3,.78);box-shadow:0 24px 70px rgba(0,0,0,.75)}
+  .artsHeading{margin:0 0 20px;color:#eadadd;font:400 17px 'Special Elite','Courier New',monospace;letter-spacing:.22em;text-align:center;text-transform:uppercase}
+  .artsGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+  .artsItem{min-width:0;margin:0;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);padding:6px}
+  .artsItem img{display:block;width:100%;aspect-ratio:1;object-fit:contain;background:#050304}
+  .artsItem figcaption{padding:7px 3px 3px;color:rgba(225,205,210,.7);font:11px 'IM Fell English',Georgia,serif;overflow-wrap:anywhere}
+  .artsEmpty{padding:35px 10px;text-align:center;color:rgba(220,190,195,.55);font:italic 14px 'IM Fell English',Georgia,serif}
   #toastContainer{position:fixed;top:calc(env(safe-area-inset-top, 0px) + 16px);left:50%;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;align-items:center;gap:8px;width:min(420px, calc(100% - 24px));pointer-events:none}
   .toast{position:relative;pointer-events:auto;max-width:100%;padding:12px 22px;background:rgba(8,5,7,.94);border:1px solid rgba(255,255,255,.1);border-radius:3px;font-family:'IM Fell English', Georgia, serif;font-weight:400;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:#ded9ea;text-align:center;box-shadow:0 10px 34px rgba(0,0,0,.85), 0 0 22px rgba(255,255,255,.03);transform:translate3d(0,-140%,0);opacity:0;transition:transform .45s cubic-bezier(.2,.9,.3,1.15), opacity .32s ease;will-change:transform,opacity;touch-action:none;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .toast.show{transform:translate3d(0,0,0);opacity:1}
@@ -300,8 +305,11 @@
     #topBar{top:16px;right:12px;gap:0}
     #topBar button{width:30px;height:30px;padding:5px}
     #topBar button svg{width:18px;height:18px}
-    #infoBtn{top:16px;left:12px;width:30px;height:30px;padding:5px}
+    #infoBtn{top:16px;left:12px;width:32px;height:32px;padding:5px}
     #infoBtn svg{width:18px;height:18px}
+    #quickMenu{top:15px;left:52px;width:194px}
+    #artsPanel{padding:14px}
+    .artsCard{padding:20px 14px}
     .pageNav{font-size:12px;letter-spacing:.26em;gap:6px;margin-left:4px}
     #topBar button.pageNav{width:auto;height:auto;min-width:58px;padding:4px 6px}
     #pageMapPanel{top:54px;right:12px;width:min(430px,calc(100vw - 24px));padding:9px}
@@ -368,7 +376,6 @@
       <line x1="15.5" y1="15.5" x2="20" y2="20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
     </svg>
   </button>
-  <button id="muteBtn" aria-label="Mute"></button>
   <button class="pageNav" id="pageNavBtn" type="button" aria-label="Открыть карту выпусков" aria-expanded="false" aria-controls="pageMapPanel">
     <span id="pageCurrent">1</span><i>/</i><span id="pageTotal">1</span>
   </button>
@@ -378,13 +385,14 @@
   <div class="pageMapMeta"><span id="pageMapPageLabel">Страница 1 / 1</span></div>
   <input id="pageMapSlider" type="range" min="0" max="0" step="1" value="0" aria-label="Выбор страницы">
 </div>
-<button id="infoBtn" aria-label="Информация">
-  <svg viewBox="0 0 24 24">
-    <circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.3"/>
-    <circle cx="12" cy="7.4" r="1.3" fill="currentColor"/>
-    <rect x="11.1" y="10" width="1.8" height="7.2" rx="0.9" fill="currentColor"/>
-  </svg>
+<button id="infoBtn" type="button" aria-label="Открыть меню" aria-expanded="false" aria-controls="quickMenu">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.65" fill="currentColor"/><circle cx="12" cy="12" r="1.65" fill="currentColor"/><circle cx="12" cy="19" r="1.65" fill="currentColor"/></svg>
 </button>
+<div id="quickMenu" aria-hidden="true">
+  <button class="quickMenuItem" id="muteBtn" type="button" aria-label="Отключить фоновый звук"><span class="quickMenuIcon" aria-hidden="true">♫</span><span id="muteMenuLabel">Отключить звук фона</span><span class="quickMenuStatus" id="muteMenuStatus"></span></button>
+  <button class="quickMenuItem" id="menuInfoBtn" type="button"><span class="quickMenuIcon" aria-hidden="true">i</span><span>Информация</span></button>
+  <button class="quickMenuItem" id="menuArtsBtn" type="button"><span class="quickMenuIcon" aria-hidden="true">✧</span><span>Арты</span></button>
+</div>
 <div id="toastContainer" aria-live="polite"></div>
 <div class="dropzone" id="dropzone"><div class="dropzone-label">отпустите<br>здесь</div></div>
 <div id="miniPlayer">
@@ -432,10 +440,10 @@
   </div>
 </div>
 <div id="infoPanel">
-  <div class="infoCard">
-    <button class="infoClose" id="infoClose" aria-label="Закрыть">×</button>
-    <div id="infoContent"></div>
-  </div>
+  <div class="infoCard"><div id="infoContent"></div></div>
+</div>
+<div id="artsPanel" aria-hidden="true">
+  <div class="artsCard"><div class="artsHeading">Арты</div><div class="artsGrid" id="artsGrid"></div><div class="artsEmpty" id="artsEmpty" hidden></div></div>
 </div>
 <div id="externalWarning">
   <div class="extCard">
@@ -539,6 +547,12 @@ const miniPlayBtn = document.getElementById('miniPlayBtn');
 const miniPlayIcon = document.getElementById('miniPlayIcon');
 const infoPanel = document.getElementById('infoPanel');
 const infoContent = document.getElementById('infoContent');
+const quickMenu = document.getElementById('quickMenu');
+const muteMenuLabel = document.getElementById('muteMenuLabel');
+const muteMenuStatus = document.getElementById('muteMenuStatus');
+const artsPanel = document.getElementById('artsPanel');
+const artsGrid = document.getElementById('artsGrid');
+const artsEmpty = document.getElementById('artsEmpty');
 const externalWarning = document.getElementById('externalWarning');
 const extUrl = document.getElementById('extUrl');
 const searchBox = document.getElementById('searchBox');
@@ -1713,15 +1727,11 @@ function fadeVolume(audio, target, dur, onDone){
 }
 
 function updateMuteIcon(){
-  if (ambientMuted) {
-    muteBtn.innerHTML = ICON_MUTE_OFF;
-    muteBtn.setAttribute('aria-label', 'Unmute');
-    muteBtn.classList.add('muted');
-  } else {
-    muteBtn.innerHTML = ICON_MUTE_ON;
-    muteBtn.setAttribute('aria-label', 'Mute');
-    muteBtn.classList.remove('muted');
-  }
+  if (!muteBtn) return;
+  muteMenuLabel.textContent = ambientMuted ? 'Включить звук фона' : 'Отключить звук фона';
+  muteMenuStatus.textContent = ambientMuted ? 'выкл.' : 'вкл.';
+  muteBtn.setAttribute('aria-label', ambientMuted ? 'Включить фоновый звук' : 'Отключить фоновый звук');
+  muteBtn.classList.toggle('muted', ambientMuted);
 }
 
 function ambientShouldPlay(){
@@ -1850,7 +1860,11 @@ function toggleMute(){
   applyAmbientState();
 }
 
-muteBtn.addEventListener('click', toggleMute);
+muteBtn.addEventListener('click', () => {
+  if (tutorialIsActive()) return;
+  toggleMute();
+  closeQuickMenu();
+});
 
 function showToast(text, duration){
   if (!text) return;
@@ -1957,7 +1971,33 @@ async function loadPodcastInfo(){
   renderInfoPanel();
 }
 
+function closeQuickMenu(){
+  quickMenu.classList.remove('show');
+  quickMenu.setAttribute('aria-hidden','true');
+  infoBtn.setAttribute('aria-expanded','false');
+}
+function openQuickMenu(){
+  const r = infoBtn.getBoundingClientRect();
+  quickMenu.style.left = '0px';
+  quickMenu.style.top = '0px';
+  quickMenu.classList.add('show');
+  quickMenu.setAttribute('aria-hidden','false');
+  const w = quickMenu.offsetWidth || 204;
+  const h = quickMenu.offsetHeight || 150;
+  let left = r.right + 8;
+  if (left + w > innerWidth - 10) left = Math.max(10, r.left - w - 8);
+  const top = Math.max(8, Math.min(innerHeight - h - 8, r.top + 2));
+  quickMenu.style.left = left + 'px';
+  quickMenu.style.top = top + 'px';
+  infoBtn.setAttribute('aria-expanded','true');
+}
+function toggleQuickMenu(){
+  if (tutorialIsActive()) return;
+  if (quickMenu.classList.contains('show')) closeQuickMenu();
+  else openQuickMenu();
+}
 function openInfoPanel(){
+  closeQuickMenu();
   closeSearch();
   if (!podcastInfoLoaded) {
     infoContent.innerHTML = '<div class="info-empty">загрузка...</div>';
@@ -1967,12 +2007,60 @@ function openInfoPanel(){
 }
 function closeInfoPanel(){ infoPanel.classList.remove('show'); }
 
-infoBtn.addEventListener('click', () => {
-  if (infoPanel.classList.contains('show')) closeInfoPanel();
-  else openInfoPanel();
+infoBtn.addEventListener('click', toggleQuickMenu);
+document.getElementById('menuInfoBtn').addEventListener('click', () => {
+  if (tutorialIsActive()) return;
+  closeQuickMenu();
+  openInfoPanel();
 });
-document.getElementById('infoClose').addEventListener('click', closeInfoPanel);
+quickMenu.addEventListener('pointerdown', e => e.stopPropagation());
+document.addEventListener('pointerdown', e => {
+  if (!quickMenu.classList.contains('show')) return;
+  if (!quickMenu.contains(e.target) && e.target !== infoBtn && !infoBtn.contains(e.target)) closeQuickMenu();
+});
 infoPanel.addEventListener('click', (e) => { if (e.target === infoPanel) closeInfoPanel(); });
+
+async function openArtsPanel(){
+  closeQuickMenu();
+  closeSearch();
+  artsPanel.classList.add('show');
+  artsPanel.setAttribute('aria-hidden','false');
+  artsGrid.replaceChildren();
+  artsEmpty.hidden = false;
+  artsEmpty.textContent = 'загрузка...';
+  try {
+    const tree = await getFullTree();
+    const imagePattern = /\.(?:png|jpe?g|webp|gif|avif)$/i;
+    const prefixPattern = /^(?:arts?|artworks?|иллюстрации|арты)(?:\/|$)|^DATA\/(?:arts?|artworks?)(?:\/|$)/i;
+    const files = (tree || []).filter(item => item && item.type === 'blob' && item.path && prefixPattern.test(item.path) && imagePattern.test(item.path));
+    files.sort((a,b) => a.path.localeCompare(b.path, 'ru'));
+    artsEmpty.hidden = files.length > 0;
+    artsEmpty.textContent = files.length ? '' : 'арты пока не добавлены';
+    for (const item of files) {
+      const figure = document.createElement('figure');
+      figure.className = 'artsItem';
+      const img = document.createElement('img');
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      img.alt = item.path.split('/').pop();
+      img.src = buildUrl(item.path.split('/'));
+      img.addEventListener('error', () => figure.remove(), {once:true});
+      const caption = document.createElement('figcaption');
+      caption.textContent = item.path.split('/').pop().replace(/\.[^.]+$/, '');
+      figure.append(img, caption);
+      artsGrid.appendChild(figure);
+    }
+  } catch (e) {
+    artsEmpty.hidden = false;
+    artsEmpty.textContent = 'не удалось загрузить арты';
+  }
+}
+function closeArtsPanel(){ artsPanel.classList.remove('show'); artsPanel.setAttribute('aria-hidden','true'); }
+document.getElementById('menuArtsBtn').addEventListener('click', () => {
+  if (tutorialIsActive()) return;
+  openArtsPanel();
+});
+artsPanel.addEventListener('click', e => { if (e.target === artsPanel) closeArtsPanel(); });
 
 function openExternalWarning(url){
   pendingExternalUrl = url;
@@ -1991,6 +2079,7 @@ document.getElementById('extCancelBtn').addEventListener('click', closeExternalW
 externalWarning.addEventListener('click', (e) => { if (e.target === externalWarning) closeExternalWarning(); });
 
 function openSearch(){
+  closeQuickMenu();
   searchBox.classList.add('show');
   searchOpen = true;
   setTimeout(() => { if (searchOpen) searchInput.focus(); }, 80);
@@ -3628,6 +3717,7 @@ function updatePageMap(){
   drawPageMap();
 }
 function openPageMap(){
+  closeQuickMenu();
   updatePageMap();
   pageMapPanel.classList.add('show');
   pageMapPanel.setAttribute('aria-hidden', 'false');
@@ -3878,6 +3968,8 @@ miniPlayBtn.addEventListener('click', (e) => {
 document.addEventListener('keydown', (e) => {
   if (ageGateActive) return;
   if (e.key === 'Escape') {
+    if (quickMenu.classList.contains('show')) { closeQuickMenu(); return; }
+    if (artsPanel.classList.contains('show')) { closeArtsPanel(); return; }
     if (pageMapPanel.classList.contains('show')) { closePageMap(); return; }
     if (externalWarning.classList.contains('show')) { closeExternalWarning(); return; }
     if (infoPanel.classList.contains('show')) { closeInfoPanel(); return; }
