@@ -278,59 +278,17 @@
   .ageEnter{padding:14px 60px;background:transparent;border:1px solid rgba(255,255,255,.4);color:#eae6f2;font-family:'Special Elite', 'Courier New', monospace;font-weight:400;font-size:12px;letter-spacing:.48em;text-indent:.48em;text-transform:uppercase;cursor:pointer;transition:color .3s ease, border-color .3s ease, box-shadow .3s ease, letter-spacing .3s ease;border-radius:2px;-webkit-tap-highlight-color:transparent}
   .ageEnter:hover{color:#fff;border-color:#fff;box-shadow:0 0 50px rgba(255,255,255,.24);letter-spacing:.56em}
   .ageEnter:active{box-shadow:0 0 30px rgba(255,255,255,.35), inset 0 0 26px rgba(255,255,255,.1)}
-  #skyHintBanner{position:fixed;inset:0;z-index:90;display:grid;place-items:center;padding:20px;background:radial-gradient(ellipse at 50% 46%,rgba(28,17,31,.76),rgba(0,0,0,.96) 72%);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .45s ease,visibility .45s ease}
-  #skyHintBanner.show{opacity:1;visibility:visible;pointer-events:auto}
-  .tutorialCard{width:min(470px,100%);padding:22px 24px 24px;border:1px solid rgba(205,190,218,.2);border-radius:4px;background:radial-gradient(ellipse at 50% 0%,rgba(95,55,91,.13),transparent 55%),linear-gradient(160deg,rgba(13,10,16,.98),rgba(3,3,5,.99));box-shadow:0 24px 80px rgba(0,0,0,.9),inset 0 0 42px rgba(125,90,140,.045);text-align:center;overflow:hidden}
-  .tutorialScene{--drag-x:178px;--drag-y:76px;position:relative;width:100%;height:230px;overflow:hidden;border:1px solid rgba(200,185,210,.13);border-radius:3px;background:radial-gradient(ellipse at 50% 52%,rgba(87,64,96,.18),transparent 62%),radial-gradient(ellipse at 20% 80%,rgba(93,15,33,.12),transparent 46%),#020203;isolation:isolate}
-  .tutorialScene::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.7;background-image:radial-gradient(circle at 13% 22%,rgba(255,255,255,.72) 0 1px,transparent 1.5px),radial-gradient(circle at 77% 18%,rgba(255,255,255,.55) 0 1px,transparent 1.5px),radial-gradient(circle at 61% 78%,rgba(255,255,255,.52) 0 1px,transparent 1.5px),radial-gradient(circle at 32% 68%,rgba(255,255,255,.38) 0 1px,transparent 1.5px),radial-gradient(circle at 88% 58%,rgba(255,255,255,.55) 0 1px,transparent 1.5px)}
-  .tutorialScene::after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 45%,rgba(0,0,0,.5) 100%)}
-  .tutorialLayer{position:absolute;inset:0;display:none}
-  .tutorialScene[data-stage="swipe"] .tutorialSwipeLayer,.tutorialScene[data-stage="drag"] .tutorialDragLayer,.tutorialScene[data-stage="tap"] .tutorialTapLayer{display:block}
-  .tutorialPage{position:absolute;left:50%;width:76%;height:106px;border:1px solid rgba(205,195,220,.18);border-radius:3px;background:radial-gradient(ellipse at 50% 65%,rgba(105,85,120,.1),transparent 65%),rgba(4,4,7,.82);transform:translateX(-50%);box-shadow:0 10px 24px rgba(0,0,0,.5)}
-  .tutorialPage.one{top:24px}
-  .tutorialPage.two{top:148px;opacity:.42}
-  .tutorialScene.run[data-stage="swipe"] .tutorialPage.one{animation:tutorialPageOut 2.8s ease-in-out infinite}
-  .tutorialScene.run[data-stage="swipe"] .tutorialPage.two{animation:tutorialPageIn 2.8s ease-in-out infinite}
-  .tutorialDot{position:absolute;width:5px;height:5px;border-radius:50%;background:#f4efff;box-shadow:0 0 10px 3px rgba(230,220,255,.72)}
-  .tutorialDot.d1{left:22%;top:32%}.tutorialDot.d2{left:49%;top:62%;width:7px;height:7px}.tutorialDot.d3{left:73%;top:38%;width:4px;height:4px}.tutorialDot.d4{left:35%;top:75%;width:3px;height:3px}
-  .tutorialArrow{position:absolute;left:50%;top:50%;width:24px;height:24px;border-right:1px solid rgba(230,220,245,.6);border-bottom:1px solid rgba(230,220,245,.6);transform:translate(-50%,-50%) rotate(45deg);opacity:.35}
-  .tutorialFinger{position:absolute;width:54px;height:70px;z-index:5;filter:drop-shadow(0 4px 10px rgba(0,0,0,.85));overflow:visible}
-  .tutorialFinger path{fill:#eee9f2;stroke:#514958;stroke-width:1.7;stroke-linejoin:round}
-  .tutorialScene.run[data-stage="swipe"] .tutorialFinger{left:68%;top:68%;animation:tutorialFingerSwipe 2.8s ease-in-out infinite}
-  .tutorialDragStar,.tutorialTapStar{position:absolute;width:76px;height:76px;display:grid;place-items:center}
-  .tutorialDragStar{left:23%;top:18%}
-  .tutorialTapStar{left:50%;top:34%;transform:translateX(-50%)}
-  .tutorialStarCore{position:absolute;width:9px;height:9px;border-radius:50%;background:#fff;box-shadow:0 0 12px 5px rgba(255,255,255,.95),0 0 35px 12px rgba(220,205,255,.38)}
-  .tutorialStarRing{position:absolute;width:72px;height:72px;border:1px solid rgba(225,215,240,.58);border-radius:50%;box-shadow:0 0 15px rgba(205,190,225,.12)}
-  .tutorialRingLabel{position:absolute;inset:-5px;display:grid;place-items:center;font-family:'IM Fell English',Georgia,serif;font-size:7px;letter-spacing:.14em;color:rgba(235,228,245,.76);text-transform:uppercase}
-  .tutorialDropTarget{position:absolute;right:15%;bottom:12%;width:88px;height:88px;border:1px dashed rgba(225,215,240,.48);border-radius:50%;box-shadow:0 0 24px rgba(165,125,185,.13),inset 0 0 22px rgba(165,125,185,.08)}
-  .tutorialDropTarget::before,.tutorialDropTarget::after{content:'';position:absolute;inset:13px;border:1px solid rgba(230,220,245,.2);border-radius:50%}
-  .tutorialDropTarget::after{inset:29px;background:radial-gradient(circle,rgba(235,230,245,.18),transparent 70%)}
-  .tutorialDragTrail{position:absolute;left:36%;top:43%;width:46%;height:28%;border-top:2px solid rgba(220,210,245,.46);border-radius:50%;transform:rotate(31deg);filter:drop-shadow(0 0 5px rgba(220,210,245,.4));opacity:0}
-  .tutorialScene.run[data-stage="drag"] .tutorialDragStar{animation:tutorialStarDrag 3s cubic-bezier(.5,.05,.2,1) infinite}
-  .tutorialScene.run[data-stage="drag"] .tutorialDragTrail{animation:tutorialTrailDraw 3s ease-in-out infinite}
-  .tutorialScene.run[data-stage="drag"] .tutorialFinger{left:25%;top:25%;animation:tutorialFingerDrag 3s cubic-bezier(.5,.05,.2,1) infinite}
-  .tutorialScene.run[data-stage="tap"] .tutorialTapStar .tutorialStarCore{animation:tutorialTapPulse 2.1s ease-in-out infinite}
-  .tutorialScene.run[data-stage="tap"] .tutorialTapStar .tutorialStarRing{animation:tutorialTapRing 2.1s ease-out infinite}
-  .tutorialScene.run[data-stage="tap"] .tutorialFinger{left:46%;top:43%;animation:tutorialFingerTap 2.1s ease-in-out infinite}
-  .tutorialStageCount{margin:18px 0 8px;font-family:'Special Elite','Courier New',monospace;font-size:10px;letter-spacing:.32em;color:rgba(215,205,225,.48);font-variant-numeric:tabular-nums}
-  .tutorialTitle{font-family:'Special Elite','Courier New',monospace;font-size:clamp(17px,4.2vw,21px);font-weight:400;letter-spacing:.1em;color:#eee9f4;text-transform:uppercase;margin:0 0 9px;text-shadow:0 0 22px rgba(230,220,245,.14)}
-  .tutorialDescription{min-height:44px;max-width:360px;margin:0 auto 16px;font-family:'IM Fell English',Georgia,serif;font-size:14px;line-height:1.6;letter-spacing:.025em;color:#aaa3b5}
-  .tutorialProgress{display:flex;justify-content:center;gap:9px;margin:0 0 17px}
-  .tutorialProgress span{width:5px;height:5px;border-radius:50%;background:rgba(220,210,235,.2);transition:background .3s ease,box-shadow .3s ease,transform .3s ease}
-  .tutorialProgress span.active{background:#e9e1f0;box-shadow:0 0 10px rgba(230,220,245,.8);transform:scale(1.35)}
-  .skyHintBtn{min-width:170px;padding:12px 34px;background:transparent;border:1px solid rgba(225,215,238,.48);color:#eae6f2;font-family:'Special Elite','Courier New',monospace;font-size:11px;letter-spacing:.38em;text-indent:.38em;text-transform:uppercase;cursor:pointer;border-radius:2px;opacity:0;visibility:hidden;pointer-events:none;transform:translateY(8px);transition:opacity .35s ease,transform .35s ease,border-color .3s ease,box-shadow .3s ease; -webkit-tap-highlight-color:transparent}
-  .skyHintBtn.ready{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0)}
-  .skyHintBtn:hover{color:#fff;border-color:#fff;box-shadow:0 0 34px rgba(255,255,255,.2)}
-  @keyframes tutorialPageOut{0%,12%{transform:translate(-50%,0);opacity:1}48%,62%{transform:translate(-50%,-88px);opacity:.08}100%{transform:translate(-50%,0);opacity:1}}
-  @keyframes tutorialPageIn{0%,12%{transform:translate(-50%,0);opacity:.12}48%,62%{transform:translate(-50%,-88px);opacity:1}100%{transform:translate(-50%,0);opacity:.12}}
-  @keyframes tutorialFingerSwipe{0%,10%{transform:translate(-50%,-50%)}45%,60%{transform:translate(-50%,-115%)}100%{transform:translate(-50%,-50%)}}
-  @keyframes tutorialStarDrag{0%,12%{transform:translate(0,0) scale(1)}55%,72%{transform:translate(var(--drag-x),var(--drag-y)) scale(.72)}100%{transform:translate(0,0) scale(1)}}
-  @keyframes tutorialTrailDraw{0%,12%{opacity:0;transform:rotate(31deg) scaleX(.1)}45%,70%{opacity:.8;transform:rotate(31deg) scaleX(1)}100%{opacity:0;transform:rotate(31deg) scaleX(.1)}}
-  @keyframes tutorialFingerDrag{0%,12%{transform:translate(0,0)}55%,72%{transform:translate(var(--drag-x),var(--drag-y))}100%{transform:translate(0,0)}}
-  @keyframes tutorialTapPulse{0%,25%,100%{transform:scale(1);opacity:.9}35%,50%{transform:scale(3);opacity:1}}
-  @keyframes tutorialTapRing{0%,25%{transform:scale(.7);opacity:.2}45%{transform:scale(1.5);opacity:1}75%,100%{transform:scale(2.1);opacity:0}}
-  @keyframes tutorialFingerTap{0%,22%,100%{transform:translate(-50%,-50%)}32%,45%{transform:translate(-50%,-36%)}58%,70%{transform:translate(-50%,-50%)}}
+  #tutorialHand{position:fixed;left:0;top:0;width:68px;height:88px;z-index:260;pointer-events:none;opacity:0;visibility:hidden;transform-origin:24px 8px;will-change:left,top,transform,opacity;filter:drop-shadow(0 5px 10px rgba(0,0,0,.9));transition:opacity .2s ease,visibility .2s ease}
+  #tutorialHand.active{opacity:1;visibility:visible}
+  #tutorialHand svg{display:block;width:68px;height:88px;overflow:visible}
+  #tutorialHand path{fill:#f0ebf4;stroke:#655b6e;stroke-width:1.55;stroke-linejoin:round}
+  #tutorialHand .finger-glint{fill:none;stroke:rgba(255,255,255,.72);stroke-width:1.2;stroke-linecap:round}
+  .star.tutorial-target .star-core{animation:tutorialStarGuidePulse 1.6s ease-in-out infinite!important;box-shadow:0 0 20px 7px rgba(255,255,255,.98),0 0 56px 18px rgba(220,205,255,.52)!important}
+  .star.tutorial-target::after{content:'';position:absolute;left:50%;top:50%;width:56px;height:56px;border:1px solid rgba(238,229,250,.8);border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;animation:tutorialStarGuideRing 1.8s ease-out infinite}
+  .tutorial-demo-proxy{position:fixed!important;z-index:258!important;pointer-events:none!important;opacity:1!important;transition:none!important;animation:none!important;overflow:visible!important;will-change:left,top,transform,opacity;}
+  .tutorial-demo-proxy .star-core,.tutorial-demo-proxy .star-flare{animation:none!important}
+  @keyframes tutorialStarGuidePulse{0%,100%{opacity:.72;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.55)}}
+  @keyframes tutorialStarGuideRing{0%{opacity:.75;transform:translate(-50%,-50%) scale(.68)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.95)}}
   @media (max-width:768px){
     .grain{animation:none}
     #playerOverlay{backdrop-filter:none;-webkit-backdrop-filter:none;background:radial-gradient(circle at 50% 42%, rgba(16,16,20,.94) 0%, rgba(0,0,0,.985) 72%)}
@@ -338,7 +296,6 @@
     #pageMapPanel{backdrop-filter:none;-webkit-backdrop-filter:none}
     .toast{backdrop-filter:none;-webkit-backdrop-filter:none}
     #sky{transition:transform .8s cubic-bezier(.7,0,.28,1)}
-    #skyHintBanner{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(0,0,0,.85)}
     .star-core{box-shadow:0 0 8px 2px rgba(255,255,255,.9), 0 0 20px 6px rgba(255,255,255,.22)}
     .star:hover .star-core{box-shadow:0 0 12px 3px rgba(255,255,255,.95), 0 0 32px 10px rgba(255,255,255,.3)}
     .star-flare{animation:none;opacity:.55}
@@ -391,19 +348,12 @@
     .extGo{padding:14px 44px;font-size:11px}
     #searchInput{padding:11px 15px;font-size:14px}
     .suggestion{padding:10px 14px;font-size:13.5px}
-    .tutorialCard{padding:16px 14px 18px}
-    .tutorialScene{height:205px;--drag-x:98px;--drag-y:64px}
-    .tutorialDescription{font-size:13px;min-height:42px}
-    .tutorialStageCount{margin-top:14px}
-    .skyHintBtn{padding:11px 30px;font-size:10.5px}
   }
 
   @media (max-width:768px){
     #skyWrap::after{filter:none;background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(42,30,48,.08) 47%,rgba(215,201,222,.12) 50%,rgba(0,0,0,.34) 51%,rgba(0,0,0,0) 100%)}
   }
-  @media (prefers-reduced-motion: reduce){
-    .tutorialScene.run .tutorialPage.one,.tutorialScene.run .tutorialPage.two,.tutorialScene.run .tutorialFinger,.tutorialScene.run .tutorialDragStar,.tutorialScene.run .tutorialDragTrail,.tutorialScene.run .tutorialTapStar .tutorialStarCore,.tutorialScene.run .tutorialTapStar .tutorialStarRing{animation-duration:1.2s!important;animation-iteration-count:1!important}
-    #sky{transition-duration:.28s}
+#sky{transition-duration:.28s}
     #skyWrap.page-turn-forward::after{animation-duration:.3s}
     #skyWrap.page-turn-back::after{animation-duration:.3s}
     .star.launching .star-core{animation:starLaunchPulse 280ms ease-out both!important}
@@ -509,34 +459,11 @@
     <div class="extCancel" id="extCancelBtn">отмена</div>
   </div>
 </div>
-<div id="skyHintBanner" role="dialog" aria-modal="true" aria-label="Обучение управлению сайтом">
-  <div class="tutorialCard">
-    <div class="tutorialScene" id="tutorialScene" data-stage="swipe" aria-hidden="true">
-      <div class="tutorialLayer tutorialSwipeLayer">
-        <div class="tutorialPage one">
-          <span class="tutorialDot d1"></span><span class="tutorialDot d2"></span><span class="tutorialDot d3"></span><span class="tutorialDot d4"></span>
-          <span class="tutorialArrow"></span>
-        </div>
-        <div class="tutorialPage two">
-          <span class="tutorialDot d1"></span><span class="tutorialDot d2"></span><span class="tutorialDot d3"></span><span class="tutorialDot d4"></span>
-        </div>
-      </div>
-      <div class="tutorialLayer tutorialDragLayer">
-        <div class="tutorialDragTrail"></div>
-        <div class="tutorialDragStar"><span class="tutorialStarRing"></span><span class="tutorialRingLabel">СТРАШИЛКИ · ВЫПУСК</span><span class="tutorialStarCore"></span></div>
-        <div class="tutorialDropTarget"></div>
-      </div>
-      <div class="tutorialLayer tutorialTapLayer">
-        <div class="tutorialTapStar"><span class="tutorialStarRing"></span><span class="tutorialRingLabel">ОТКРЫТЬ ИСТОРИЮ</span><span class="tutorialStarCore"></span></div>
-      </div>
-      <svg class="tutorialFinger" viewBox="0 0 54 70" aria-hidden="true"><path d="M18 38V13.5c0-3.2 2.1-5.4 4.8-5.4s4.8 2.2 4.8 5.4v17.1l3.5-4c1.8-2 5.2-1.8 6.5.8l5.2 10.2c2.4 4.7 1.9 10.2-1.4 14.1-2.7 3.2-6.7 5-10.9 5h-6.4c-3.9 0-7.5-1.9-9.8-5.1L7.6 41.2c-1.7-2.3-1.2-5.5 1.1-7.2 2-1.5 4.8-1.1 6.5.8L18 38Z"/></svg>
-    </div>
-    <div class="tutorialStageCount" id="tutorialStageCount" aria-live="polite">01 / 03</div>
-    <h2 class="tutorialTitle" id="tutorialTitle">Перелистывайте небо</h2>
-    <p class="tutorialDescription" id="tutorialDescription">Смахните вверх или вниз, чтобы переходить между страницами выпусков.</p>
-    <div class="tutorialProgress" aria-hidden="true"><span class="active"></span><span></span><span></span></div>
-    <button class="skyHintBtn" id="skyHintOk" type="button" disabled>Понятно</button>
-  </div>
+<div id="tutorialHand" aria-hidden="true">
+  <svg viewBox="0 0 54 70">
+    <path d="M18 38V13.5c0-3.2 2.1-5.4 4.8-5.4s4.8 2.2 4.8 5.4v17.1l3.5-4c1.8-2 5.2-1.8 6.5.8l5.2 10.2c2.4 4.7 1.9 10.2-1.4 14.1-2.7 3.2-6.7 5-10.9 5h-6.4c-3.9 0-7.5-1.9-9.8-5.1L7.6 41.2c-1.7-2.3-1.2-5.5 1.1-7.2 2-1.5 4.8-1.1 6.5.8L18 38Z"/>
+    <path class="finger-glint" d="M22.8 14v17"/>
+  </svg>
 </div>
 <div id="ageGate" role="dialog" aria-modal="true">
   <div class="ageInner">
@@ -632,16 +559,15 @@ const searchBtn = document.getElementById('searchBtn');
 const infoBtn = document.getElementById('infoBtn');
 const searchSuggestions = document.getElementById('searchSuggestions');
 const muteBtn = document.getElementById('muteBtn');
-const skyHintBanner = document.getElementById('skyHintBanner');
-const tutorialScene = document.getElementById('tutorialScene');
-const tutorialStageCount = document.getElementById('tutorialStageCount');
-const tutorialTitle = document.getElementById('tutorialTitle');
-const tutorialDescription = document.getElementById('tutorialDescription');
-const tutorialProgress = skyHintBanner.querySelector('.tutorialProgress');
-let tutorialTimer = 0;
-let tutorialButtonTimer = 0;
-let tutorialStage = -1;
-const skyHintOk = document.getElementById('skyHintOk');
+const tutorialHand = document.getElementById('tutorialHand');
+let tutorialStage = 'idle';
+let tutorialStartRequested = false;
+let tutorialCompletedThisSession = false;
+let tutorialHandAnimations = [];
+let tutorialDemoAnimations = [];
+let tutorialDemoNode = null;
+let tutorialDemoTimer = 0;
+let tutorialTargetStar = null;
 
 const ICON_PLAY = '<path d="M8 5v14l11-7z"/>';
 const ICON_PAUSE = '<path d="M6 5h4v14H6zm8 0h4v14h-4z"/>';
@@ -726,55 +652,198 @@ function markPlayed(folderKey){
   if (idx >= 0 && starEls[idx]) starEls[idx].classList.remove('unplayed');
 }
 
-const SKY_HINT_KEY = 'skyTutorialCompleted_v2';
+const SKY_HINT_KEY = 'skyTutorialCompleted_v3';
 function shouldShowSkyHint(){
-  try {
-    return localStorage.getItem(SKY_HINT_KEY) !== '1';
-  } catch (e) { return true; }
+  if (tutorialCompletedThisSession) return false;
+  try { return localStorage.getItem(SKY_HINT_KEY) !== '1'; } catch (e) { return true; }
 }
-const tutorialStages = [
-  { title: 'Путешествуйте по небу', description: 'Смахните вверх или вниз, чтобы переходить между страницами выпусков.' },
-  { title: 'Следуйте за звездой', description: 'Перетащите звезду вниз, в светящийся круг, чтобы запустить выпуск.' },
-  { title: 'Выберите историю', description: 'Нажмите на звезду, чтобы открыть плеер и начать прослушивание.' }
-];
-function runTutorialStage(index){
-  clearTimeout(tutorialTimer);
-  clearTimeout(tutorialButtonTimer);
-  tutorialStage = index;
-  const stage = tutorialStages[index];
-  if (!stage) return;
-  tutorialScene.classList.remove('run');
-  tutorialScene.dataset.stage = ['swipe','drag','tap'][index];
-  tutorialStageCount.textContent = '0' + (index + 1) + ' / 03';
-  tutorialTitle.textContent = stage.title;
-  tutorialDescription.textContent = stage.description;
-  Array.from(tutorialProgress.children).forEach((dot, dotIndex) => dot.classList.toggle('active', dotIndex === index));
-  skyHintOk.classList.remove('ready');
-  skyHintOk.disabled = true;
-  requestAnimationFrame(() => tutorialScene.classList.add('run'));
-  if (index < tutorialStages.length - 1) {
-    tutorialTimer = setTimeout(() => runTutorialStage(index + 1), 3600);
-  } else {
-    tutorialButtonTimer = setTimeout(() => {
-      skyHintOk.disabled = false;
-      skyHintOk.classList.add('ready');
-    }, 2900);
+function cancelTutorialMotion(hideDropzone){
+  clearTimeout(tutorialDemoTimer);
+  tutorialHandAnimations.forEach(animation => { try { animation.cancel(); } catch (e) {} });
+  tutorialDemoAnimations.forEach(animation => { try { animation.cancel(); } catch (e) {} });
+  tutorialHandAnimations = [];
+  tutorialDemoAnimations = [];
+  if (tutorialDemoNode && tutorialDemoNode.isConnected) tutorialDemoNode.remove();
+  tutorialDemoNode = null;
+  if (tutorialTargetStar) tutorialTargetStar.classList.remove('tutorial-target');
+  tutorialTargetStar = null;
+  tutorialHand.classList.remove('active');
+  if (hideDropzone !== false) dropzone.classList.remove('visible', 'hover');
+}
+function placeTutorialHand(x, y){
+  const maxLeft = Math.max(4, innerWidth - 72);
+  const maxTop = Math.max(4, innerHeight - 92);
+  tutorialHand.style.left = Math.max(4, Math.min(maxLeft, x - 24)) + 'px';
+  tutorialHand.style.top = Math.max(4, Math.min(maxTop, y - 8)) + 'px';
+  tutorialHand.classList.add('active');
+}
+function getTutorialStar(preferNotCurrent){
+  const start = pageStarts[currentPage] || 0;
+  const end = pageStarts[currentPage + 1] || EPISODES.length;
+  let candidates = [];
+  for (let i = start; i < end; i++) {
+    const star = starEls[i];
+    if (!star || !star.isConnected || star.classList.contains('revealing')) continue;
+    if (preferNotCurrent && i === current) continue;
+    const rect = star.getBoundingClientRect();
+    if (!(rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.top < innerHeight && rect.right > 0 && rect.left < innerWidth)) continue;
+    if (miniPlayer.classList.contains('show')) {
+      const miniRect = miniPlayer.getBoundingClientRect();
+      if (rect.right > miniRect.left && rect.left < miniRect.right && rect.bottom > miniRect.top && rect.top < miniRect.bottom) continue;
+    }
+    const topRect = document.getElementById('topBar').getBoundingClientRect();
+    if (rect.right > topRect.left - 8 && rect.left < topRect.right + 8 && rect.bottom > topRect.top - 8 && rect.top < topRect.bottom + 8) continue;
+    candidates.push(star);
+  }
+  if (!candidates.length && preferNotCurrent) return getTutorialStar(false);
+  if (!candidates.length) return null;
+  return candidates[Math.min(candidates.length - 1, Math.floor(candidates.length * .42))];
+}
+function makeTutorialStarProxy(star, x, y){
+  const proxy = star.cloneNode(true);
+  proxy.classList.remove('dragging', 'revealing', 'launching', 'active', 'searched', 'tutorial-target');
+  proxy.classList.add('tutorial-demo-proxy');
+  proxy.setAttribute('aria-hidden', 'true');
+  proxy.removeAttribute('id');
+  proxy.tabIndex = -1;
+  const rect = star.getBoundingClientRect();
+  proxy.style.width = rect.width + 'px';
+  proxy.style.height = rect.height + 'px';
+  proxy.style.left = x + 'px';
+  proxy.style.top = y + 'px';
+  proxy.style.transform = 'translate(-50%,-50%) scale(1)';
+  proxy.style.opacity = '1';
+  const path = proxy.querySelector('.star-ring defs path');
+  const textPath = proxy.querySelector('textPath');
+  if (path && textPath) {
+    const id = 'tutorial-ring-' + Date.now() + '-' + Math.floor(Math.random() * 100000);
+    path.id = id;
+    textPath.setAttribute('href', '#' + id);
+    textPath.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', '#' + id);
+  }
+  document.body.appendChild(proxy);
+  return proxy;
+}
+function startTutorialDragDemo(){
+  if (tutorialStage !== 'drag' || overlay.classList.contains('show')) return;
+  const star = getTutorialStar(false);
+  if (!star) {
+    tutorialDemoTimer = setTimeout(startTutorialDragDemo, 500);
+    return;
+  }
+  tutorialTargetStar = star;
+  star.classList.add('tutorial-target');
+  dropzone.classList.add('visible');
+  miniPlayer.classList.remove('show');
+  const rect = star.getBoundingClientRect();
+  const sx = rect.left + rect.width / 2;
+  const sy = rect.top + rect.height / 2;
+  const targetRect = dropzone.getBoundingClientRect();
+  const tx = targetRect.left + targetRect.width / 2;
+  const ty = targetRect.top + targetRect.height / 2;
+  tutorialDemoNode = makeTutorialStarProxy(star, sx, sy);
+  placeTutorialHand(sx, sy);
+  const moveStar = tutorialDemoNode.animate([
+    { left:sx+'px', top:sy+'px', opacity:.96, transform:'translate(-50%,-50%) scale(1)', offset:0 },
+    { left:tx+'px', top:ty+'px', opacity:1, transform:'translate(-50%,-50%) scale(.76)', offset:.57 },
+    { left:tx+'px', top:ty+'px', opacity:0, transform:'translate(-50%,-50%) scale(.08)', offset:.68 },
+    { left:sx+'px', top:sy+'px', opacity:0, transform:'translate(-50%,-50%) scale(.72)', offset:.82 },
+    { left:sx+'px', top:sy+'px', opacity:.96, transform:'translate(-50%,-50%) scale(1)', offset:1 }
+  ], { duration:3100, iterations:Infinity, easing:'ease-in-out' });
+  const moveHand = tutorialHand.animate([
+    { left:(sx-24)+'px', top:(sy-8)+'px', opacity:1, transform:'rotate(-7deg) scale(1)', offset:0 },
+    { left:(tx-24)+'px', top:(ty-8)+'px', opacity:1, transform:'rotate(5deg) scale(.94)', offset:.57 },
+    { left:(tx-24)+'px', top:(ty-8)+'px', opacity:.1, transform:'rotate(5deg) scale(.82)', offset:.68 },
+    { left:(sx-24)+'px', top:(sy-8)+'px', opacity:0, transform:'rotate(-7deg) scale(.9)', offset:.82 },
+    { left:(sx-24)+'px', top:(sy-8)+'px', opacity:1, transform:'rotate(-7deg) scale(1)', offset:1 }
+  ], { duration:3100, iterations:Infinity, easing:'ease-in-out' });
+  tutorialDemoAnimations = [moveStar];
+  tutorialHandAnimations = [moveHand];
+}
+function startTutorialCloseDemo(){
+  const card = document.getElementById('playerCard');
+  const rect = card ? card.getBoundingClientRect() : { left:innerWidth*.1, right:innerWidth*.9, top:innerHeight*.2, bottom:innerHeight*.8 };
+  const candidates = [
+    { x:innerWidth*.5, y:Math.max(12, rect.top - 18) },
+    { x:innerWidth*.5, y:Math.min(innerHeight - 12, rect.bottom + 18) },
+    { x:Math.max(12, rect.left - 14), y:innerHeight*.18 },
+    { x:Math.min(innerWidth - 12, rect.right + 14), y:innerHeight*.18 }
+  ];
+  let point = candidates.find(p => p.x < rect.left - 8 || p.x > rect.right + 8 || p.y < rect.top - 8 || p.y > rect.bottom + 8);
+  if (!point) point = { x:innerWidth*.94, y:innerHeight*.06 };
+  placeTutorialHand(point.x, point.y);
+  const animation = tutorialHand.animate([
+    { transform:'translateY(0) scale(1)', opacity:1, offset:0 },
+    { transform:'translateY(11px) scale(.94)', opacity:1, offset:.22 },
+    { transform:'translateY(0) scale(1)', opacity:1, offset:.43 },
+    { transform:'translateY(0) scale(1)', opacity:1, offset:1 }
+  ], { duration:1450, iterations:Infinity, easing:'ease-in-out' });
+  tutorialHandAnimations = [animation];
+}
+function startTutorialTapDemo(){
+  const star = getTutorialStar(true);
+  if (!star) {
+    tutorialDemoTimer = setTimeout(startTutorialTapDemo, 500);
+    return;
+  }
+  tutorialTargetStar = star;
+  star.classList.add('tutorial-target');
+  const rect = star.getBoundingClientRect();
+  const x = rect.left + rect.width / 2;
+  const y = rect.top + rect.height / 2;
+  placeTutorialHand(x, y);
+  const animation = tutorialHand.animate([
+    { transform:'translateY(0) scale(1)', opacity:1, offset:0 },
+    { transform:'translateY(10px) scale(.91)', opacity:1, offset:.24 },
+    { transform:'translateY(0) scale(1)', opacity:1, offset:.48 },
+    { transform:'translateY(0) scale(1)', opacity:1, offset:1 }
+  ], { duration:1500, iterations:Infinity, easing:'ease-in-out' });
+  tutorialHandAnimations = [animation];
+}
+function setTutorialStage(stage){
+  cancelTutorialMotion(true);
+  tutorialStage = stage;
+  if (stage === 'swipe') {
+    tutorialHand.style.left = '50%';
+    tutorialHand.style.top = Math.round(innerHeight * .64) + 'px';
+    tutorialHand.classList.add('active');
+    const animation = tutorialHand.animate([
+      { transform:'translate(-50%,0) rotate(-7deg)', opacity:1, offset:0 },
+      { transform:'translate(-50%,-142px) rotate(6deg)', opacity:1, offset:.48 },
+      { transform:'translate(-50%,0) rotate(-7deg)', opacity:1, offset:1 }
+    ], { duration:1750, iterations:Infinity, easing:'cubic-bezier(.45,0,.3,1)' });
+    tutorialHandAnimations = [animation];
+  } else if (stage === 'drag') {
+    miniPlayer.classList.remove('show');
+    tutorialDemoTimer = setTimeout(startTutorialDragDemo, 850);
+  } else if (stage === 'close') {
+    tutorialDemoTimer = setTimeout(startTutorialCloseDemo, 700);
+  } else if (stage === 'tap') {
+    tutorialDemoTimer = setTimeout(startTutorialTapDemo, 320);
+  } else if (stage === 'done') {
+    cancelTutorialMotion(true);
   }
 }
-function openSkyHint(){
-  if (!shouldShowSkyHint()) return;
-  runTutorialStage(0);
-  skyHintBanner.classList.add('show');
+function maybeStartTutorial(){
+  if (!tutorialStartRequested || ageGateActive || !EPISODES.length || !shouldShowSkyHint() || tutorialStage !== 'idle') return;
+  tutorialStartRequested = false;
+  setTutorialStage('swipe');
 }
-function closeSkyHint(){
-  if (tutorialStage !== tutorialStages.length - 1 || skyHintOk.disabled) return;
+function tutorialSwipePerformed(){
+  if (tutorialStage === 'swipe') setTutorialStage('drag');
+}
+function completeTutorial(){
+  if (tutorialStage === 'done') return;
+  tutorialCompletedThisSession = true;
   try { localStorage.setItem(SKY_HINT_KEY, '1'); } catch (e) {}
-  clearTimeout(tutorialTimer);
-  clearTimeout(tutorialButtonTimer);
-  skyHintBanner.classList.remove('show');
-  tutorialScene.classList.remove('run');
+  setTutorialStage('done');
 }
-skyHintOk.addEventListener('click', closeSkyHint);
+function pauseTutorialForUserDrag(){
+  if (tutorialStage === 'drag' || tutorialStage === 'tap') cancelTutorialMotion(false);
+}
+function resumeTutorialAfterFailedDrag(){
+  if (tutorialStage === 'drag' || tutorialStage === 'tap') setTutorialStage(tutorialStage);
+}
 
 let W = 0, H = 0;
 let dragTrailDpr = 1;
@@ -1408,6 +1477,7 @@ async function buildSky(){
   restoreLastPlayed();
   updatePageMap();
   setTimeout(() => loadEpisodeNamesInBackground().catch(() => {}), 1400);
+  maybeStartTutorial();
 }
 
 function restoreLastPlayed(){
@@ -1652,12 +1722,11 @@ document.getElementById('ageEnterBtn').addEventListener('click', () => {
   startAmbient();
   const g = document.getElementById('ageGate');
   g.classList.add('hide');
-  if (shouldShowSkyHint()) {
-    setTimeout(() => openSkyHint(), 300);
-  }
+  tutorialStartRequested = shouldShowSkyHint();
   setTimeout(() => {
     g.remove();
     ageGateActive = false;
+    maybeStartTutorial();
   }, 600);
 });
 
@@ -2877,9 +2946,14 @@ function openOverlay(){
   overlay.classList.add('show');
   miniPlayer.classList.remove('show');
   updateFullUI();
+  if (tutorialStage === 'drag') setTutorialStage('close');
+  else if (tutorialStage === 'tap') cancelTutorialMotion(true);
 }
 function closeOverlay(){
+  if (!overlay.classList.contains('show')) return;
   overlay.classList.remove('show');
+  if (tutorialStage === 'close') setTutorialStage('tap');
+  else if (tutorialStage === 'tap') setTutorialStage('tap');
   if (current >= 0) {
     updateMiniUI();
     setTimeout(() => {
@@ -3143,6 +3217,7 @@ function startDrag(index, starEl, e){
   e.preventDefault();
   if (starEl.classList.contains('searched')) clearSearchedState();
   closeSearch();
+  pauseTutorialForUserDrag();
 
   const rect = starEl.getBoundingClientRect();
   const cx = rect.left + rect.width / 2;
@@ -3225,6 +3300,10 @@ function onDragCancel(e){
     { left: originX + 'px', top: originY + 'px', transform: dragTransform(.72), opacity: 0 }
   ], { duration: reduced ? 180 : (isMobile ? 260 : 340), easing: 'cubic-bezier(.12,.82,.16,1)', fill: 'forwards' });
   finishDragProxy(state, animation);
+  if (tutorialStage === 'drag' || tutorialStage === 'tap') {
+    const previous = tutorialStage;
+    setTimeout(() => { if (tutorialStage === previous && !dragState && !overlay.classList.contains('show')) setTutorialStage(previous); }, reduced ? 200 : 360);
+  }
 }
 function onDragUp(e){
   if (!dragState || e.pointerId !== dragState.pid) return;
@@ -3249,6 +3328,11 @@ function onDragUp(e){
     state.proxy.remove();
     restoreDraggedStar(state, false);
     dropzone.classList.remove('visible');
+    if (tutorialStage === 'drag') {
+      resumeTutorialAfterFailedDrag();
+      return;
+    }
+    if (tutorialStage === 'tap') completeTutorial();
     launchEpisode(state.index, state.starEl);
     return;
   }
@@ -3268,6 +3352,10 @@ function onDragUp(e){
       { left: originX + 'px', top: originY + 'px', transform: dragTransform(.62), opacity: 0 }
     ], { duration: reduced ? 220 : (isMobile ? 380 : 480), easing: 'cubic-bezier(.12,.82,.16,1)', fill: 'forwards' });
     finishDragProxy(state, animation);
+    if (tutorialStage === 'drag' || tutorialStage === 'tap') {
+      const previous = tutorialStage;
+      setTimeout(() => { if (tutorialStage === previous && !dragState && !overlay.classList.contains('show')) setTutorialStage(previous); }, reduced ? 220 : 500);
+    }
     return;
   }
 
@@ -3426,6 +3514,7 @@ function goToPage(n){
   }
   const turnClass = nn > currentPage ? 'page-turn-forward' : 'page-turn-back';
   currentPage = nn;
+  if (tutorialStage === 'swipe') tutorialSwipePerformed();
   sky.classList.remove('page-turning');
   void sky.offsetWidth;
   sky.classList.add('page-turning');
@@ -3622,13 +3711,12 @@ document.addEventListener('keydown', (e) => {
   if (ageGateActive) return;
   if (e.key === 'Escape') {
     if (pageMapPanel.classList.contains('show')) { closePageMap(); return; }
-    if (skyHintBanner.classList.contains('show')) return;
     if (externalWarning.classList.contains('show')) { closeExternalWarning(); return; }
     if (infoPanel.classList.contains('show')) { closeInfoPanel(); return; }
     if (overlay.classList.contains('show')) { closeOverlay(); return; }
     if (searchOpen) { closeSearch(); return; }
   }
-  if (skyHintBanner.classList.contains('show') || pageMapPanel.classList.contains('show')) return;
+  if (pageMapPanel.classList.contains('show')) return;
   if (overlay.classList.contains('show') || infoPanel.classList.contains('show') ||
       externalWarning.classList.contains('show') || searchOpen) return;
   if (dragState) return;
@@ -3639,7 +3727,7 @@ document.addEventListener('keydown', (e) => {
 let wheelAccum = 0;
 let wheelTimer = null;
 window.addEventListener('wheel', (e) => {
-  if (ageGateActive || skyHintBanner.classList.contains('show') || overlay.classList.contains('show') ||
+  if (ageGateActive || overlay.classList.contains('show') ||
       infoPanel.classList.contains('show') || externalWarning.classList.contains('show') ||
       searchOpen || pageMapPanel.classList.contains('show') || dragState) return;
   wheelAccum += e.deltaY;
@@ -3657,7 +3745,7 @@ let touchY = 0;
 let touchActive = false;
 window.addEventListener('touchstart', (e) => {
   if (pageMapPanel.classList.contains('show')) return;
-  if (ageGateActive || skyHintBanner.classList.contains('show') || overlay.classList.contains('show') ||
+  if (ageGateActive || overlay.classList.contains('show') ||
       infoPanel.classList.contains('show') || externalWarning.classList.contains('show') ||
       searchOpen || dragState) return;
   if (miniPlayer.contains(e.target) || pageMapPanel.contains(e.target) || pageNavBtn.contains(e.target) || document.getElementById('topBar').contains(e.target)) return;
@@ -3671,6 +3759,7 @@ window.addEventListener('touchend', (e) => {
   if (Math.abs(dy) > 55) {
     if (dy > 0) goToPage(currentPage + 1);
     else goToPage(currentPage - 1);
+    tutorialSwipePerformed();
   }
 }, { passive: true });
 
