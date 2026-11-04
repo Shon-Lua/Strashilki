@@ -299,6 +299,8 @@
   .tutorial-demo-proxy{position:fixed!important;z-index:258!important;pointer-events:none!important;opacity:1!important;transition:none!important;animation:none!important;overflow:visible!important;will-change:left,top,transform,opacity;}
   .tutorial-demo-proxy .star-core,.tutorial-demo-proxy .star-flare{animation:none!important}
   @keyframes tutorialStarGuidePulse{0%,100%{opacity:.72;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.55)}}
+  html.site-fullscreen-fallback,html.site-fullscreen-fallback body{width:100%;height:100%;overflow:hidden}
+  html.site-fullscreen-fallback body{position:fixed;inset:0;height:100dvh}
   @media (max-width:768px){
     .grain{animation:none}
     #playerOverlay{backdrop-filter:none;-webkit-backdrop-filter:none;background:radial-gradient(circle at 50% 42%, rgba(16,16,20,.94) 0%, rgba(0,0,0,.985) 72%)}
@@ -405,6 +407,7 @@
   <button class="quickMenuItem" id="menuInfoBtn" type="button"><span class="quickMenuIcon" aria-hidden="true">i</span><span>Информация</span></button>
   <button class="quickMenuItem" id="markAllPlayedBtn" type="button"><span class="quickMenuIcon" aria-hidden="true">✓</span><span>Отметить все прослушанным</span></button>
   <button class="quickMenuItem" id="menuArtsBtn" type="button"><span class="quickMenuIcon" aria-hidden="true">✧</span><span>Арты</span></button>
+  <button class="quickMenuItem" id="fullscreenBtn" type="button" aria-label="На весь экран"><span class="quickMenuIcon" aria-hidden="true">⛶</span><span id="fullscreenMenuLabel">На весь экран</span></button>
 </div>
 <div id="toastContainer" aria-live="polite"></div>
 <div class="dropzone" id="dropzone"><div class="dropzone-label">отпустите<br>здесь</div></div>
@@ -418,7 +421,7 @@
   </button>
 </div>
 <div id="searchBox">
-  <input type="search" name="q" id="searchInput" placeholder="название выпуска..." autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search" inputmode="search" />
+  <input type="search" name="q" id="searchInput" maxlength="160" placeholder="название выпуска..." autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search" inputmode="search" />
   <div id="searchSuggestions"></div>
 </div>
 <div id="playerOverlay">
@@ -567,6 +570,8 @@ const infoPanel = document.getElementById('infoPanel');
 const infoContent = document.getElementById('infoContent');
 const quickMenu = document.getElementById('quickMenu');
 const muteMenuLabel = document.getElementById('muteMenuLabel');
+const fullscreenBtn = document.getElementById('fullscreenBtn');
+const fullscreenMenuLabel = document.getElementById('fullscreenMenuLabel');
 const artsPanel = document.getElementById('artsPanel');
 const artsGrid = document.getElementById('artsGrid');
 const artsEmpty = document.getElementById('artsEmpty');
@@ -2064,30 +2069,48 @@ let podcastInfoLoaded = false;
 let pendingExternalUrl = '';
 
 function renderInfoPanel(){
+  infoContent.replaceChildren();
   if (!podcastInfoText) {
-    infoContent.innerHTML = '<div class="info-empty">информация недоступна</div>';
+    const empty = document.createElement('div');
+    empty.className = 'info-empty';
+    empty.textContent = 'информация недоступна';
+    infoContent.appendChild(empty);
     return;
   }
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const urlRegex = /https?:\/\/[^\s]+/g;
   const lines = podcastInfoText.split('\n');
-  let html = '';
   let firstNonEmpty = true;
   lines.forEach(line => {
     const trimmed = line.trim();
-    if (!trimmed) { html += '<div class="info-gap"></div>'; return; }
-    const withLinks = trimmed.replace(urlRegex, (url) =>
-      '<a class="info-link" data-url="' + url + '" href="javascript:void(0)">' + url + '</a>'
-    );
-    if (firstNonEmpty) { html += '<div class="infoHeading">' + withLinks + '</div>'; firstNonEmpty = false; }
-    else { html += '<div class="info-line">' + withLinks + '</div>'; }
-  });
-  infoContent.innerHTML = html;
-  infoContent.querySelectorAll('.info-link').forEach(link => {
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-      const url = link.getAttribute('data-url');
-      if (url) openExternalWarning(url);
-    });
+    if (!trimmed) {
+      const gap = document.createElement('div');
+      gap.className = 'info-gap';
+      infoContent.appendChild(gap);
+      return;
+    }
+    const row = document.createElement('div');
+    row.className = firstNonEmpty ? 'infoHeading' : 'info-line';
+    firstNonEmpty = false;
+    let cursor = 0;
+    let match;
+    urlRegex.lastIndex = 0;
+    while ((match = urlRegex.exec(trimmed)) !== null) {
+      if (match.index > cursor) row.appendChild(document.createTextNode(trimmed.slice(cursor, match.index)));
+      const link = document.createElement('a');
+      link.className = 'info-link';
+      link.href = '#';
+      link.textContent = match[0];
+      link.dataset.url = match[0];
+      link.addEventListener('click', event => {
+        event.preventDefault();
+        const url = link.dataset.url;
+        if (url) openExternalWarning(url);
+      });
+      row.appendChild(link);
+      cursor = match.index + match[0].length;
+    }
+    if (cursor < trimmed.length) row.appendChild(document.createTextNode(trimmed.slice(cursor)));
+    infoContent.appendChild(row);
   });
 }
 
@@ -2109,6 +2132,48 @@ function closeQuickMenu(){
   quickMenu.setAttribute('aria-hidden','true');
   infoBtn.setAttribute('aria-expanded','false');
 }
+function getNativeFullscreenElement(){
+  return document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement || null;
+}
+function isSiteFullscreen(){
+  return !!getNativeFullscreenElement() || document.documentElement.classList.contains('site-fullscreen-fallback');
+}
+function updateFullscreenMenuLabel(){
+  const active = isSiteFullscreen();
+  if (fullscreenMenuLabel) fullscreenMenuLabel.textContent = active ? 'Выйти из полного экрана' : 'На весь экран';
+  if (fullscreenBtn) fullscreenBtn.setAttribute('aria-label', active ? 'Выйти из полноэкранного режима' : 'На весь экран');
+}
+async function toggleSiteFullscreen(){
+  const root = document.documentElement;
+  if (getNativeFullscreenElement()) {
+    const exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+    if (exit) {
+      try { await Promise.resolve(exit.call(document)); }
+      catch (e) { showToast('не удалось закрыть полноэкранный режим', 2000); }
+    } else {
+      root.classList.toggle('site-fullscreen-fallback');
+    }
+  } else if (root.classList.contains('site-fullscreen-fallback')) {
+    root.classList.remove('site-fullscreen-fallback');
+  } else {
+    const request = root.requestFullscreen || root.webkitRequestFullscreen || root.msRequestFullscreen;
+    if (request) {
+      try {
+        await Promise.resolve(request.call(root));
+        root.classList.remove('site-fullscreen-fallback');
+      } catch (e) {
+        root.classList.add('site-fullscreen-fallback');
+      }
+    } else {
+      root.classList.add('site-fullscreen-fallback');
+    }
+  }
+  updateFullscreenMenuLabel();
+  closeQuickMenu();
+}
+document.addEventListener('fullscreenchange', updateFullscreenMenuLabel);
+document.addEventListener('webkitfullscreenchange', updateFullscreenMenuLabel);
+document.addEventListener('MSFullscreenChange', updateFullscreenMenuLabel);
 function openQuickMenu(){
   const r = infoBtn.getBoundingClientRect();
   quickMenu.style.left = '0px';
@@ -2133,7 +2198,11 @@ function openInfoPanel(){
   closeQuickMenu();
   closeSearch();
   if (!podcastInfoLoaded) {
-    infoContent.innerHTML = '<div class="info-empty">загрузка...</div>';
+    infoContent.replaceChildren();
+    const loading = document.createElement('div');
+    loading.className = 'info-empty';
+    loading.textContent = 'загрузка...';
+    infoContent.appendChild(loading);
     loadPodcastInfo();
   }
   infoPanel.classList.add('show');
@@ -2141,6 +2210,11 @@ function openInfoPanel(){
 function closeInfoPanel(){ infoPanel.classList.remove('show'); }
 
 infoBtn.addEventListener('click', toggleQuickMenu);
+fullscreenBtn.addEventListener('click', () => {
+  if (tutorialIsActive() && tutorialStage !== 'pages') return;
+  toggleSiteFullscreen();
+});
+updateFullscreenMenuLabel();
 document.getElementById('menuInfoBtn').addEventListener('click', () => {
   if (tutorialIsActive() && tutorialStage !== 'pages') return;
   closeQuickMenu();
@@ -2224,7 +2298,7 @@ function openSearch(){
 function closeSearch(){
   searchBox.classList.remove('show');
   searchSuggestions.classList.remove('show');
-  searchSuggestions.innerHTML = '';
+  searchSuggestions.replaceChildren();
   searchOpen = false;
   searchInput.blur();
 }
@@ -2292,27 +2366,44 @@ function getSuggestions(rawQuery){
   return out.slice(0, 6);
 }
 function renderSuggestions(rawQuery){
-  const q = String(rawQuery || '').trim();
-  if (!q) { searchSuggestions.classList.remove('show'); searchSuggestions.innerHTML = ''; return; }
+  const q = sanitizeSearchQuery(rawQuery).trim();
+  searchSuggestions.replaceChildren();
+  if (!q) { searchSuggestions.classList.remove('show'); return; }
   const list = getSuggestions(q);
   if (!list.length) {
-    searchSuggestions.innerHTML = '<div class="suggestion no-results">ничего не найдено</div>';
+    const empty = document.createElement('div');
+    empty.className = 'suggestion no-results';
+    empty.textContent = 'ничего не найдено';
+    searchSuggestions.appendChild(empty);
     searchSuggestions.classList.add('show');
     return;
   }
-  searchSuggestions.innerHTML = list.map(r =>
-    '<div class="suggestion" data-index="' + r.index + '">' + escapeHtml(r.title) + '</div>'
-  ).join('');
+  list.forEach(result => {
+    const item = document.createElement('div');
+    item.className = 'suggestion';
+    item.dataset.index = String(result.index);
+    item.textContent = String(result.title ?? '');
+    searchSuggestions.appendChild(item);
+  });
   searchSuggestions.classList.add('show');
 }
 
+function sanitizeSearchQuery(value){
+  let text = String(value ?? '');
+  try { text = text.normalize('NFC'); } catch (e) {}
+  return text.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '').slice(0, 160);
+}
+
 searchInput.addEventListener('input', () => {
+  const safeValue = sanitizeSearchQuery(searchInput.value);
+  if (safeValue !== searchInput.value) searchInput.value = safeValue;
   if (searchInput.value === 'localStorage_RST') {
     searchSuggestions.classList.remove('show');
-    searchSuggestions.innerHTML = '';
+    searchSuggestions.replaceChildren();
     return;
   }
-  renderSuggestions(searchInput.value);
+  try { renderSuggestions(searchInput.value); }
+  catch (e) { searchSuggestions.replaceChildren(); searchSuggestions.classList.remove('show'); }
 });
 searchInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') { e.preventDefault(); performSearch(searchInput.value); }
@@ -2453,8 +2544,8 @@ function showMapArrow(starEl){
   }, 4700);
 }
 function performSearch(rawQuery){
-  const raw = String(rawQuery ?? '');
-  if (raw === 'localStorage_RST') {
+  const originalRaw = String(rawQuery ?? '');
+  if (originalRaw === 'localStorage_RST') {
     closeSearch();
     try {
       storageResetPending = true;
@@ -2472,7 +2563,7 @@ function performSearch(rawQuery){
     }
     return;
   }
-  const q = raw.trim();
+  const q = sanitizeSearchQuery(originalRaw).trim();
   if (q.length < 2) { showToast('введите название', 1800); return; }
   const idx = findBestMatch(q);
   if (idx < 0) { showToast('выпуск не найден', 2200); return; }
@@ -3882,6 +3973,7 @@ function updatePageMap(){
 }
 function openPageMap(){
   closeQuickMenu();
+  if (tutorialStage === 'pages') cancelTutorialMotion(true);
   updatePageMap();
   pageMapPanel.classList.add('show');
   pageMapPanel.setAttribute('aria-hidden', 'false');
