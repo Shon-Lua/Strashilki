@@ -111,12 +111,12 @@
   .star-label{display:none}
 
   .map-arrow{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:210;opacity:1;overflow:hidden;transition:opacity .6s ease}
-  .map-arrow .arrow-outline{fill:none;stroke:rgba(42,8,15,.94);stroke-width:var(--arrow-outline-width,7px);stroke-linecap:round;stroke-linejoin:round}
-  .map-arrow .arrow-shaft{fill:none;stroke:var(--arrow-color,#e9dfd3);stroke-width:var(--arrow-width,3px);stroke-linecap:round;stroke-linejoin:round}
-  .map-arrow .arrow-head-outline{fill:none;stroke:rgba(42,8,15,.94);stroke-width:var(--arrow-head-outline-width,6px);stroke-linecap:round;stroke-linejoin:round;opacity:0}
-  .map-arrow .arrow-head{fill:none;stroke:var(--arrow-color,#e9dfd3);stroke-width:var(--arrow-head-width,3px);stroke-linecap:round;stroke-linejoin:round;opacity:0}
+  .map-arrow .arrow-tail,.map-arrow .arrow-shaft,.map-arrow .arrow-head{fill:none;stroke:#fff;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+  .map-arrow .arrow-tail{stroke-width:var(--arrow-tail-width,2.8px)}
+  .map-arrow .arrow-shaft{stroke-width:var(--arrow-width,3.2px)}
+  .map-arrow .arrow-head{stroke-width:var(--arrow-head-width,3px);opacity:0}
   .map-arrow .arrow-wobble{transform-box:fill-box;transform-origin:center;animation:mapArrowWobble 1.8s ease-in-out infinite}
-  @keyframes mapArrowWobble{0%,100%{transform:translateY(0) rotate(0)}35%{transform:translateY(-1.2px) rotate(.35deg)}70%{transform:translateY(.6px) rotate(-.25deg)}}
+  @keyframes mapArrowWobble{0%,100%{transform:translateY(0) rotate(0)}35%{transform:translateY(-.8px) rotate(.22deg)}70%{transform:translateY(.4px) rotate(-.18deg)}}
   @media (prefers-reduced-motion:reduce){.map-arrow .arrow-wobble{animation:none}}
   #topBar{position:fixed;top:24px;right:20px;z-index:26;display:flex;align-items:center;gap:2px}
   #topBar button{background:none;border:none;padding:6px;width:34px;height:34px;display:grid;place-items:center;color:rgba(255,255,255,.92);cursor:pointer;transition:color .3s ease, filter .3s ease, opacity .3s ease;-webkit-tap-highlight-color:transparent;text-shadow:0 0 10px rgba(0,0,0,.9)}
@@ -810,7 +810,8 @@ function startTutorialCloseDemo(){
     setTutorialHandScale(scale);
     const handHeight = TUTORIAL_HAND_HEIGHT * tutorialHandScale;
     const targetY = Math.min(innerHeight - handHeight - 5, rect.bottom + 9);
-    point = { x:innerWidth * .5, y:Math.max(12, targetY) };
+    const targetX = Math.max(14, Math.min(innerWidth - 14, innerWidth * .68));
+    point = { x:targetX, y:Math.max(12, targetY) };
   } else {
     setTutorialHandScale(1);
     tutorialHand.classList.remove('bottom-approach', 'compact');
@@ -827,12 +828,13 @@ function startTutorialCloseDemo(){
   }
   tutorialHand.classList.toggle('mirror', mirrored);
   placeTutorialHand(point.x, point.y);
+  const handTilt = isMobile ? 8 : -5;
   const animation = tutorialHand.animate([
-    { transform:'translateY(0) rotate(-5deg) scale(1)', opacity:1, offset:0 },
-    { transform:'translateY(-7px) rotate(1deg) scale(.96)', opacity:1, offset:.2 },
-    { transform:'translateY(-1px) rotate(-3deg) scale(1.01)', opacity:1, offset:.42 },
-    { transform:'translateY(0) rotate(-5deg) scale(1)', opacity:1, offset:.58 },
-    { transform:'translateY(0) rotate(-5deg) scale(1)', opacity:1, offset:1 }
+    { transform:'translateY(0) rotate(' + handTilt + 'deg) scale(1)', opacity:1, offset:0 },
+    { transform:'translateY(-7px) rotate(' + (handTilt + 2) + 'deg) scale(.96)', opacity:1, offset:.2 },
+    { transform:'translateY(-1px) rotate(' + (handTilt - 1) + 'deg) scale(1.01)', opacity:1, offset:.42 },
+    { transform:'translateY(0) rotate(' + handTilt + 'deg) scale(1)', opacity:1, offset:.58 },
+    { transform:'translateY(0) rotate(' + handTilt + 'deg) scale(1)', opacity:1, offset:1 }
   ], { duration:1600, iterations:Infinity, easing:'ease-in-out' });
   tutorialHandAnimations = [animation];
 }
@@ -2077,135 +2079,175 @@ function showMapArrow(starEl){
   const vh = Math.max(1, innerHeight);
   const tx = rect.left + rect.width * .5;
   const ty = rect.top + rect.height * .5;
-  const margin = 30;
+  const margin = 48;
   const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
   const directions = [[1,0],[-1,0],[0,1],[0,-1],[.707,.707],[.707,-.707],[-.707,.707],[-.707,-.707]];
-  const candidates = directions.map(([dx,dy]) => {
+  const directionsWithRoom = directions.map(([dx,dy]) => {
     const maxX = dx > 0 ? (vw - margin - tx) / dx : dx < 0 ? (margin - tx) / dx : Infinity;
     const maxY = dy > 0 ? (vh - margin - ty) / dy : dy < 0 ? (margin - ty) / dy : Infinity;
-    return { dx, dy, max:Math.max(0, Math.min(maxX,maxY)) };
-  }).filter(item => item.max > 108);
+    return {dx,dy,max:Math.max(0,Math.min(maxX,maxY))};
+  }).filter(item => item.max > 132);
+  const candidates = directionsWithRoom.length ? directionsWithRoom : directions.map(([dx,dy]) => {
+    const maxX = dx > 0 ? (vw - 34 - tx) / dx : dx < 0 ? (34 - tx) / dx : Infinity;
+    const maxY = dy > 0 ? (vh - 34 - ty) / dy : dy < 0 ? (34 - ty) / dy : Infinity;
+    return {dx,dy,max:Math.max(0,Math.min(maxX,maxY))};
+  }).filter(item => item.max > 86);
   if (!candidates.length) return;
   candidates.sort((a,b) => b.max - a.max);
-  const viable = candidates.filter(item => item.max >= Math.min(138,candidates[0].max));
+  const viable = candidates.filter(item => item.max >= Math.min(150,candidates[0].max));
   const direction = viable[Math.floor(Math.random()*viable.length)] || candidates[0];
   const dx = direction.dx;
   const dy = direction.dy;
-  const px = -dy;
-  const py = dx;
-  const distance = Math.min(178, Math.max(104, direction.max - 24));
-  const startX = clamp(tx + dx * distance, margin, vw - margin);
-  const startY = clamp(ty + dy * distance, margin, vh - margin);
-  const tipGap = 8 + Math.random() * 4;
-  const tipX = clamp(tx + dx * tipGap, margin, vw - margin);
-  const tipY = clamp(ty + dy * tipGap, margin, vh - margin);
-  const headLength = 17 + Math.random() * 8;
-  const baseX = clamp(tipX + dx * headLength, margin, vw - margin);
-  const baseY = clamp(tipY + dy * headLength, margin, vh - margin);
-  const vx = baseX - startX;
-  const vy = baseY - startY;
-  const length = Math.max(1, Math.hypot(vx,vy));
-  const normalX = -vy / length;
-  const normalY = vx / length;
-  const curve = (Math.random() - .5) * Math.min(112, distance * .62);
-  const bend2 = curve * (.25 + Math.random() * .45);
-  const style = Math.floor(Math.random() * 4);
-  let shaftD;
-  if (style === 0) {
-    const c1x = clamp(startX + vx*.27 + normalX*curve, margin, vw-margin);
-    const c1y = clamp(startY + vy*.27 + normalY*curve, margin, vh-margin);
-    const c2x = clamp(startX + vx*.76 - normalX*bend2, margin, vw-margin);
-    const c2y = clamp(startY + vy*.76 - normalY*bend2, margin, vh-margin);
-    shaftD = 'M '+startX+' '+startY+' C '+c1x+' '+c1y+' '+c2x+' '+c2y+' '+baseX+' '+baseY;
-  } else if (style === 1) {
-    const qx = clamp((startX+baseX)*.5 + normalX*curve, margin, vw-margin);
-    const qy = clamp((startY+baseY)*.5 + normalY*curve, margin, vh-margin);
-    shaftD = 'M '+startX+' '+startY+' Q '+qx+' '+qy+' '+baseX+' '+baseY;
-  } else if (style === 2) {
-    const c1x = clamp(startX + vx*.34 + normalX*curve*.65, margin, vw-margin);
-    const c1y = clamp(startY + vy*.34 + normalY*curve*.65, margin, vh-margin);
-    const c2x = clamp(startX + vx*.72 + normalX*bend2*.72, margin, vw-margin);
-    const c2y = clamp(startY + vy*.72 + normalY*bend2*.72, margin, vh-margin);
-    shaftD = 'M '+startX+' '+startY+' C '+c1x+' '+c1y+' '+c2x+' '+c2y+' '+baseX+' '+baseY;
+  const tipGap = 7 + Math.random()*5;
+  const headLength = 15 + Math.random()*8;
+  const tailRadius = 12 + Math.random()*9;
+  const tailReach = tailRadius*2.15;
+  const distance = Math.min(174,Math.max(82,direction.max-tailReach-20));
+  const startX = clamp(tx+dx*distance,margin,vw-margin);
+  const startY = clamp(ty+dy*distance,margin,vh-margin);
+  const tipX = clamp(tx+dx*tipGap,margin,vw-margin);
+  const tipY = clamp(ty+dy*tipGap,margin,vh-margin);
+  const baseX = clamp(tipX+dx*headLength,margin,vw-margin);
+  const baseY = clamp(tipY+dy*headLength,margin,vh-margin);
+  const vx = baseX-startX;
+  const vy = baseY-startY;
+  const length = Math.max(1,Math.hypot(vx,vy));
+  const ux = vx/length;
+  const uy = vy/length;
+  const nx = -uy;
+  const ny = ux;
+  const bound = (along,side) => ({
+    x:clamp(startX+ux*along+nx*side,margin,vw-margin),
+    y:clamp(startY+uy*along+ny*side,margin,vh-margin)
+  });
+  const d = p => p.x.toFixed(1)+' '+p.y.toFixed(1);
+  const curlSide = Math.random() < .5 ? -1 : 1;
+  const curlStyle = Math.floor(Math.random()*4);
+  let tailD;
+  if (curlStyle === 0) {
+    const p0=bound(-tailRadius*.65,curlSide*tailRadius*.3);
+    const p1=bound(-tailRadius*1.65,curlSide*tailRadius*1.6);
+    const p2=bound(tailRadius*1.2,curlSide*tailRadius*1.7);
+    const p3=bound(tailRadius*.58,curlSide*tailRadius*.35);
+    const p4=bound(tailRadius*.02,-curlSide*tailRadius*.8);
+    const p5=bound(-tailRadius*.9,-curlSide*tailRadius*.65);
+    tailD='M '+d(p0)+' C '+d(p1)+' '+d(p2)+' '+d(p3)+' C '+d(p4)+' '+d(p5)+' '+d({x:startX,y:startY});
+  } else if (curlStyle === 1) {
+    const p0=bound(-tailRadius*.35,-curlSide*tailRadius*.35);
+    const p1=bound(-tailRadius*1.75,-curlSide*tailRadius*1.5);
+    const p2=bound(tailRadius*1.55,-curlSide*tailRadius*1.75);
+    const p3=bound(tailRadius*.55,-curlSide*tailRadius*.25);
+    const p4=bound(-tailRadius*.25,curlSide*tailRadius*.7);
+    const p5=bound(-tailRadius*1.05,curlSide*tailRadius*.3);
+    tailD='M '+d(p0)+' C '+d(p1)+' '+d(p2)+' '+d(p3)+' C '+d(p4)+' '+d(p5)+' '+d({x:startX,y:startY});
+  } else if (curlStyle === 2) {
+    const p0=bound(-tailRadius*.75,curlSide*tailRadius*.15);
+    const p1=bound(-tailRadius*1.9,curlSide*tailRadius*1.35);
+    const p2=bound(tailRadius*.95,curlSide*tailRadius*2.0);
+    const p3=bound(tailRadius*.85,curlSide*tailRadius*.45);
+    const p4=bound(tailRadius*.05,-curlSide*tailRadius*.7);
+    const p5=bound(-tailRadius*.85,-curlSide*tailRadius*1.05);
+    const p6=bound(tailRadius*.38,-curlSide*tailRadius*.2);
+    tailD='M '+d(p0)+' C '+d(p1)+' '+d(p2)+' '+d(p3)+' C '+d(p4)+' '+d(p5)+' '+d(p6)+' Q '+d(bound(tailRadius*.25,-curlSide*tailRadius*.06))+' '+d({x:startX,y:startY});
   } else {
-    const c1x = clamp(startX + vx*.36 + normalX*curve, margin, vw-margin);
-    const c1y = clamp(startY + vy*.36 + normalY*curve, margin, vh-margin);
-    const c2x = clamp(startX + vx*.79 - normalX*bend2, margin, vw-margin);
-    const c2y = clamp(startY + vy*.79 - normalY*bend2, margin, vh-margin);
-    shaftD = 'M '+startX+' '+startY+' C '+c1x+' '+c1y+' '+c2x+' '+c2y+' '+baseX+' '+baseY;
+    const p0=bound(-tailRadius*.45,curlSide*tailRadius*.35);
+    const p1=bound(-tailRadius*1.4,curlSide*tailRadius*1.9);
+    const p2=bound(tailRadius*1.65,curlSide*tailRadius*1.2);
+    const p3=bound(tailRadius*.45,curlSide*tailRadius*.15);
+    const p4=bound(-tailRadius*.45,-curlSide*tailRadius*.9);
+    tailD='M '+d(p0)+' C '+d(p1)+' '+d(p2)+' '+d(p3)+' Q '+d(p4)+' '+d({x:startX,y:startY});
   }
 
-  const spread = 8 + Math.random()*5;
-  const asymmetry = .82 + Math.random()*.36;
-  const leftX = clamp(baseX + normalX*spread, margin, vw-margin);
-  const leftY = clamp(baseY + normalY*spread, margin, vh-margin);
-  const rightX = clamp(baseX - normalX*spread*asymmetry, margin, vw-margin);
-  const rightY = clamp(baseY - normalY*spread*asymmetry, margin, vh-margin);
-  const curveAmount = 3 + Math.random()*4;
-  const leftHeadD = 'M '+leftX+' '+leftY+' Q '+clamp(tipX+dx*7+normalX*curveAmount,margin,vw-margin)+' '+clamp(tipY+dy*7+normalY*curveAmount,margin,vh-margin)+' '+tipX+' '+tipY;
-  const rightHeadD = 'M '+tipX+' '+tipY+' Q '+clamp(tipX+dx*7-normalX*curveAmount,margin,vw-margin)+' '+clamp(tipY+dy*7-normalY*curveAmount,margin,vh-margin)+' '+rightX+' '+rightY;
+  const curve = (Math.random()-.5)*Math.min(104,distance*.58);
+  const bend = curve*(.22+Math.random()*.65);
+  const form = Math.floor(Math.random()*5);
+  let shaftD;
+  if (form === 0) {
+    const c1x=clamp(startX+vx*.22+nx*curve,margin,vw-margin);
+    const c1y=clamp(startY+vy*.22+ny*curve,margin,vh-margin);
+    const c2x=clamp(startX+vx*.78-nx*bend,margin,vw-margin);
+    const c2y=clamp(startY+vy*.78-ny*bend,margin,vh-margin);
+    shaftD='M '+startX.toFixed(1)+' '+startY.toFixed(1)+' C '+c1x.toFixed(1)+' '+c1y.toFixed(1)+' '+c2x.toFixed(1)+' '+c2y.toFixed(1)+' '+baseX.toFixed(1)+' '+baseY.toFixed(1);
+  } else if (form === 1) {
+    const qx=clamp((startX+baseX)*.5+nx*curve,margin,vw-margin);
+    const qy=clamp((startY+baseY)*.5+ny*curve,margin,vh-margin);
+    shaftD='M '+startX.toFixed(1)+' '+startY.toFixed(1)+' Q '+qx.toFixed(1)+' '+qy.toFixed(1)+' '+baseX.toFixed(1)+' '+baseY.toFixed(1);
+  } else if (form === 2) {
+    const c1x=clamp(startX+vx*.32+nx*curve*.75,margin,vw-margin);
+    const c1y=clamp(startY+vy*.32+ny*curve*.75,margin,vh-margin);
+    const c2x=clamp(startX+vx*.72+nx*bend,margin,vw-margin);
+    const c2y=clamp(startY+vy*.72+ny*bend,margin,vh-margin);
+    shaftD='M '+startX.toFixed(1)+' '+startY.toFixed(1)+' C '+c1x.toFixed(1)+' '+c1y.toFixed(1)+' '+c2x.toFixed(1)+' '+c2y.toFixed(1)+' '+baseX.toFixed(1)+' '+baseY.toFixed(1);
+  } else if (form === 3) {
+    const q1x=clamp(startX+vx*.34+nx*curve,margin,vw-margin);
+    const q1y=clamp(startY+vy*.34+ny*curve,margin,vh-margin);
+    const q2x=clamp(startX+vx*.7-nx*bend,margin,vw-margin);
+    const q2y=clamp(startY+vy*.7-ny*bend,margin,vh-margin);
+    shaftD='M '+startX.toFixed(1)+' '+startY.toFixed(1)+' Q '+q1x.toFixed(1)+' '+q1y.toFixed(1)+' '+q2x.toFixed(1)+' '+q2y.toFixed(1)+' T '+baseX.toFixed(1)+' '+baseY.toFixed(1);
+  } else {
+    const c1x=clamp(startX+vx*.28-nx*curve*.9,margin,vw-margin);
+    const c1y=clamp(startY+vy*.28-ny*curve*.9,margin,vh-margin);
+    const c2x=clamp(startX+vx*.8+nx*bend*.5,margin,vw-margin);
+    const c2y=clamp(startY+vy*.8+ny*bend*.5,margin,vh-margin);
+    shaftD='M '+startX.toFixed(1)+' '+startY.toFixed(1)+' C '+c1x.toFixed(1)+' '+c1y+' '+c2x.toFixed(1)+' '+c2y+' '+baseX.toFixed(1)+' '+baseY.toFixed(1);
+  }
 
-  const palette = ['#e8ddd1','#d7beb3','#e7d0c3','#c9beb4','#ead6ca'];
-  const color = palette[Math.floor(Math.random()*palette.length)];
-  const shaftWidth = 2.35 + Math.random()*1.7;
-  const headWidth = Math.max(2.1, shaftWidth*.88);
-  const outlineWidth = shaftWidth + 3.1;
-  const headOutlineWidth = headWidth + 3.0;
+  const spread=7+Math.random()*5;
+  const headCurve=2+Math.random()*4;
+  const left={x:clamp(baseX+nx*spread,margin,vw-margin),y:clamp(baseY+ny*spread,margin,vh-margin)};
+  const right={x:clamp(baseX-nx*spread*(.82+Math.random()*.36),margin,vw-margin),y:clamp(baseY-ny*spread*(.82+Math.random()*.36),margin,vh-margin)};
+  const headCtrlA={x:clamp(tipX+dx*headLength*.42+nx*headCurve,margin,vw-margin),y:clamp(tipY+dy*headLength*.42+ny*headCurve,margin,vh-margin)};
+  const headCtrlB={x:clamp(tipX+dx*headLength*.42-nx*headCurve,margin,vw-margin),y:clamp(tipY+dy*headLength*.42-ny*headCurve,margin,vh-margin)};
+  const leftHeadD='M '+left.x.toFixed(1)+' '+left.y.toFixed(1)+' Q '+headCtrlA.x.toFixed(1)+' '+headCtrlA.y.toFixed(1)+' '+tipX.toFixed(1)+' '+tipY.toFixed(1);
+  const rightHeadD='M '+tipX.toFixed(1)+' '+tipY.toFixed(1)+' Q '+headCtrlB.x.toFixed(1)+' '+headCtrlB.y.toFixed(1)+' '+right.x.toFixed(1)+' '+right.y.toFixed(1);
 
-  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  const shaftWidth=2.35+Math.random()*1.65;
+  const tailWidth=shaftWidth*(.72+Math.random()*.22);
+  const headWidth=shaftWidth*(.82+Math.random()*.12);
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
   svg.setAttribute('class','map-arrow');
   svg.setAttribute('viewBox','0 0 '+vw+' '+vh);
   svg.setAttribute('preserveAspectRatio','none');
-  svg.style.setProperty('--arrow-color',color);
   svg.style.setProperty('--arrow-width',shaftWidth.toFixed(2)+'px');
-  svg.style.setProperty('--arrow-outline-width',outlineWidth.toFixed(2)+'px');
+  svg.style.setProperty('--arrow-tail-width',tailWidth.toFixed(2)+'px');
   svg.style.setProperty('--arrow-head-width',headWidth.toFixed(2)+'px');
-  svg.style.setProperty('--arrow-head-outline-width',headOutlineWidth.toFixed(2)+'px');
-
-  const group = document.createElementNS('http://www.w3.org/2000/svg','g');
+  const group=document.createElementNS('http://www.w3.org/2000/svg','g');
   group.setAttribute('class','arrow-wobble');
   svg.appendChild(group);
-  const makePath = (d, className, delay) => {
-    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
-    path.setAttribute('d',d);
+  const makePath=(pathData,className,delay)=>{
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',pathData);
     path.setAttribute('class',className);
-    path._arrowDelay = delay;
-    path.style.transition = 'none';
+    path._arrowDelay=delay;
+    path.style.transition='none';
     group.appendChild(path);
     return path;
   };
-
-  const outline = makePath(shaftD,'arrow-outline',0);
-  const shaft = makePath(shaftD,'arrow-shaft',.025);
-  const headOutlineA = makePath(leftHeadD,'arrow-head-outline',.43);
-  const headOutlineB = makePath(rightHeadD,'arrow-head-outline',.49);
-  const headA = makePath(leftHeadD,'arrow-head',.455);
-  const headB = makePath(rightHeadD,'arrow-head',.515);
+  const tail=makePath(tailD,'arrow-tail',0);
+  const shaft=makePath(shaftD,'arrow-shaft',.12);
+  const headA=makePath(leftHeadD,'arrow-head',.47);
+  const headB=makePath(rightHeadD,'arrow-head',.52);
   document.body.appendChild(svg);
-  currentArrow = svg;
+  currentArrow=svg;
 
-  [outline,shaft,headOutlineA,headOutlineB,headA,headB].forEach(path => {
-    let pathLength = 100;
-    try { pathLength = Math.max(1,path.getTotalLength()); } catch(e) {}
-    path.style.strokeDasharray = String(pathLength);
-    path.style.strokeDashoffset = String(pathLength);
-    path.style.transition = 'stroke-dashoffset .82s cubic-bezier(.2,.8,.2,1) '+path._arrowDelay+'s,opacity .2s ease '+(path._arrowDelay+.08)+'s';
+  const paths=[tail,shaft,headA,headB];
+  paths.forEach(path=>{
+    let len=100;
+    try{len=Math.max(1,path.getTotalLength());}catch(e){}
+    path.style.strokeDasharray=String(len);
+    path.style.strokeDashoffset=String(len);
+    path.style.transition='stroke-dashoffset .86s cubic-bezier(.2,.8,.2,1) '+path._arrowDelay+'s,opacity .22s ease '+(path._arrowDelay+.06)+'s';
   });
-
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    if (!svg.isConnected) return;
-    [outline,shaft,headOutlineA,headOutlineB,headA,headB].forEach(path => {
-      path.style.strokeDashoffset = '0';
-      path.style.opacity = '1';
-    });
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    if(!svg.isConnected)return;
+    paths.forEach(path=>{path.style.strokeDashoffset='0';path.style.opacity='1';});
   }));
-
-  setTimeout(() => {
-    if (!svg.parentNode) return;
-    svg.style.opacity = '0';
-    setTimeout(() => {
-      if (svg.parentNode) svg.remove();
-      if (currentArrow === svg) currentArrow = null;
+  setTimeout(()=>{
+    if(!svg.parentNode)return;
+    svg.style.opacity='0';
+    setTimeout(()=>{
+      if(svg.parentNode)svg.remove();
+      if(currentArrow===svg)currentArrow=null;
     },650);
   },4600);
 }
