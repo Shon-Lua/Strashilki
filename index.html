@@ -241,27 +241,18 @@
   .suggestion:hover{background:rgba(255,255,255,.06);color:#fff}
   .suggestion.no-results{cursor:default;font-style:italic;color:rgba(255,255,255,.3);text-align:center}
   .suggestion.no-results:hover{background:none;color:rgba(255,255,255,.3)}
-  #infoPanel{position:fixed;inset:0;z-index:80;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 40%, rgba(20,18,24,.95) 0%, rgba(0,0,0,.99) 70%);opacity:0;pointer-events:none;transition:opacity .4s ease;padding:24px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  #infoPanel{position:fixed;inset:0;z-index:80;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 36%,rgba(75,5,17,.97) 0%,rgba(34,0,7,.985) 48%,rgba(8,0,2,.995) 78%,#000 100%);opacity:0;pointer-events:none;transition:opacity .4s ease;padding:24px;overflow-y:auto;-webkit-overflow-scrolling:touch}
   #infoPanel.show{opacity:1;pointer-events:auto}
-  .infoCard{position:relative;width:min(480px, 100%);padding:44px 34px 38px;border:1px solid rgba(255,255,255,.08);border-radius:4px;background:rgba(7,6,9,.7);text-align:left;margin:auto}
+  .infoCard{position:relative;width:min(480px, 100%);padding:44px 34px 38px;border:1px solid rgba(112,18,34,.38);border-radius:4px;background:radial-gradient(ellipse at 50% 0%,rgba(47,3,12,.92),rgba(10,0,3,.94) 76%);text-align:left;margin:auto}
   .infoClose{position:absolute;top:10px;right:12px;width:36px;height:36px;border:none;background:none;color:rgba(255,255,255,.4);font-size:26px;line-height:1;cursor:pointer;transition:color .3s ease;font-family:'Special Elite', 'Courier New', monospace;display:grid;place-items:center}
   .infoClose:hover{color:#fff}
-  .infoHeading{font-family:'Special Elite', 'Courier New', monospace;font-weight:400;font-size:16px;letter-spacing:.14em;color:#eae6f2;margin-bottom:26px;line-height:1.45;text-transform:uppercase}
-  .info-line{font-family:'IM Fell English', Georgia, serif;font-weight:400;font-size:15px;line-height:1.7;color:#b8b2c5;margin-bottom:2px;word-break:break-word}
+  .infoHeading{font-family:'Special Elite', 'Courier New', monospace;font-weight:400;font-size:16px;letter-spacing:.14em;color:#f0dddd;margin-bottom:26px;line-height:1.45;text-transform:uppercase}
+  .info-line{font-family:'IM Fell English', Georgia, serif;font-weight:400;font-size:15px;line-height:1.7;color:#c9afb3;margin-bottom:2px;word-break:break-word}
   .info-gap{height:14px}
   .info-empty{font-family:'IM Fell English', Georgia, serif;font-weight:400;font-size:14px;letter-spacing:.04em;color:#5e596f;text-align:center;font-style:italic;line-height:1.7}
   .info-link{color:#fff;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;text-decoration-color:rgba(255,255,255,.55);cursor:pointer;transition:text-decoration-color .25s ease, text-shadow .25s ease;margin:0 3px;word-break:break-all}
   .info-link:hover{text-decoration-color:#fff;text-shadow:0 0 14px rgba(255,255,255,.5)}
 
-  .installAppArea{margin-top:24px;padding-top:18px;border-top:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;align-items:center;gap:10px}
-  .installAppArea[hidden]{display:none}
-  .tutorialReplayArea{margin-top:14px;display:flex;justify-content:center}
-  #tutorialReplayBtn{min-height:38px;padding:9px 18px;background:transparent;border:1px solid rgba(255,255,255,.18);border-radius:2px;color:rgba(234,230,242,.72);font-family:'Special Elite','Courier New',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;cursor:pointer;transition:border-color .25s ease,color .25s ease,background .25s ease}
-  #tutorialReplayBtn:hover{border-color:rgba(255,255,255,.62);color:#fff;background:rgba(255,255,255,.045)}
-  #installAppBtn{min-height:42px;padding:11px 22px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.28);border-radius:2px;color:#eae6f2;font-family:'Special Elite','Courier New',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;transition:border-color .25s ease,background .25s ease,color .25s ease}
-  #installAppBtn:hover{border-color:rgba(255,255,255,.72);background:rgba(255,255,255,.07);color:#fff}
-  #installAppHint{display:none;max-width:360px;text-align:center;color:#9d96aa;font-size:13px;line-height:1.65;letter-spacing:.02em}
-  #installAppHint.show{display:block}
   #externalWarning{position:fixed;inset:0;z-index:90;display:grid;place-items:center;background:rgba(0,0,0,.94);opacity:0;pointer-events:none;transition:opacity .35s ease;padding:24px}
   #externalWarning.show{opacity:1;pointer-events:auto}
   .extCard{width:min(420px, 100%);padding:38px 30px 30px;text-align:center;border:1px solid rgba(255,255,255,.1);border-radius:4px;background:rgba(8,6,10,.85)}
@@ -284,15 +275,15 @@
   .ageEnter{padding:14px 60px;background:transparent;border:1px solid rgba(255,255,255,.4);color:#eae6f2;font-family:'Special Elite', 'Courier New', monospace;font-weight:400;font-size:12px;letter-spacing:.48em;text-indent:.48em;text-transform:uppercase;cursor:pointer;transition:color .3s ease, border-color .3s ease, box-shadow .3s ease, letter-spacing .3s ease;border-radius:2px;-webkit-tap-highlight-color:transparent}
   .ageEnter:hover{color:#fff;border-color:#fff;box-shadow:0 0 50px rgba(255,255,255,.24);letter-spacing:.56em}
   .ageEnter:active{box-shadow:0 0 30px rgba(255,255,255,.35), inset 0 0 26px rgba(255,255,255,.1)}
-  #tutorialHand{position:fixed;left:0;top:0;width:104px;height:134px;z-index:260;pointer-events:none;opacity:0;visibility:hidden;transform-origin:51px 10px;will-change:left,top,transform,opacity;transition:opacity .24s ease,visibility .24s ease}
+  #tutorialHand{position:fixed;left:0;top:0;width:112px;height:144px;z-index:260;pointer-events:none;opacity:0;visibility:hidden;transform-origin:49px 10px;will-change:left,top,transform,opacity;transition:opacity .24s ease,visibility .24s ease}
   #tutorialHand.active{opacity:1;visibility:visible}
-  #tutorialHand svg{display:block;width:104px;height:134px;overflow:visible;transform-origin:50% 50%}
-  #tutorialHand.mirror:not(.bottom-approach){transform-origin:53px 10px}
+  #tutorialHand svg{display:block;width:112px;height:144px;overflow:visible;transform-origin:50% 50%}
+  #tutorialHand.mirror:not(.bottom-approach){transform-origin:63px 10px}
   #tutorialHand.mirror svg{transform:scaleX(-1)}
-  #tutorialHand.bottom-approach{transform-origin:54px 125px}
+  #tutorialHand.bottom-approach{transform-origin:63px 134px}
   #tutorialHand.bottom-approach svg{transform:rotate(180deg);transform-origin:50% 50%}
-  #tutorialHand .hand-outline{fill:none;stroke:#f4f1f3;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round;opacity:.96}
-  #tutorialHand .hand-detail{fill:none;stroke:#f4f1f3;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round;opacity:.62}
+  #tutorialHand .hand-outline{fill:none;stroke:#f5f3f2;stroke-width:3.1;stroke-linecap:round;stroke-linejoin:round;opacity:.98}
+  #tutorialHand .hand-detail{fill:none;stroke:#f5f3f2;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round;opacity:.78}
   .star.tutorial-target .star-core{animation:tutorialStarGuidePulse 1.6s ease-in-out infinite!important;box-shadow:0 0 20px 7px rgba(255,255,255,.98),0 0 56px 18px rgba(220,205,255,.52)!important}
   .tutorial-demo-proxy{position:fixed!important;z-index:258!important;pointer-events:none!important;opacity:1!important;transition:none!important;animation:none!important;overflow:visible!important;will-change:left,top,transform,opacity;}
   .tutorial-demo-proxy .star-core,.tutorial-demo-proxy .star-flare{animation:none!important}
@@ -348,9 +339,6 @@
     .ageEnter{padding:13px 50px;font-size:11px;letter-spacing:.44em;text-indent:.44em}
     .ageEnter:hover{letter-spacing:.5em}
     .infoCard{padding:38px 24px 30px}
-    #installAppBtn{width:100%;max-width:280px}
-    #installAppHint{font-size:12.5px}
-    #tutorialReplayBtn{width:100%;max-width:280px}
     .infoHeading{font-size:14px;margin-bottom:22px}
     .info-line{font-size:14px}
     .extCard{padding:32px 24px 26px}
@@ -453,13 +441,6 @@
   <div class="infoCard">
     <button class="infoClose" id="infoClose" aria-label="Закрыть">×</button>
     <div id="infoContent"></div>
-    <div class="installAppArea" id="installAppArea">
-      <button type="button" id="installAppBtn">Как установить приложение</button>
-      <p id="installAppHint" aria-live="polite"></p>
-    </div>
-    <div class="tutorialReplayArea">
-      <button type="button" id="tutorialReplayBtn">Повторить обучение</button>
-    </div>
   </div>
 </div>
 <div id="externalWarning">
@@ -472,9 +453,11 @@
   </div>
 </div>
 <div id="tutorialHand" aria-hidden="true">
-  <svg viewBox="0 0 112 144" role="presentation">
-    <path class="hand-outline" d="M35 137 C30 133 27 127 25 120 L18.5 101 C16.2 94.5 18.6 89.1 23.3 87.1 C28.2 85 33.1 87.7 36 94 L43.2 109 L40.5 29 C40.2 19 44.4 12.5 51.7 12.5 C59.2 12.5 63.1 18.3 63.3 28.2 L64.2 80.5 L68.4 70 C71 63.5 76.4 61 81.2 63.7 C86.1 66.5 86.8 71.8 83.9 78 L80.6 86.5 L87.2 80.3 C91.5 76.3 97.1 76.8 100.5 80.8 C104.1 85 102.7 90.1 98.9 94.6 L91.3 104.3 C85.4 113.2 79.6 120.2 71 126.1 C62.2 132.1 51.4 136.4 40.7 138 Z"/>
-    <path class="hand-detail" d="M47.2 40 C51 42.3 56.8 42.3 60.2 40 M47.9 51 C51.8 53 57.1 53 60.7 50.7 M48.4 62 C52.1 63.7 57 63.6 61 61.3 M64.8 91 C69.3 94 75 93.7 79.4 90 M29 99 C33.4 98 37.1 100.2 39.1 104.1 M38.8 119.5 C46.3 124 56.2 124.6 64.5 121.2 M43.8 131 C51.2 131.5 58.2 129.9 64.4 126.9"/>
+  <svg viewBox="0 0 112 144" role="presentation" aria-hidden="true">
+    <path class="hand-outline" d="M35 136 C27 132 21 125 17 116 L7 95 C3 87 7 79 14 76 C20 73 26 78 30 86 L37 102 L35.5 29 C35.2 18 41 10.5 49.5 10.5 C58.5 10.5 64 17 64 29 L65 77 C65 69 69 64 75.5 65 C82 66 85 72 83 80 C86 72 92 69 98 73 C104 77 103 84 99 91 C104 94 103 101 98 107 L88 119 C80 130 68 136 55 139 C47 141 40 139 35 136 Z"/>
+    <path class="hand-detail" d="M65 91 C69 83 78 82 83 88 C87 94 83 101 77 104 C71 106 66 102 64 96 M76 108 C81 101 90 102 94 108 C97 114 92 120 85 122 C79 123 74 119 73 114 M30 99 C36 108 46 112 56 109 M28 118 C39 127 56 131 72 124"/>
+    <path class="hand-outline" d="M27 121 C39 131 58 134 75 125 L82 133 C68 143 44 144 29 133 Z"/>
+    <path class="hand-detail" d="M43 18 C45 14 49 12.5 53 13 C57 13.5 60 16 61 20"/>
   </svg>
 </div>
 <div id="ageGate" role="dialog" aria-modal="true">
@@ -572,7 +555,6 @@ const infoBtn = document.getElementById('infoBtn');
 const searchSuggestions = document.getElementById('searchSuggestions');
 const muteBtn = document.getElementById('muteBtn');
 const tutorialHand = document.getElementById('tutorialHand');
-const tutorialReplayBtn = document.getElementById('tutorialReplayBtn');
 let tutorialStage = 'idle';
 let tutorialStartRequested = false;
 let tutorialCompletedThisSession = false;
@@ -689,13 +671,13 @@ function cancelTutorialMotion(hideDropzone){
   setTutorialHandScale(1);
   if (hideDropzone !== false) dropzone.classList.remove('visible', 'hover');
 }
-const TUTORIAL_HAND_WIDTH = 104;
-const TUTORIAL_HAND_HEIGHT = 134;
-const TUTORIAL_HAND_TIP_X = 50;
+const TUTORIAL_HAND_WIDTH = 112;
+const TUTORIAL_HAND_HEIGHT = 144;
+const TUTORIAL_HAND_TIP_X = 49;
 const TUTORIAL_HAND_MIRROR_TIP_X = TUTORIAL_HAND_WIDTH - TUTORIAL_HAND_TIP_X;
 const TUTORIAL_HAND_TIP_Y = 10;
-const TUTORIAL_HAND_BOTTOM_TIP_X = 54;
-const TUTORIAL_HAND_BOTTOM_TIP_Y = 125;
+const TUTORIAL_HAND_BOTTOM_TIP_X = 63;
+const TUTORIAL_HAND_BOTTOM_TIP_Y = 134;
 let tutorialHandScale = 1;
 function setTutorialHandScale(scale){
   tutorialHandScale = Math.max(.3, Math.min(1, scale || 1));
@@ -709,7 +691,7 @@ function setTutorialHandScale(scale){
     svg.style.height = height + 'px';
   }
   const fromBottom = tutorialHand.classList.contains('bottom-approach');
-  tutorialHand.style.transformOrigin = (fromBottom ? 54 : 51) * tutorialHandScale + 'px ' + (fromBottom ? 125 : 10) * tutorialHandScale + 'px';
+  tutorialHand.style.transformOrigin = (fromBottom ? 63 : 49) * tutorialHandScale + 'px ' + (fromBottom ? 134 : 10) * tutorialHandScale + 'px';
 }
 function tutorialHandPosition(x, y){
   const mirrored = tutorialHand.classList.contains('mirror');
@@ -957,15 +939,6 @@ function completeTutorial(){
   }
   setTutorialStage('done');
 }
-function replayTutorial(){
-  cancelTutorialMotion(true);
-  try { localStorage.removeItem(SKY_HINT_KEY); } catch (e) {}
-  tutorialCompletedThisSession = false;
-  tutorialStartRequested = false;
-  closeInfoPanel();
-  setTutorialStage('swipe');
-}
-if (tutorialReplayBtn) tutorialReplayBtn.addEventListener('click', replayTutorial);
 function pauseTutorialForUserDrag(){
   if (tutorialStage === 'drag' || tutorialStage === 'tap') cancelTutorialMotion(false);
 }
@@ -1360,6 +1333,47 @@ function getPageForIndex(idx){
   return 0;
 }
 
+function getSkyPageHeight(){
+  const visibleHeight = window.visualViewport && window.visualViewport.height > 0 ? window.visualViewport.height : innerHeight;
+  return Math.max(1, Math.round(visibleHeight || document.documentElement.clientHeight || 1));
+}
+
+function updateSkyPageGeometry(){
+  const pageHeight = getSkyPageHeight();
+  const pageNodes = sky.querySelectorAll('.page');
+  pageNodes.forEach((page, index) => {
+    page.style.height = pageHeight + 'px';
+    page.style.top = (index * pageHeight) + 'px';
+  });
+  sky.style.height = (Math.max(1, pageNodes.length) * pageHeight) + 'px';
+  sky.style.transform = 'translate3d(0,' + (-currentPage * pageHeight) + 'px,0)';
+}
+
+function refreshStarRingLayout(){
+  const small = innerWidth <= 640;
+  const ringSize = small ? 108 : 132;
+  const radius = small ? 42 : 52;
+  const center = ringSize / 2;
+  const fontSize = small ? 8 : 9;
+  const letterSpacing = small ? .5 : .7;
+  const pathD = 'M ' + center + ' ' + (center + radius) + ' a ' + radius + ' ' + radius + ' 0 1 1 0 -' + (radius * 2) + ' a ' + radius + ' ' + radius + ' 0 1 1 0 ' + (radius * 2);
+  starEls.forEach((star, index) => {
+    if (!star) return;
+    const ring = star.querySelector('.star-ring');
+    const path = ring && ring.querySelector('defs path');
+    const text = ring && ring.querySelector('.ring-text');
+    const textPath = ring && ring.querySelector('.ring-text textPath');
+    if (!ring || !path || !text || !textPath || !EPISODES[index]) return;
+    ring.setAttribute('viewBox', '0 0 ' + ringSize + ' ' + ringSize);
+    ring.style.width = ringSize + 'px';
+    ring.style.height = ringSize + 'px';
+    path.setAttribute('d', pathD);
+    text.setAttribute('font-size', String(fontSize));
+    text.setAttribute('letter-spacing', String(letterSpacing));
+    textPath.textContent = fitRingTitle(EPISODES[index].title, radius, fontSize, letterSpacing);
+  });
+}
+
 function getExclusionZones(){
   const zones = [];
   const bar = document.getElementById('topBar');
@@ -1488,7 +1502,7 @@ function createStarEl(ep, idx, pos){
   star.setAttribute('aria-label', ep.title);
   if (!playedSet.has(ep.folderKey)) star.classList.add('unplayed');
 
-  const small = innerWidth < 700;
+  const small = innerWidth <= 640;
   const ringSize = small ? 108 : 132;
   const radius = small ? 42 : 52;
   const center = ringSize / 2;
@@ -1521,7 +1535,7 @@ function createStarEl(ep, idx, pos){
 
 async function buildSky(){
   const initialStarCount = isMobile ? 220 : 460;
-  sky.innerHTML = '<div class="page" style="top:0"><div class="page-sky">' + makeSkySVG(initialStarCount) + '</div></div>';
+  sky.innerHTML = '<div class="page" style="top:0;height:' + Math.max(1, innerHeight) + 'px"><div class="page-sky">' + makeSkySVG(initialStarCount) + '</div></div>';
 
   let data;
   try {
@@ -1561,7 +1575,9 @@ async function buildSky(){
   for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
     const page = document.createElement('div');
     page.className = 'page';
-    page.style.top = (pageIndex * 100) + 'vh';
+    const pageHeight = getSkyPageHeight();
+    page.style.top = (pageIndex * pageHeight) + 'px';
+    page.style.height = pageHeight + 'px';
     const skyLayer = document.createElement('div');
     skyLayer.className = 'page-sky';
     const perPageStars = isMobile ? 140 + Math.floor(Math.random() * 90) : 260 + Math.floor(Math.random() * 160);
@@ -1573,7 +1589,8 @@ async function buildSky(){
   }
   while (sky.firstChild) sky.removeChild(sky.firstChild);
   sky.appendChild(fragment);
-  sky.style.transform = 'translateY(0)';
+  updateSkyPageGeometry();
+  refreshStarRingLayout();
 
   for (let index = 0; index < EPISODES.length; index++) {
     const ep = EPISODES[index];
@@ -1606,6 +1623,7 @@ async function buildSky(){
   updatePageMap();
   setTimeout(() => loadEpisodeNamesInBackground().catch(() => {}), 1400);
   maybeStartTutorial();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => refreshStarRingLayout()).catch(() => {});
 }
 
 function restoreLastPlayed(){
@@ -2977,8 +2995,25 @@ function updateEpisodeTitle(index, title){
   const star = starEls[index];
   if (star) {
     star.setAttribute('aria-label', title);
-    const path = star.querySelector('.ring-text textPath');
-    if (path) path.textContent = fitRingTitle(title, innerWidth < 700 ? 42 : 52, innerWidth < 700 ? 8 : 9, innerWidth < 700 ? 0.5 : 0.7);
+    const small = innerWidth <= 640;
+    const ring = star.querySelector('.star-ring');
+    const path = ring && ring.querySelector('defs path');
+    const text = ring && ring.querySelector('.ring-text');
+    const textPath = ring && ring.querySelector('.ring-text textPath');
+    const ringSize = small ? 108 : 132;
+    const radius = small ? 42 : 52;
+    const fontSize = small ? 8 : 9;
+    const letterSpacing = small ? .5 : .7;
+    const center = ringSize / 2;
+    if (ring && path && text && textPath) {
+      ring.setAttribute('viewBox', '0 0 ' + ringSize + ' ' + ringSize);
+      ring.style.width = ringSize + 'px';
+      ring.style.height = ringSize + 'px';
+      path.setAttribute('d', 'M ' + center + ' ' + (center + radius) + ' a ' + radius + ' ' + radius + ' 0 1 1 0 -' + (radius * 2) + ' a ' + radius + ' ' + radius + ' 0 1 1 0 ' + (radius * 2));
+      text.setAttribute('font-size', String(fontSize));
+      text.setAttribute('letter-spacing', String(letterSpacing));
+      textPath.textContent = fitRingTitle(title, radius, fontSize, letterSpacing);
+    }
   }
   if (current === index) {
     applyMarquee(pTitle, title);
@@ -3648,7 +3683,8 @@ function goToPage(n){
   skyWrap.classList.add(turnClass);
   clearTimeout(pageTurnCleanupTimer);
   pageTurnCleanupTimer = setTimeout(() => skyWrap.classList.remove('page-turn-forward', 'page-turn-back'), 1020);
-  sky.style.transform = 'translate3d(0,-' + (nn * 100) + 'vh,0)';
+  const pageHeight = getSkyPageHeight();
+  sky.style.transform = 'translate3d(0,-' + (nn * pageHeight) + 'px,0)';
   pageCurrentEl.textContent = nn + 1;
   updatePageMap();
   preloadPageCovers(nn);
@@ -3898,12 +3934,14 @@ document.addEventListener('visibilitychange', () => {
     clearDragTrail();
   } else {
     resize();
+    updateSkyPageGeometry();
+    refreshStarRingLayout();
     startBgLoop();
     if (pageMapPanel.classList.contains('show')) updatePageMap();
   }
 });
 window.addEventListener('pageshow', (event) => {
-  if (!document.hidden) startBgLoop();
+  if (!document.hidden) { startBgLoop(); updateSkyPageGeometry(); refreshStarRingLayout(); }
   if (event.persisted && TUTORIAL_MODE === 0 && !ageGateActive && EPISODES.length) {
     cancelTutorialMotion(true);
     tutorialCompletedThisSession = false;
@@ -3915,6 +3953,8 @@ window.addEventListener('pageshow', (event) => {
 
 window.addEventListener('resize', () => {
   resize();
+  updateSkyPageGeometry();
+  refreshStarRingLayout();
   if (pageMapPanel.classList.contains('show')) updatePageMap();
   if (current >= 0 && EPISODES[current]) {
     setTimeout(() => {
@@ -3926,58 +3966,20 @@ window.addEventListener('resize', () => {
   }
 });
 
-let deferredInstallPrompt = null;
-const installAppArea = document.getElementById('installAppArea');
-const installAppBtn = document.getElementById('installAppBtn');
-const installAppHint = document.getElementById('installAppHint');
-function isAppInstalled(){
-  return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+if (window.visualViewport) {
+  let viewportResizeFrame = 0;
+  const syncVisualViewport = () => {
+    if (viewportResizeFrame) cancelAnimationFrame(viewportResizeFrame);
+    viewportResizeFrame = requestAnimationFrame(() => {
+      viewportResizeFrame = 0;
+      updateSkyPageGeometry();
+      refreshStarRingLayout();
+      if (pageMapPanel.classList.contains('show')) updatePageMap();
+    });
+  };
+  window.visualViewport.addEventListener('resize', syncVisualViewport, { passive:true });
 }
-function getInstallInstructions(){
-  const ua = navigator.userAgent || '';
-  const appleMobile = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  if (appleMobile) return 'Откройте меню «Поделиться» и выберите «На экран Домой», затем нажмите «Добавить». На новых версиях iOS можно оставить включённым «Открыть как веб-приложение».';
-  if (/Android/i.test(ua)) return 'Откройте меню браузера и выберите «Установить приложение» или «Добавить на главный экран». Название пункта зависит от браузера.';
-  if (/Macintosh|Mac OS X/i.test(ua)) return 'В Safari выберите «Файл» → «Добавить в Dock». В Chrome или Edge используйте значок установки в адресной строке либо пункт установки в меню браузера.';
-  if (/Windows/i.test(ua)) return 'В Chrome или Edge откройте меню браузера и выберите «Установить Страшилки» или «Установить приложение». В других браузерах используйте доступный пункт создания ярлыка или добавления сайта на экран.';
-  return 'Откройте меню браузера и найдите пункт «Установить приложение», «Добавить на главный экран» или «Создать ярлык». Доступный вариант зависит от браузера и системы.';
-}
-function updateInstallUI(){
-  if (!installAppArea || !installAppBtn || !installAppHint) return;
-  if (isAppInstalled()) {
-    installAppArea.hidden = true;
-    return;
-  }
-  installAppArea.hidden = false;
-  installAppBtn.textContent = deferredInstallPrompt ? 'Установить приложение' : 'Как установить приложение';
-}
-if (installAppBtn) {
-  installAppBtn.addEventListener('click', async () => {
-    if (deferredInstallPrompt) {
-      const promptEvent = deferredInstallPrompt;
-      deferredInstallPrompt = null;
-      try {
-        await promptEvent.prompt();
-        const choice = await promptEvent.userChoice;
-        if (choice && choice.outcome === 'accepted') showToast('установка приложения запущена', 2200);
-      } catch (e) {}
-      updateInstallUI();
-      return;
-    }
-    installAppHint.textContent = getInstallInstructions();
-    installAppHint.classList.toggle('show');
-  });
-}
-window.addEventListener('beforeinstallprompt', (event) => {
-  event.preventDefault();
-  deferredInstallPrompt = event;
-  updateInstallUI();
-});
-window.addEventListener('appinstalled', () => {
-  deferredInstallPrompt = null;
-  updateInstallUI();
-  showToast('Страшилки установлены', 2200);
-});
+
 function registerAppServiceWorker(){
   if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
   try {
@@ -4000,7 +4002,6 @@ async function init(){
   loadPositions();
   startBgLoop();
   registerAppServiceWorker();
-  updateInstallUI();
   loadPodcastInfo();
   buildSky();
 }
