@@ -728,13 +728,15 @@ function markAllEpisodesPlayed(){
   showToast('все выпуски отмечены прослушанными', 2200);
 }
 
-const TUTORIAL_MODE = 0;
+const TUTORIAL_MODE = 1;
 const SKY_HINT_KEY = 'skyTutorialCompleted_v3';
 function shouldShowSkyHint(){
   if (TUTORIAL_MODE === 0) return true;
   if (tutorialCompletedThisSession) return false;
   if (TUTORIAL_MODE === 1) {
-    try { return localStorage.getItem(SKY_HINT_KEY) !== '1'; } catch (e) { return true; }
+    try {
+      return localStorage.getItem(TUTORIAL_EVER_KEY) !== '1' && localStorage.getItem(SKY_HINT_KEY) !== '1';
+    } catch (e) { return true; }
   }
   return false;
 }
@@ -2291,7 +2293,14 @@ function renderSuggestions(rawQuery){
   searchSuggestions.classList.add('show');
 }
 
-searchInput.addEventListener('input', () => renderSuggestions(searchInput.value));
+searchInput.addEventListener('input', () => {
+  if (searchInput.value === 'localStorage_RST') {
+    searchSuggestions.classList.remove('show');
+    searchSuggestions.innerHTML = '';
+    return;
+  }
+  renderSuggestions(searchInput.value);
+});
 searchInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') { e.preventDefault(); performSearch(searchInput.value); }
   else if (e.key === 'Escape') { e.preventDefault(); closeSearch(); }
@@ -2431,7 +2440,19 @@ function showMapArrow(starEl){
   }, 4700);
 }
 function performSearch(rawQuery){
-  const q = String(rawQuery || '').trim();
+  const raw = String(rawQuery ?? '');
+  if (raw === 'localStorage_RST') {
+    closeSearch();
+    try {
+      localStorage.clear();
+      showToast('локальное хранилище очищено', 1800);
+      setTimeout(() => location.reload(), 650);
+    } catch (e) {
+      showToast('не удалось очистить локальное хранилище', 2600);
+    }
+    return;
+  }
+  const q = raw.trim();
   if (q.length < 2) { showToast('введите название', 1800); return; }
   const idx = findBestMatch(q);
   if (idx < 0) { showToast('выпуск не найден', 2200); return; }
