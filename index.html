@@ -694,14 +694,15 @@ function markPlayed(folderKey){
   if (idx >= 0 && starEls[idx]) starEls[idx].classList.remove('unplayed');
 }
 
-const TUTORIAL_MODE = 1;
+const TUTORIAL_MODE = 0;
 const SKY_HINT_KEY = 'skyTutorialCompleted_v3';
 function shouldShowSkyHint(){
-  if (tutorialCompletedThisSession) return false;
   if (TUTORIAL_MODE === 0) return true;
-  return TUTORIAL_MODE === 1 ? (() => {
+  if (tutorialCompletedThisSession) return false;
+  if (TUTORIAL_MODE === 1) {
     try { return localStorage.getItem(SKY_HINT_KEY) !== '1'; } catch (e) { return true; }
-  })() : false;
+  }
+  return false;
 }
 function cancelTutorialMotion(hideDropzone){
   clearTimeout(tutorialDemoTimer);
@@ -955,7 +956,11 @@ function completeTutorial(){
   if (tutorialStage === 'done') return;
   tutorialCompletedThisSession = true;
   tutorialStartRequested = false;
-  try { localStorage.setItem(SKY_HINT_KEY, '1'); } catch (e) {}
+  if (TUTORIAL_MODE === 1) {
+    try { localStorage.setItem(SKY_HINT_KEY, '1'); } catch (e) {}
+  } else {
+    try { localStorage.removeItem(SKY_HINT_KEY); } catch (e) {}
+  }
   setTutorialStage('done');
 }
 function replayTutorial(){
@@ -3906,8 +3911,15 @@ document.addEventListener('visibilitychange', () => {
     if (pageMapPanel.classList.contains('show')) updatePageMap();
   }
 });
-window.addEventListener('pageshow', () => {
+window.addEventListener('pageshow', (event) => {
   if (!document.hidden) startBgLoop();
+  if (event.persisted && TUTORIAL_MODE === 0 && !ageGateActive && EPISODES.length) {
+    cancelTutorialMotion(true);
+    tutorialCompletedThisSession = false;
+    tutorialStage = 'idle';
+    tutorialStartRequested = true;
+    requestAnimationFrame(maybeStartTutorial);
+  }
 });
 
 window.addEventListener('resize', () => {
