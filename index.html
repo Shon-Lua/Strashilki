@@ -602,13 +602,14 @@ function tutorialIsActive(){
 function tutorialTargetAllowed(target, eventType){
   if (!tutorialIsActive()) return true;
   if (!(target instanceof Element)) return false;
+  if (tutorialStage === 'pages') return true;
+  if (target.closest('#playerOverlay .playerCard, #miniPlayer')) return true;
   if (tutorialStage === 'swipe') return eventType === 'pointerdown' && skyWrap.contains(target) && !(target.closest && target.closest('.star'));
   if (tutorialStage === 'drag' || tutorialStage === 'tap') {
     const star = target.closest('.star');
     return !!star && !!tutorialTargetStar && star === tutorialTargetStar;
   }
   if (tutorialStage === 'close' || tutorialStage === 'closeAgain') return target === overlay;
-  if (tutorialStage === 'pages') return true;
   return false;
 }
 function blockTutorialInput(event){
@@ -1533,15 +1534,15 @@ function updateSkyPageGeometry(){
     page.style.top = (index * pageHeight) + 'px';
   });
   sky.style.height = (Math.max(1, pageNodes.length) * pageHeight) + 'px';
-  sky.style.transform = 'translate3d(0,' + (-currentPage * pageHeight) + 'px,0)';
+  sky.style.transform = 'translateY(' + (-currentPage * pageHeight) + 'px)';
   requestAnimationFrame(() => { sky.style.transition = previousTransition; });
 }
 
 let lastStarRingLayout = '';
-function refreshStarRingLayout(){
+function refreshStarRingLayout(force){
   const layoutWidth = document.documentElement.clientWidth || innerWidth;
   const layoutKey = layoutWidth <= 640 ? 'small' : 'large';
-  if (lastStarRingLayout === layoutKey) return;
+  if (!force && lastStarRingLayout === layoutKey) return;
   lastStarRingLayout = layoutKey;
   const small = layoutKey === 'small';
   const ringSize = small ? 108 : 132;
@@ -1993,7 +1994,7 @@ function toggleMute(){
 }
 
 muteBtn.addEventListener('click', () => {
-  if (tutorialIsActive()) return;
+  if (tutorialIsActive() && tutorialStage !== 'pages') return;
   toggleMute();
   closeQuickMenu();
 });
@@ -2124,7 +2125,7 @@ function openQuickMenu(){
   infoBtn.setAttribute('aria-expanded','true');
 }
 function toggleQuickMenu(){
-  if (tutorialIsActive()) return;
+  if (tutorialIsActive() && tutorialStage !== 'pages') return;
   if (quickMenu.classList.contains('show')) closeQuickMenu();
   else openQuickMenu();
 }
@@ -2141,12 +2142,12 @@ function closeInfoPanel(){ infoPanel.classList.remove('show'); }
 
 infoBtn.addEventListener('click', toggleQuickMenu);
 document.getElementById('menuInfoBtn').addEventListener('click', () => {
-  if (tutorialIsActive()) return;
+  if (tutorialIsActive() && tutorialStage !== 'pages') return;
   closeQuickMenu();
   openInfoPanel();
 });
 document.getElementById('markAllPlayedBtn').addEventListener('click', () => {
-  if (tutorialIsActive()) return;
+  if (tutorialIsActive() && tutorialStage !== 'pages') return;
   markAllEpisodesPlayed();
 });
 quickMenu.addEventListener('pointerdown', e => e.stopPropagation());
@@ -2193,7 +2194,7 @@ async function openArtsPanel(){
 }
 function closeArtsPanel(){ artsPanel.classList.remove('show'); artsPanel.setAttribute('aria-hidden','true'); }
 document.getElementById('menuArtsBtn').addEventListener('click', () => {
-  if (tutorialIsActive()) return;
+  if (tutorialIsActive() && tutorialStage !== 'pages') return;
   openArtsPanel();
 });
 artsPanel.addEventListener('click', e => { if (e.target === artsPanel) closeArtsPanel(); });
@@ -3902,7 +3903,12 @@ pageMapPanel.addEventListener('pointerdown', (e) => e.stopPropagation());
 pageMapSlider.addEventListener('input', () => goToPage(Number(pageMapSlider.value), true));
 pageMapSlider.addEventListener('change', () => {
   clearTimeout(pageSliderTransitionTimer);
-  pageSliderTransitionTimer = setTimeout(() => { sky.style.transition = ''; }, 220);
+  pageSliderTransitionTimer = setTimeout(() => {
+    sky.style.transition = '';
+    sky.style.transform = 'translateY(-' + (currentPage * getSkyPageHeight()) + 'px)';
+    void sky.offsetHeight;
+    requestAnimationFrame(() => requestAnimationFrame(() => refreshStarRingLayout(true)));
+  }, 240);
   preloadPageCovers(currentPage);
 });
 document.addEventListener('pointerdown', (e) => {
@@ -3931,7 +3937,7 @@ function goToPage(n, fromSlider){
     clearTimeout(pageTurnCleanupTimer);
     clearTimeout(pageSliderTransitionTimer);
     sky.style.transition = 'transform .18s cubic-bezier(.2,.65,.25,1)';
-    sky.style.transform = 'translate3d(0,-' + (nn * pageHeight) + 'px,0)';
+    sky.style.transform = 'translateY(-' + (nn * pageHeight) + 'px)';
   } else {
     clearTimeout(pageSliderTransitionTimer);
     sky.style.transition = '';
@@ -3944,7 +3950,7 @@ function goToPage(n, fromSlider){
     skyWrap.classList.add(turnClass);
     clearTimeout(pageTurnCleanupTimer);
     pageTurnCleanupTimer = setTimeout(() => skyWrap.classList.remove('page-turn-forward', 'page-turn-back'), 1020);
-    sky.style.transform = 'translate3d(0,-' + (nn * pageHeight) + 'px,0)';
+    sky.style.transform = 'translateY(-' + (nn * pageHeight) + 'px)';
   }
   pageCurrentEl.textContent = nn + 1;
   updatePageMap();
