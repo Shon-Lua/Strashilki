@@ -269,14 +269,9 @@
   .ageEnter{padding:14px 60px;background:transparent;border:1px solid rgba(255,255,255,.4);color:#eae6f2;font-family:'Special Elite', 'Courier New', monospace;font-weight:400;font-size:12px;letter-spacing:.48em;text-indent:.48em;text-transform:uppercase;cursor:pointer;transition:color .3s ease, border-color .3s ease, box-shadow .3s ease, letter-spacing .3s ease;border-radius:2px;-webkit-tap-highlight-color:transparent}
   .ageEnter:hover{color:#fff;border-color:#fff;box-shadow:0 0 50px rgba(255,255,255,.24);letter-spacing:.56em}
   .ageEnter:active{box-shadow:0 0 30px rgba(255,255,255,.35), inset 0 0 26px rgba(255,255,255,.1)}
-  #tutorialHand{position:fixed;left:0;top:0;width:112px;height:144px;z-index:260;pointer-events:none;opacity:0;visibility:hidden;transform-origin:50px 11px;will-change:left,top,transform,opacity;transition:opacity .24s ease,visibility .24s ease}
+  #tutorialHand{position:fixed;left:0;top:0;width:14px;height:14px;z-index:260;pointer-events:none;opacity:0;visibility:hidden;border-radius:50%;background:#fff;box-shadow:0 0 7px rgba(255,255,255,.95),0 0 17px rgba(255,255,255,.55);transform-origin:50% 50%;will-change:left,top,transform,opacity;transition:opacity .22s ease,visibility .22s ease}
   #tutorialHand.active{opacity:1;visibility:visible}
-  #tutorialHand svg{display:block;width:112px;height:144px;overflow:visible;transform-origin:50% 50%}
-  #tutorialHand.mirror{transform-origin:62px 11px}
-  #tutorialHand.mirror svg{transform:scaleX(-1)}
-  #tutorialHand.bottom-approach{transform-origin:50px 11px}
-  #tutorialHand.bottom-approach svg{transform:none;transform-origin:50% 50%}
-  #tutorialHand .hand-outline{fill:none;stroke:#f5f3f2;stroke-width:3.15;stroke-linecap:round;stroke-linejoin:round;opacity:.98}
+  #tutorialHand::before{content:'';position:absolute;right:50%;top:50%;width:42px;height:3px;border-radius:99px;transform-origin:right center;transform:rotate(var(--tutorial-tail-angle,0deg)) scaleX(var(--tutorial-tail-scale,1));background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.2) 34%,rgba(255,255,255,.72) 78%,#fff 100%);box-shadow:0 0 5px rgba(255,255,255,.45);opacity:.9;pointer-events:none}
   .star.tutorial-target .star-core{animation:tutorialStarGuidePulse 1.6s ease-in-out infinite!important;box-shadow:0 0 20px 7px rgba(255,255,255,.98),0 0 56px 18px rgba(220,205,255,.52)!important}
   .tutorial-demo-proxy{position:fixed!important;z-index:258!important;pointer-events:none!important;opacity:1!important;transition:none!important;animation:none!important;overflow:visible!important;will-change:left,top,transform,opacity;}
   .tutorial-demo-proxy .star-core,.tutorial-demo-proxy .star-flare{animation:none!important}
@@ -445,11 +440,7 @@
     <div class="extCancel" id="extCancelBtn">отмена</div>
   </div>
 </div>
-<div id="tutorialHand" aria-hidden="true">
-  <svg viewBox="0 0 112 144" role="presentation" aria-hidden="true">
-    <path class="hand-outline" d="M32 139 C25 136 23 129 27 123 L16 109 C10 102 11 94 17 89 C23 84 30 87 35 94 L39 101 L39 31 C39 19 44 11 51 11 C59 11 64 19 64 31 L64 78 C64 69 70 64 77 65 C85 65 89 71 89 80 L89 84 C90 76 96 72 102 76 C108 80 108 88 104 95 C110 92 114 98 111 105 L103 120 C96 134 82 141 66 143 C52 145 40 143 32 139 Z"/>
-  </svg>
-</div>
+<div id="tutorialHand" aria-hidden="true"></div>
 <div id="ageGate" role="dialog" aria-modal="true">
   <div class="ageInner">
     <div class="ageBrand">Страшилки</div>
@@ -662,38 +653,32 @@ function cancelTutorialMotion(hideDropzone){
   setTutorialHandScale(1);
   if (hideDropzone !== false) dropzone.classList.remove('visible', 'hover');
 }
-const TUTORIAL_HAND_WIDTH = 112;
-const TUTORIAL_HAND_HEIGHT = 144;
-const TUTORIAL_HAND_TIP_X = 51;
-const TUTORIAL_HAND_MIRROR_TIP_X = TUTORIAL_HAND_WIDTH - TUTORIAL_HAND_TIP_X;
-const TUTORIAL_HAND_TIP_Y = 11;
+const TUTORIAL_HAND_WIDTH = 14;
+const TUTORIAL_HAND_HEIGHT = 14;
+const TUTORIAL_HAND_TIP_X = 7;
+const TUTORIAL_HAND_MIRROR_TIP_X = TUTORIAL_HAND_TIP_X;
+const TUTORIAL_HAND_TIP_Y = 7;
 const TUTORIAL_HAND_BOTTOM_TIP_X = TUTORIAL_HAND_TIP_X;
 const TUTORIAL_HAND_BOTTOM_TIP_Y = TUTORIAL_HAND_TIP_Y;
 let tutorialHandScale = 1;
 function setTutorialHandScale(scale){
-  tutorialHandScale = Math.max(.3, Math.min(1, scale || 1));
-  const width = TUTORIAL_HAND_WIDTH * tutorialHandScale;
-  const height = TUTORIAL_HAND_HEIGHT * tutorialHandScale;
-  tutorialHand.style.width = width + 'px';
-  tutorialHand.style.height = height + 'px';
-  const svg = tutorialHand.querySelector('svg');
-  if (svg) {
-    svg.style.width = width + 'px';
-    svg.style.height = height + 'px';
-  }
-  const fromBottom = tutorialHand.classList.contains('bottom-approach');
-  tutorialHand.style.transformOrigin = TUTORIAL_HAND_TIP_X * tutorialHandScale + 'px ' + TUTORIAL_HAND_TIP_Y * tutorialHandScale + 'px';
+  tutorialHandScale = Math.max(.55, Math.min(1.35, scale || 1));
+  const size = 14 * tutorialHandScale;
+  tutorialHand.style.width = size + 'px';
+  tutorialHand.style.height = size + 'px';
+  tutorialHand.style.transformOrigin = '50% 50%';
+  tutorialHand.style.setProperty('--tutorial-tail-scale', String(tutorialHandScale));
+}
+function setTutorialTailDirection(fromX, fromY, toX, toY){
+  const dx = toX - fromX;
+  const dy = toY - fromY;
+  const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+  tutorialHand.style.setProperty('--tutorial-tail-angle', angle.toFixed(1) + 'deg');
 }
 function tutorialHandPosition(x, y){
-  const mirrored = tutorialHand.classList.contains('mirror');
-  const fromBottom = tutorialHand.classList.contains('bottom-approach');
-  const width = TUTORIAL_HAND_WIDTH * tutorialHandScale;
-  const height = TUTORIAL_HAND_HEIGHT * tutorialHandScale;
-  const normalTipX = (fromBottom ? TUTORIAL_HAND_BOTTOM_TIP_X : TUTORIAL_HAND_TIP_X) * tutorialHandScale;
-  const tipX = mirrored ? width - normalTipX : normalTipX;
-  const tipY = (fromBottom ? TUTORIAL_HAND_BOTTOM_TIP_Y : TUTORIAL_HAND_TIP_Y) * tutorialHandScale;
-  const left = Math.max(3, Math.min(innerWidth - width - 3, x - tipX));
-  const top = Math.max(3, Math.min(innerHeight - height - 3, y - tipY));
+  const size = 14 * tutorialHandScale;
+  const left = Math.max(3, Math.min(innerWidth - size - 3, x - size / 2));
+  const top = Math.max(3, Math.min(innerHeight - size - 3, y - size / 2));
   return { left, top };
 }
 function placeTutorialHand(x, y){
@@ -769,6 +754,8 @@ function startTutorialDragDemo(){
   const ty = targetRect.top + targetRect.height / 2;
   tutorialDemoNode = makeTutorialStarProxy(star, sx, sy);
   tutorialHand.classList.remove('mirror', 'bottom-approach');
+  setTutorialHandScale(1);
+  setTutorialTailDirection(sx, sy, tx, ty);
   const handStart = tutorialHandPosition(sx, sy);
   const handEnd = tutorialHandPosition(tx, ty);
   tutorialHand.style.left = handStart.left + 'px';
@@ -782,54 +769,36 @@ function startTutorialDragDemo(){
     { left:sx+'px', top:sy+'px', opacity:.96, transform:'translate(-50%,-50%) scale(1)', offset:1 }
   ], { duration:3100, iterations:Infinity, easing:'ease-in-out' });
   const moveHand = tutorialHand.animate([
-    { left:handStart.left+'px', top:handStart.top+'px', opacity:1, transform:'rotate(-10deg) scale(1)', offset:0 },
-    { left:handEnd.left+'px', top:handEnd.top+'px', opacity:1, transform:'rotate(7deg) scale(.94)', offset:.57 },
-    { left:handEnd.left+'px', top:handEnd.top+'px', opacity:.1, transform:'rotate(7deg) scale(.82)', offset:.68 },
-    { left:handStart.left+'px', top:handStart.top+'px', opacity:0, transform:'rotate(-10deg) scale(.9)', offset:.82 },
-    { left:handStart.left+'px', top:handStart.top+'px', opacity:1, transform:'rotate(-10deg) scale(1)', offset:1 }
+    { left:handStart.left+'px', top:handStart.top+'px', opacity:1, transform:'scale(1)', offset:0 },
+    { left:handEnd.left+'px', top:handEnd.top+'px', opacity:1, transform:'scale(.92)', offset:.57 },
+    { left:handEnd.left+'px', top:handEnd.top+'px', opacity:.1, transform:'scale(.72)', offset:.68 },
+    { left:handStart.left+'px', top:handStart.top+'px', opacity:0, transform:'scale(.82)', offset:.82 },
+    { left:handStart.left+'px', top:handStart.top+'px', opacity:1, transform:'scale(1)', offset:1 }
   ], { duration:3100, iterations:Infinity, easing:'ease-in-out' });
   tutorialDemoAnimations = [moveStar];
   tutorialHandAnimations = [moveHand];
 }
 function startTutorialCloseDemo(){
   const card = document.getElementById('playerCard');
-  const coverEl = document.getElementById('cover');
-  const rect = card ? card.getBoundingClientRect() : { left:innerWidth*.1, right:innerWidth*.9, top:innerHeight*.2, bottom:innerHeight*.8 };
-  let point;
-  let mirrored = false;
-  if (isMobile) {
-    tutorialHand.classList.remove('bottom-approach', 'compact', 'mirror');
-    const freeBelowCard = Math.max(34, innerHeight - rect.bottom - 8);
-    const scale = Math.max(.28, Math.min(.62, (freeBelowCard - 8) / TUTORIAL_HAND_HEIGHT));
-    setTutorialHandScale(scale);
-    const handHeight = TUTORIAL_HAND_HEIGHT * tutorialHandScale;
-    const targetY = Math.min(innerHeight - handHeight - 5, rect.bottom + 9);
-    const targetX = Math.max(14, Math.min(innerWidth - 14, innerWidth * .74));
-    point = { x:targetX, y:Math.max(12, targetY) };
-  } else {
-    setTutorialHandScale(1);
-    tutorialHand.classList.remove('bottom-approach', 'compact');
-    const leftSpace = rect.left;
-    const rightSpace = innerWidth - rect.right;
-    mirrored = leftSpace > rightSpace;
-    const tipX = mirrored ? TUTORIAL_HAND_MIRROR_TIP_X : TUTORIAL_HAND_TIP_X;
-    const minX = tipX + 3;
-    const maxX = innerWidth - TUTORIAL_HAND_WIDTH + tipX - 3;
-    const desiredX = mirrored ? rect.left - 12 : rect.right + 12;
-    const sideX = Math.max(minX, Math.min(maxX, desiredX));
-    const sideY = Math.max(28, Math.min(innerHeight - 145, rect.top + rect.height * .55));
-    point = { x:sideX, y:sideY };
-  }
-  tutorialHand.classList.toggle('mirror', mirrored);
-  placeTutorialHand(point.x, point.y);
-  const handTilt = isMobile ? 25 : -5;
+  const pauseButton = document.getElementById('playPauseBtn');
+  const cardRect = card ? card.getBoundingClientRect() : { bottom:innerHeight * .72 };
+  const pauseRect = pauseButton ? pauseButton.getBoundingClientRect() : { left:innerWidth * .45, right:innerWidth * .55, bottom:cardRect.bottom - 12 };
+  const bottomLimit = innerHeight - 12;
+  const minOutside = Math.min(bottomLimit - 8, cardRect.bottom + 16);
+  const betweenPauseAndScreen = (pauseRect.bottom + bottomLimit) / 2;
+  const targetY = Math.max(minOutside, Math.min(bottomLimit - 7, betweenPauseAndScreen));
+  const targetX = Math.max(12, Math.min(innerWidth - 12, (pauseRect.left + pauseRect.right) / 2));
+  tutorialHand.classList.remove('mirror', 'bottom-approach', 'compact');
+  setTutorialHandScale(1);
+  setTutorialTailDirection(targetX, targetY - 22, targetX, targetY);
+  placeTutorialHand(targetX, targetY);
   const animation = tutorialHand.animate([
-    { transform:'translateY(0) rotate(' + handTilt + 'deg) scale(1)', opacity:1, offset:0 },
-    { transform:'translateY(-7px) rotate(' + (handTilt + 2) + 'deg) scale(.96)', opacity:1, offset:.2 },
-    { transform:'translateY(-1px) rotate(' + (handTilt - 1) + 'deg) scale(1.01)', opacity:1, offset:.42 },
-    { transform:'translateY(0) rotate(' + handTilt + 'deg) scale(1)', opacity:1, offset:.58 },
-    { transform:'translateY(0) rotate(' + handTilt + 'deg) scale(1)', opacity:1, offset:1 }
-  ], { duration:1600, iterations:Infinity, easing:'ease-in-out' });
+    { transform:'scale(1)', opacity:1, offset:0 },
+    { transform:'scale(.68)', opacity:1, offset:.18 },
+    { transform:'scale(1.08)', opacity:1, offset:.32 },
+    { transform:'scale(1)', opacity:1, offset:.5 },
+    { transform:'scale(1)', opacity:1, offset:1 }
+  ], { duration:1500, iterations:Infinity, easing:'ease-in-out' });
   tutorialHandAnimations = [animation];
 }
 function startTutorialTapDemo(){
@@ -844,12 +813,14 @@ function startTutorialTapDemo(){
   const x = rect.left + rect.width / 2;
   const y = rect.top + rect.height / 2;
   tutorialHand.classList.remove('mirror', 'bottom-approach');
+  setTutorialHandScale(1);
+  setTutorialTailDirection(x, y - 12, x, y + 8);
   placeTutorialHand(x, y);
   const animation = tutorialHand.animate([
-    { transform:'translateY(0) rotate(-7deg) scale(1)', opacity:1, offset:0 },
-    { transform:'translateY(9px) rotate(-2deg) scale(.92)', opacity:1, offset:.22 },
-    { transform:'translateY(1px) rotate(-6deg) scale(1)', opacity:1, offset:.45 },
-    { transform:'translateY(0) rotate(-7deg) scale(1)', opacity:1, offset:1 }
+    { transform:'translateY(0) scale(1)', opacity:1, offset:0 },
+    { transform:'translateY(8px) scale(.68)', opacity:1, offset:.22 },
+    { transform:'translateY(1px) scale(1.08)', opacity:1, offset:.45 },
+    { transform:'translateY(0) scale(1)', opacity:1, offset:1 }
   ], { duration:1580, iterations:Infinity, easing:'ease-in-out' });
   tutorialHandAnimations = [animation];
 }
@@ -858,12 +829,14 @@ function startTutorialPagesDemo(){
   const x = rect.left + rect.width * .5;
   const y = rect.top + rect.height * .5;
   tutorialHand.classList.remove('mirror', 'bottom-approach');
+  setTutorialHandScale(1);
+  setTutorialTailDirection(x, y - 12, x, y + 8);
   placeTutorialHand(x, y);
   const animation = tutorialHand.animate([
-    { transform:'translateY(0) rotate(-8deg) scale(1)', opacity:1, offset:0 },
-    { transform:'translateY(8px) rotate(-3deg) scale(.94)', opacity:1, offset:.2 },
-    { transform:'translateY(1px) rotate(-7deg) scale(1)', opacity:1, offset:.42 },
-    { transform:'translateY(0) rotate(-8deg) scale(1)', opacity:1, offset:1 }
+    { transform:'translateY(0) scale(1)', opacity:1, offset:0 },
+    { transform:'translateY(8px) scale(.68)', opacity:1, offset:.2 },
+    { transform:'translateY(1px) scale(1.08)', opacity:1, offset:.42 },
+    { transform:'translateY(0) scale(1)', opacity:1, offset:1 }
   ], { duration:1520, iterations:Infinity, easing:'ease-in-out' });
   tutorialHandAnimations = [animation];
 }
@@ -872,6 +845,8 @@ function setTutorialStage(stage){
   tutorialStage = stage;
   if (stage === 'swipe') {
     tutorialHand.classList.remove('mirror', 'bottom-approach');
+    setTutorialHandScale(1);
+    setTutorialTailDirection(innerWidth * .36, innerHeight * .75, innerWidth * .53, innerHeight * .52);
     const swipePath = [
       { x:.36, y:.75, rotation:-18, scale:1, opacity:1, offset:0 },
       { x:.41, y:.69, rotation:-13, scale:.99, opacity:1, offset:.18 },
@@ -887,7 +862,7 @@ function setTutorialStage(stage){
       return {
         left:pos.left + 'px',
         top:pos.top + 'px',
-        transform:'rotate(' + point.rotation + 'deg) scale(' + point.scale + ')',
+        transform:'scale(' + point.scale + ')',
         opacity:point.opacity,
         offset:point.offset
       };
