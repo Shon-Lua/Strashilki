@@ -2053,6 +2053,7 @@ function showToast(text, duration){
 }
 
 document.getElementById('ageEnterBtn').addEventListener('click', () => {
+  applySavedFullscreenOnEnter();
   startAmbient();
   const g = document.getElementById('ageGate');
   g.classList.add('hide');
@@ -2132,6 +2133,15 @@ function closeQuickMenu(){
   quickMenu.setAttribute('aria-hidden','true');
   infoBtn.setAttribute('aria-expanded','false');
 }
+const SITE_FULLSCREEN_PREF_KEY = 'siteFullscreenEnabled_v1';
+function getSavedFullscreenPreference(){
+  try { return localStorage.getItem(SITE_FULLSCREEN_PREF_KEY) === '1'; }
+  catch (e) { return false; }
+}
+function saveFullscreenPreference(enabled){
+  try { localStorage.setItem(SITE_FULLSCREEN_PREF_KEY, enabled ? '1' : '0'); }
+  catch (e) {}
+}
 function getNativeFullscreenElement(){
   return document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement || null;
 }
@@ -2143,17 +2153,50 @@ function updateFullscreenMenuLabel(){
   if (fullscreenMenuLabel) fullscreenMenuLabel.textContent = active ? 'Выйти из полного экрана' : 'На весь экран';
   if (fullscreenBtn) fullscreenBtn.setAttribute('aria-label', active ? 'Выйти из полноэкранного режима' : 'На весь экран');
 }
+function applySavedFullscreenOnEnter(){
+  const root = document.documentElement;
+  if (!getSavedFullscreenPreference()) {
+    root.classList.remove('site-fullscreen-fallback');
+    const exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+    if (getNativeFullscreenElement() && exit) {
+      try { Promise.resolve(exit.call(document)).catch(() => {}); }
+      catch (e) {}
+    }
+    updateFullscreenMenuLabel();
+    return;
+  }
+  if (isSiteFullscreen()) {
+    updateFullscreenMenuLabel();
+    return;
+  }
+  const request = root.requestFullscreen || root.webkitRequestFullscreen || root.msRequestFullscreen;
+  if (request) {
+    try {
+      const result = request.call(root);
+      root.classList.remove('site-fullscreen-fallback');
+      Promise.resolve(result).then(updateFullscreenMenuLabel).catch(() => {
+        root.classList.add('site-fullscreen-fallback');
+        updateFullscreenMenuLabel();
+      });
+    } catch (e) {
+      root.classList.add('site-fullscreen-fallback');
+      updateFullscreenMenuLabel();
+    }
+  } else {
+    root.classList.add('site-fullscreen-fallback');
+    updateFullscreenMenuLabel();
+  }
+}
 async function toggleSiteFullscreen(){
   const root = document.documentElement;
-  if (getNativeFullscreenElement()) {
+  const enable = !isSiteFullscreen();
+  saveFullscreenPreference(enable);
+  if (!enable) {
     const exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
-    if (exit) {
+    if (getNativeFullscreenElement() && exit) {
       try { await Promise.resolve(exit.call(document)); }
       catch (e) { showToast('не удалось закрыть полноэкранный режим', 2000); }
-    } else {
-      root.classList.toggle('site-fullscreen-fallback');
     }
-  } else if (root.classList.contains('site-fullscreen-fallback')) {
     root.classList.remove('site-fullscreen-fallback');
   } else {
     const request = root.requestFullscreen || root.webkitRequestFullscreen || root.msRequestFullscreen;
