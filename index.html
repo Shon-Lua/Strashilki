@@ -111,10 +111,9 @@
   .star-label{display:none}
 
   .map-arrow{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:210;opacity:1;overflow:hidden;transition:opacity .6s ease}
-  .map-arrow .arrow-ink{fill:none;stroke:rgba(67,25,43,.82);stroke-width:6.6;stroke-linecap:round;stroke-linejoin:round}
-  .map-arrow .arrow-face{fill:none;stroke:var(--arrow-color,#f0e6da);stroke-width:3.1;stroke-linecap:round;stroke-linejoin:round}
-  .map-arrow .arrow-accent{fill:none;stroke:var(--arrow-color,#f0e6da);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;opacity:.86}
-  .map-arrow .arrow-spark{fill:var(--arrow-color,#f0e6da);stroke:rgba(67,25,43,.68);stroke-width:1.2;stroke-linejoin:round;opacity:0;transition:opacity .35s ease}
+  .map-arrow .arrow-outline{fill:none;stroke:rgba(31,13,27,.94);stroke-width:var(--arrow-outline-width,10px);stroke-linecap:round;stroke-linejoin:round}
+  .map-arrow .arrow-shaft{fill:none;stroke:var(--arrow-color,#f0e6da);stroke-width:var(--arrow-width,6px);stroke-linecap:round;stroke-linejoin:round}
+  .map-arrow .arrow-head{fill:var(--arrow-color,#f0e6da);stroke:rgba(31,13,27,.96);stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;opacity:0}
   .map-arrow .arrow-wobble{transform-box:fill-box;transform-origin:center;animation:mapArrowWobble 1.8s ease-in-out infinite}
   @keyframes mapArrowWobble{0%,100%{transform:translateY(0) rotate(0)}35%{transform:translateY(-1.2px) rotate(.35deg)}70%{transform:translateY(.6px) rotate(-.25deg)}}
   @media (prefers-reduced-motion:reduce){.map-arrow .arrow-wobble{animation:none}}
@@ -125,7 +124,9 @@
   #topBar button svg{width:20px;height:20px;display:block}
   .pageNav{display:flex;gap:8px;align-items:baseline;font-family:'Special Elite', 'Courier New', monospace;font-size:14px;letter-spacing:.32em;font-weight:400;color:#fff;font-variant-numeric:tabular-nums;margin-left:6px;padding:5px 7px;border:1px solid rgba(220,215,235,.12);border-radius:2px;background:rgba(4,3,6,.26);cursor:pointer;pointer-events:auto;text-shadow:0 0 10px rgba(0,0,0,.95),0 0 22px rgba(255,255,255,.22);transition:border-color .25s ease,background .25s ease,box-shadow .25s ease;-webkit-tap-highlight-color:transparent}
   #topBar button.pageNav{width:auto;height:auto;min-width:66px;padding:5px 8px;display:flex;align-items:baseline;justify-content:center}
-  .pageNav:hover,.pageNav[aria-expanded="true"]{border-color:rgba(210,205,225,.42);background:rgba(14,10,16,.78);box-shadow:0 0 20px rgba(160,145,185,.12)}
+  .pageNav:hover,.pageNav[aria-expanded="true"]{border-color:rgba(220,215,235,.12);background:rgba(4,3,6,.26);box-shadow:none;filter:none}
+  #topBar button.pageNav:hover,#topBar button.pageNav[aria-expanded="true"]{color:rgba(255,255,255,.92);filter:none;text-shadow:0 0 10px rgba(0,0,0,.95)}
+  #topBar button.pageNav:active{box-shadow:none;filter:none}
   .pageNav i{font-style:normal;opacity:.55;color:#fff}
   #pageCurrent{color:#fff;opacity:1}
   #pageMapPanel{position:fixed;top:68px;right:18px;width:min(430px,calc(100vw - 24px));z-index:76;padding:10px 11px 11px;border:1px solid rgba(190,180,205,.17);border-radius:3px;background:radial-gradient(ellipse at 22% 78%,rgba(105,15,29,.12),transparent 48%),radial-gradient(ellipse at 76% 22%,rgba(165,165,185,.075),transparent 53%),rgba(0,0,0,.94);box-shadow:0 22px 70px rgba(0,0,0,.88),inset 0 0 38px rgba(120,95,135,.035);opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-9px) scale(.985);transform-origin:top right;transition:opacity .24s ease,transform .28s cubic-bezier(.2,.8,.2,1),visibility .24s ease}
@@ -290,13 +291,8 @@
   #tutorialHand.mirror svg{transform:scaleX(-1)}
   #tutorialHand.bottom-approach{transform-origin:54px 125px}
   #tutorialHand.bottom-approach svg{transform:rotate(180deg);transform-origin:50% 50%}
-  #tutorialHand .hand-outline{fill:url(#tutorialHandSkin);stroke:#171219;stroke-width:3.4;stroke-linejoin:round;stroke-linecap:round}
-  #tutorialHand .hand-shadow{fill:url(#tutorialHandShadow);opacity:.72}
-  #tutorialHand .hand-nail{fill:url(#tutorialHandNail);stroke:#19131a;stroke-width:1.8;stroke-linejoin:round}
-  #tutorialHand .hand-crease{fill:none;stroke:#493a43;stroke-width:1.8;stroke-linecap:round;opacity:.82}
-  #tutorialHand .hand-vein{fill:none;stroke:#51323d;stroke-width:1.45;stroke-linecap:round;opacity:.68}
-  #tutorialHand .finger-glint{fill:none;stroke:rgba(226,215,218,.4);stroke-width:1.15;stroke-linecap:round}
-  #tutorialHand .hand-knuckle{fill:#55444e;opacity:.34}
+  #tutorialHand .hand-outline{fill:none;stroke:#f4f1f3;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round;opacity:.96}
+  #tutorialHand .hand-detail{fill:none;stroke:#f4f1f3;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round;opacity:.62}
   .star.tutorial-target .star-core{animation:tutorialStarGuidePulse 1.6s ease-in-out infinite!important;box-shadow:0 0 20px 7px rgba(255,255,255,.98),0 0 56px 18px rgba(220,205,255,.52)!important}
   .tutorial-demo-proxy{position:fixed!important;z-index:258!important;pointer-events:none!important;opacity:1!important;transition:none!important;animation:none!important;overflow:visible!important;will-change:left,top,transform,opacity;}
   .tutorial-demo-proxy .star-core,.tutorial-demo-proxy .star-flare{animation:none!important}
@@ -477,33 +473,8 @@
 </div>
 <div id="tutorialHand" aria-hidden="true">
   <svg viewBox="0 0 112 144" role="presentation">
-    <defs>
-      <linearGradient id="tutorialHandSkin" x1=".18" y1=".02" x2=".82" y2="1">
-        <stop offset="0" stop-color="#c9c2c1"/>
-        <stop offset=".24" stop-color="#9a8b91"/>
-        <stop offset=".58" stop-color="#665761"/>
-        <stop offset="1" stop-color="#29242d"/>
-      </linearGradient>
-      <linearGradient id="tutorialHandShadow" x1=".1" y1="0" x2=".9" y2="1">
-        <stop offset="0" stop-color="#110e17" stop-opacity=".08"/>
-        <stop offset=".55" stop-color="#1a1420" stop-opacity=".3"/>
-        <stop offset="1" stop-color="#08060c" stop-opacity=".86"/>
-      </linearGradient>
-      <linearGradient id="tutorialHandNail" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#d5c5c2"/>
-        <stop offset=".38" stop-color="#75646d"/>
-        <stop offset="1" stop-color="#151019"/>
-      </linearGradient>
-    </defs>
-    <path class="hand-outline" d="M35 141c-4-5-7-13-8-22l-3-15c-1.5-7 1.2-12.5 7-14.3 5.7-1.8 10.1 1.3 12.5 7.8l3.1 8.1-3.4-77.1C40.8 18.1 45 10 53.5 9.8c8.2-.2 12.4 5.8 12.7 15.7l1.2 52.6 3.8-12.6c2.1-7 7.9-10.1 13.6-7.3 5.2 2.6 6.1 8 3.1 15.1l-4 9.5 4.9-6.3c4.3-5.6 10-6.2 14-2.1 4.1 4.1 3.2 9.5-.8 14.6l-9.8 13.2c-8.4 12-18.1 18.1-32.4 19.1l-12.5.9c-5.2.4-9.4.2-11.3-.3Z"/>
-    <path class="hand-shadow" d="M35 141c-4-5-7-13-8-22l-3-15c-1.5-7 1.2-12.5 7-14.3 5.7-1.8 10.1 1.3 12.5 7.8l3.1 8.1-3.4-77.1C40.8 18.1 45 10 53.5 9.8c8.2-.2 12.4 5.8 12.7 15.7l1.2 52.6 3.8-12.6c2.1-7 7.9-10.1 13.6-7.3 5.2 2.6 6.1 8 3.1 15.1l-4 9.5 4.9-6.3c4.3-5.6 10-6.2 14-2.1 4.1 4.1 3.2 9.5-.8 14.6l-9.8 13.2c-8.4 12-18.1 18.1-32.4 19.1l-12.5.9c-5.2.4-9.4.2-11.3-.3Z"/>
-    <path class="hand-nail" d="M47.2 25.8c-.4-8.6 1.6-13.6 6.1-14 5.2-.4 8 4.4 8.3 12.6-4.3 3.1-9.7 3.7-14.4 1.4Z"/>
-    <path class="hand-nail" d="M73.1 68.2c2.4-5.8 6.4-8 10-6 3.8 2.1 4.1 6 .8 11.7-4.2.5-8-1.6-10.8-5.7Z"/>
-    <path class="hand-nail" d="M91.4 82.6c3.2-4.6 6.8-5.6 9.8-3.1 3 2.6 2.8 6.1-.8 10.2-4 .1-7.4-2.4-9-7.1Z"/>
-    <path class="hand-knuckle" d="M28 104c5.9-5.5 13.9-5.8 19.7-.2l2.1 12.9c-6.8 5.1-15.9 4.6-21.2-.7-1.2-4.1-1.4-8.1-.6-12Z"/>
-    <path class="hand-crease" d="M48 39c4 2.1 8.6 2.1 13-.2M48.8 49.5c4.2 2.1 8.5 2 12.8-.1M49.4 60.3c4.2 2 8.3 1.8 12.4-.2M71.2 83.5c3.2 2 7 2.3 10.8.7M68.8 91.2c3.3 1.7 6.9 1.8 10.5.1M29.5 120c6.1 3.4 13.6 3.7 20 .8M44 131c6.3 1.4 12.8.9 18.3-1.4"/>
-    <path class="hand-vein" d="M51 18c-2.5-4.2-2.1-7.3.6-10.4M66 103c4.2-3.4 8.2-3.8 12.2-1.5M30 91c-3.2-1-6.1.4-8 3.5M82 111c3.3-2 6.6-2.5 9.8-1.3"/>
-    <path class="finger-glint" d="M48.1 34l1.2 40M70 74l-1.8 9M96 88l-6 8M29 102l6.5 12"/>
+    <path class="hand-outline" d="M35 137 C30 133 27 127 25 120 L18.5 101 C16.2 94.5 18.6 89.1 23.3 87.1 C28.2 85 33.1 87.7 36 94 L43.2 109 L40.5 29 C40.2 19 44.4 12.5 51.7 12.5 C59.2 12.5 63.1 18.3 63.3 28.2 L64.2 80.5 L68.4 70 C71 63.5 76.4 61 81.2 63.7 C86.1 66.5 86.8 71.8 83.9 78 L80.6 86.5 L87.2 80.3 C91.5 76.3 97.1 76.8 100.5 80.8 C104.1 85 102.7 90.1 98.9 94.6 L91.3 104.3 C85.4 113.2 79.6 120.2 71 126.1 C62.2 132.1 51.4 136.4 40.7 138 Z"/>
+    <path class="hand-detail" d="M47.2 40 C51 42.3 56.8 42.3 60.2 40 M47.9 51 C51.8 53 57.1 53 60.7 50.7 M48.4 62 C52.1 63.7 57 63.6 61 61.3 M64.8 91 C69.3 94 75 93.7 79.4 90 M29 99 C33.4 98 37.1 100.2 39.1 104.1 M38.8 119.5 C46.3 124 56.2 124.6 64.5 121.2 M43.8 131 C51.2 131.5 58.2 129.9 64.4 126.9"/>
   </svg>
 </div>
 <div id="ageGate" role="dialog" aria-modal="true">
@@ -714,7 +685,8 @@ function cancelTutorialMotion(hideDropzone){
   tutorialDemoNode = null;
   if (tutorialTargetStar) tutorialTargetStar.classList.remove('tutorial-target');
   tutorialTargetStar = null;
-  tutorialHand.classList.remove('active');
+  tutorialHand.classList.remove('active', 'compact', 'mirror', 'bottom-approach');
+  setTutorialHandScale(1);
   if (hideDropzone !== false) dropzone.classList.remove('visible', 'hover');
 }
 const TUTORIAL_HAND_WIDTH = 104;
@@ -724,14 +696,31 @@ const TUTORIAL_HAND_MIRROR_TIP_X = TUTORIAL_HAND_WIDTH - TUTORIAL_HAND_TIP_X;
 const TUTORIAL_HAND_TIP_Y = 10;
 const TUTORIAL_HAND_BOTTOM_TIP_X = 54;
 const TUTORIAL_HAND_BOTTOM_TIP_Y = 125;
+let tutorialHandScale = 1;
+function setTutorialHandScale(scale){
+  tutorialHandScale = Math.max(.3, Math.min(1, scale || 1));
+  const width = TUTORIAL_HAND_WIDTH * tutorialHandScale;
+  const height = TUTORIAL_HAND_HEIGHT * tutorialHandScale;
+  tutorialHand.style.width = width + 'px';
+  tutorialHand.style.height = height + 'px';
+  const svg = tutorialHand.querySelector('svg');
+  if (svg) {
+    svg.style.width = width + 'px';
+    svg.style.height = height + 'px';
+  }
+  const fromBottom = tutorialHand.classList.contains('bottom-approach');
+  tutorialHand.style.transformOrigin = (fromBottom ? 54 : 51) * tutorialHandScale + 'px ' + (fromBottom ? 125 : 10) * tutorialHandScale + 'px';
+}
 function tutorialHandPosition(x, y){
   const mirrored = tutorialHand.classList.contains('mirror');
   const fromBottom = tutorialHand.classList.contains('bottom-approach');
-  const normalTipX = fromBottom ? TUTORIAL_HAND_BOTTOM_TIP_X : TUTORIAL_HAND_TIP_X;
-  const tipX = mirrored ? TUTORIAL_HAND_WIDTH - normalTipX : normalTipX;
-  const tipY = fromBottom ? TUTORIAL_HAND_BOTTOM_TIP_Y : TUTORIAL_HAND_TIP_Y;
-  const left = Math.max(3, Math.min(innerWidth - TUTORIAL_HAND_WIDTH - 3, x - tipX));
-  const top = Math.max(3, Math.min(innerHeight - TUTORIAL_HAND_HEIGHT - 3, y - tipY));
+  const width = TUTORIAL_HAND_WIDTH * tutorialHandScale;
+  const height = TUTORIAL_HAND_HEIGHT * tutorialHandScale;
+  const normalTipX = (fromBottom ? TUTORIAL_HAND_BOTTOM_TIP_X : TUTORIAL_HAND_TIP_X) * tutorialHandScale;
+  const tipX = mirrored ? width - normalTipX : normalTipX;
+  const tipY = (fromBottom ? TUTORIAL_HAND_BOTTOM_TIP_Y : TUTORIAL_HAND_TIP_Y) * tutorialHandScale;
+  const left = Math.max(3, Math.min(innerWidth - width - 3, x - tipX));
+  const top = Math.max(3, Math.min(innerHeight - height - 3, y - tipY));
   return { left, top };
 }
 function placeTutorialHand(x, y){
@@ -831,15 +820,20 @@ function startTutorialDragDemo(){
 }
 function startTutorialCloseDemo(){
   const card = document.getElementById('playerCard');
+  const coverEl = document.getElementById('cover');
   const rect = card ? card.getBoundingClientRect() : { left:innerWidth*.1, right:innerWidth*.9, top:innerHeight*.2, bottom:innerHeight*.8 };
   let point;
   let mirrored = false;
   if (isMobile) {
-    mirrored = false;
-    tutorialHand.classList.add('bottom-approach');
-    point = { x:innerWidth * .5, y:innerHeight - 12 };
+    tutorialHand.classList.add('bottom-approach', 'compact');
+    const coverRect = coverEl ? coverEl.getBoundingClientRect() : rect;
+    const desiredY = Math.max(22, coverRect.top - 7);
+    const scale = Math.max(.3, Math.min(.72, (desiredY - 4) / TUTORIAL_HAND_BOTTOM_TIP_Y));
+    setTutorialHandScale(scale);
+    point = { x:innerWidth * .5, y:desiredY };
   } else {
-    tutorialHand.classList.remove('bottom-approach');
+    setTutorialHandScale(1);
+    tutorialHand.classList.remove('bottom-approach', 'compact');
     const leftSpace = rect.left;
     const rightSpace = innerWidth - rect.right;
     mirrored = leftSpace > rightSpace;
@@ -2067,9 +2061,8 @@ function showMapArrow(starEl){
   const vh = Math.max(1, innerHeight);
   const tx = rect.left + rect.width / 2;
   const ty = rect.top + rect.height / 2;
-  const margin = 22;
+  const margin = 30;
   const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
-
   const directions = [
     [1, 0], [-1, 0], [0, 1], [0, -1],
     [.707, .707], [.707, -.707], [-.707, .707], [-.707, -.707]
@@ -2081,27 +2074,23 @@ function showMapArrow(starEl){
     else if (dx < 0) maxX = (margin - tx) / dx;
     if (dy > 0) maxY = (vh - margin - ty) / dy;
     else if (dy < 0) maxY = (margin - ty) / dy;
-    return { dx, dy, max: Math.max(0, Math.min(maxX, maxY)) };
-  }).filter(item => item.max > 82);
-
+    return { dx, dy, max:Math.max(0, Math.min(maxX, maxY)) };
+  }).filter(item => item.max > 96);
   if (!candidates.length) return;
   candidates.sort((a, b) => b.max - a.max);
-  const usable = candidates.filter(item => item.max >= Math.min(108, candidates[0].max));
+  const usable = candidates.filter(item => item.max >= Math.min(124, candidates[0].max));
   const direction = usable[Math.floor(Math.random() * usable.length)] || candidates[0];
-  const distance = Math.max(58, Math.min(148, direction.max - 22));
   const dirX = direction.dx;
   const dirY = direction.dy;
-  const forwardX = -dirX;
-  const forwardY = -dirY;
-  const perpX = -forwardY;
-  const perpY = forwardX;
-
+  const perpX = -dirY;
+  const perpY = dirX;
+  const distance = Math.max(70, Math.min(162, direction.max - 28));
   const sx = clamp(tx + dirX * distance, margin, vw - margin);
   const sy = clamp(ty + dirY * distance, margin, vh - margin);
-  const tipDistance = Math.min(18, Math.max(10, distance * .12));
+  const tipDistance = Math.min(14, Math.max(8, distance * .085));
   const tipX = clamp(tx + dirX * tipDistance, margin, vw - margin);
   const tipY = clamp(ty + dirY * tipDistance, margin, vh - margin);
-  const headLength = 22 + Math.random() * 4;
+  const headLength = 21 + Math.random() * 13;
   const baseX = clamp(tipX + dirX * headLength, margin, vw - margin);
   const baseY = clamp(tipY + dirY * headLength, margin, vh - margin);
   const bodyDx = baseX - sx;
@@ -2109,105 +2098,107 @@ function showMapArrow(starEl){
   const bodyLen = Math.max(1, Math.hypot(bodyDx, bodyDy));
   const bodyPX = -bodyDy / bodyLen;
   const bodyPY = bodyDx / bodyLen;
-  const bend = (Math.random() - .5) * 78;
-  const bend2 = bend * (.45 + Math.random() * .75);
-  const style = Math.floor(Math.random() * 4);
+  const bend = (Math.random() - .5) * Math.min(104, distance * .72);
+  const bend2 = bend * (.36 + Math.random() * .92);
+  const shape = Math.floor(Math.random() * 5);
   let bodyD;
 
-  if (style === 0) {
-    const c1x = clamp(sx + bodyDx * .28 + bodyPX * bend, margin, vw - margin);
-    const c1y = clamp(sy + bodyDy * .28 + bodyPY * bend, margin, vh - margin);
-    const c2x = clamp(sx + bodyDx * .72 - bodyPX * bend2, margin, vw - margin);
-    const c2y = clamp(sy + bodyDy * .72 - bodyPY * bend2, margin, vh - margin);
+  if (shape === 0) {
+    const c1x = clamp(sx + bodyDx * .25 + bodyPX * bend, margin, vw - margin);
+    const c1y = clamp(sy + bodyDy * .25 + bodyPY * bend, margin, vh - margin);
+    const c2x = clamp(sx + bodyDx * .77 - bodyPX * bend2, margin, vw - margin);
+    const c2y = clamp(sy + bodyDy * .77 - bodyPY * bend2, margin, vh - margin);
     bodyD = 'M ' + sx + ' ' + sy + ' C ' + c1x + ' ' + c1y + ' ' + c2x + ' ' + c2y + ' ' + baseX + ' ' + baseY;
-  } else if (style === 1) {
+  } else if (shape === 1) {
     const qx = clamp((sx + baseX) / 2 + bodyPX * bend, margin, vw - margin);
     const qy = clamp((sy + baseY) / 2 + bodyPY * bend, margin, vh - margin);
     bodyD = 'M ' + sx + ' ' + sy + ' Q ' + qx + ' ' + qy + ' ' + baseX + ' ' + baseY;
-  } else if (style === 2) {
-    const p1x = clamp(sx + bodyDx * .34 + bodyPX * bend * .45, margin, vw - margin);
-    const p1y = clamp(sy + bodyDy * .34 + bodyPY * bend * .45, margin, vh - margin);
-    const p2x = clamp(sx + bodyDx * .67 - bodyPX * bend2 * .3, margin, vw - margin);
-    const p2y = clamp(sy + bodyDy * .67 - bodyPY * bend2 * .3, margin, vh - margin);
-    bodyD = 'M ' + sx + ' ' + sy + ' L ' + p1x + ' ' + p1y + ' Q ' + p2x + ' ' + p2y + ' ' + baseX + ' ' + baseY;
+  } else if (shape === 2) {
+    const p1x = clamp(sx + bodyDx * .32 + bodyPX * bend * .42, margin, vw - margin);
+    const p1y = clamp(sy + bodyDy * .32 + bodyPY * bend * .42, margin, vh - margin);
+    const p2x = clamp(sx + bodyDx * .7 - bodyPX * bend2 * .36, margin, vw - margin);
+    const p2y = clamp(sy + bodyDy * .7 - bodyPY * bend2 * .36, margin, vh - margin);
+    bodyD = 'M ' + sx + ' ' + sy + ' C ' + p1x + ' ' + p1y + ' ' + p2x + ' ' + p2y + ' ' + baseX + ' ' + baseY;
+  } else if (shape === 3) {
+    const c1x = clamp(sx + bodyDx * .2 + bodyPX * (bend + 22), margin, vw - margin);
+    const c1y = clamp(sy + bodyDy * .2 + bodyPY * (bend + 22), margin, vh - margin);
+    const midX = clamp(sx + bodyDx * .56 - bodyPX * bend2 * .25, margin, vw - margin);
+    const midY = clamp(sy + bodyDy * .56 - bodyPY * bend2 * .25, margin, vh - margin);
+    const c2x = clamp(sx + bodyDx * .85 + bodyPX * (bend2 + 10), margin, vw - margin);
+    const c2y = clamp(sy + bodyDy * .85 + bodyPY * (bend2 + 10), margin, vh - margin);
+    bodyD = 'M ' + sx + ' ' + sy + ' C ' + c1x + ' ' + c1y + ' ' + midX + ' ' + midY + ' ' + midX + ' ' + midY + ' C ' + c2x + ' ' + c2y + ' ' + (baseX - bodyPX * 5) + ' ' + (baseY - bodyPY * 5) + ' ' + baseX + ' ' + baseY;
   } else {
-    const c1x = clamp(sx + bodyDx * .22 + bodyPX * (bend + 20), margin, vw - margin);
-    const c1y = clamp(sy + bodyDy * .22 + bodyPY * (bend + 20), margin, vh - margin);
-    const c2x = clamp(sx + bodyDx * .82 + bodyPX * (bend2 - 16), margin, vw - margin);
-    const c2y = clamp(sy + bodyDy * .82 + bodyPY * (bend2 - 16), margin, vh - margin);
-    bodyD = 'M ' + sx + ' ' + sy + ' C ' + c1x + ' ' + c1y + ' ' + c2x + ' ' + c2y + ' ' + baseX + ' ' + baseY;
+    const q1x = clamp(sx + bodyDx * .34 + bodyPX * bend, margin, vw - margin);
+    const q1y = clamp(sy + bodyDy * .34 + bodyPY * bend, margin, vh - margin);
+    const q2x = clamp(sx + bodyDx * .73 - bodyPX * bend2, margin, vw - margin);
+    const q2y = clamp(sy + bodyDy * .73 - bodyPY * bend2, margin, vh - margin);
+    bodyD = 'M ' + sx + ' ' + sy + ' Q ' + q1x + ' ' + q1y + ' ' + q2x + ' ' + q2y + ' Q ' + clamp(q2x + bodyDx * .25, margin, vw - margin) + ' ' + clamp(q2y + bodyDy * .25, margin, vh - margin) + ' ' + baseX + ' ' + baseY;
   }
 
-  const headSpread = 13 + Math.random() * 4;
-  const head1x = clamp(baseX + perpX * headSpread, margin, vw - margin);
-  const head1y = clamp(baseY + perpY * headSpread, margin, vh - margin);
-  const head2x = clamp(baseX - perpX * headSpread, margin, vw - margin);
-  const head2y = clamp(baseY - perpY * headSpread, margin, vh - margin);
-  const headD1 = 'M ' + tipX + ' ' + tipY + ' Q ' +
-    clamp(tipX + dirX * 8 + perpX * 5, margin, vw - margin) + ' ' +
-    clamp(tipY + dirY * 8 + perpY * 5, margin, vh - margin) + ' ' + head1x + ' ' + head1y;
-  const headD2 = 'M ' + tipX + ' ' + tipY + ' Q ' +
-    clamp(tipX + dirX * 8 - perpX * 5, margin, vw - margin) + ' ' +
-    clamp(tipY + dirY * 8 - perpY * 5, margin, vh - margin) + ' ' + head2x + ' ' + head2y;
+  const headSpread = 11 + Math.random() * 10;
+  const headA = { x:baseX + perpX * headSpread, y:baseY + perpY * headSpread };
+  const headB = { x:baseX - perpX * headSpread * (.82 + Math.random() * .36), y:baseY - perpY * headSpread * (.82 + Math.random() * .36) };
+  headA.x = clamp(headA.x, margin, vw - margin);
+  headA.y = clamp(headA.y, margin, vh - margin);
+  headB.x = clamp(headB.x, margin, vw - margin);
+  headB.y = clamp(headB.y, margin, vh - margin);
+  const headBulge = 4 + Math.random() * 7;
+  const headD = 'M ' + headA.x + ' ' + headA.y +
+    ' Q ' + clamp(tipX + dirX * 8 + perpX * (headSpread + headBulge), margin, vw - margin) + ' ' + clamp(tipY + dirY * 8 + perpY * (headSpread + headBulge), margin, vh - margin) +
+    ' ' + tipX + ' ' + tipY +
+    ' Q ' + clamp(tipX + dirX * 8 - perpX * (headSpread + headBulge), margin, vw - margin) + ' ' + clamp(tipY + dirY * 8 - perpY * (headSpread + headBulge), margin, vh - margin) +
+    ' ' + headB.x + ' ' + headB.y +
+    ' Q ' + clamp(baseX + dirX * 5, margin, vw - margin) + ' ' + clamp(baseY + dirY * 5, margin, vh - margin) +
+    ' ' + headA.x + ' ' + headA.y + ' Z';
 
-  const palette = ['#f3e8d9', '#ead9e5', '#e5e9f3', '#f0d2c8', '#e5dfbd'];
+  const palette = ['#f6df9e', '#f1c5d1', '#cbdaf6', '#d5e8c9', '#e7c9f0', '#f0c8a8'];
   const arrowColor = palette[Math.floor(Math.random() * palette.length)];
+  const arrowWidth = 5.1 + Math.random() * 4.6;
+  const outlineWidth = arrowWidth + 4.5;
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('class', 'map-arrow');
   svg.setAttribute('viewBox', '0 0 ' + vw + ' ' + vh);
   svg.setAttribute('preserveAspectRatio', 'none');
   svg.style.setProperty('--arrow-color', arrowColor);
+  svg.style.setProperty('--arrow-width', arrowWidth.toFixed(2) + 'px');
+  svg.style.setProperty('--arrow-outline-width', outlineWidth.toFixed(2) + 'px');
 
   const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
   group.setAttribute('class', 'arrow-wobble');
   svg.appendChild(group);
 
-  const animatedPaths = [];
-  const addPath = (d, className, delay, width) => {
+  const makePath = (d, className, delay) => {
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path.setAttribute('d', d);
     path.setAttribute('class', className);
-    if (width) path.style.strokeWidth = width;
     path._arrowDelay = delay;
     path.style.transition = 'none';
     group.appendChild(path);
-    animatedPaths.push(path);
     return path;
   };
 
-  addPath(bodyD, 'arrow-ink', 0, 6.6);
-  addPath(bodyD, 'arrow-face', 0, 3.1);
-  addPath(headD1, 'arrow-ink', .58, 6.2);
-  addPath(headD1, 'arrow-face', .58, 2.9);
-  addPath(headD2, 'arrow-ink', .64, 6.2);
-  addPath(headD2, 'arrow-face', .64, 2.9);
-
-  const accentOffset = 9 + Math.random() * 7;
-  const accentX = clamp(sx + forwardX * accentOffset, margin, vw - margin);
-  const accentY = clamp(sy + forwardY * accentOffset, margin, vh - margin);
-  const accentD = 'M ' + clamp(accentX + perpX * 7, margin, vw - margin) + ' ' + clamp(accentY + perpY * 7, margin, vh - margin) +
-    ' Q ' + clamp(accentX + forwardX * 5 + perpX * 10, margin, vw - margin) + ' ' + clamp(accentY + forwardY * 5 + perpY * 10, margin, vh - margin) +
-    ' ' + clamp(accentX + forwardX * 13, margin, vw - margin) + ' ' + clamp(accentY + forwardY * 13, margin, vh - margin);
-  const accent = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  accent.setAttribute('d', accentD);
-  accent.setAttribute('class', 'arrow-accent');
-  accent.style.opacity = '0';
-  accent.style.transition = 'opacity .35s ease .72s';
-  group.appendChild(accent);
+  const outline = makePath(bodyD, 'arrow-outline', 0);
+  const shaft = makePath(bodyD, 'arrow-shaft', 0.025);
+  const head = makePath(headD, 'arrow-head', 0.55);
 
   document.body.appendChild(svg);
   currentArrow = svg;
-  animatedPaths.forEach(path => {
+
+  [outline, shaft, head].forEach(path => {
     let length = 100;
     try { length = Math.max(1, path.getTotalLength()); } catch (e) {}
     path.style.strokeDasharray = String(length);
     path.style.strokeDashoffset = String(length);
-    path.style.transition = 'stroke-dashoffset ' + (style === 2 ? '.72s' : '.88s') + ' cubic-bezier(.2,.8,.2,1) ' + path._arrowDelay + 's';
+    path.style.transition = 'stroke-dashoffset ' + (shape === 2 ? '.76s' : '.9s') + ' cubic-bezier(.2,.8,.2,1) ' + path._arrowDelay + 's, opacity .22s ease ' + (path._arrowDelay + .1) + 's';
   });
+
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      animatedPaths.forEach(path => { path.style.strokeDashoffset = '0'; });
-      accent.style.opacity = '.86';
+      if (!svg.isConnected) return;
+      outline.style.strokeDashoffset = '0';
+      shaft.style.strokeDashoffset = '0';
+      head.style.strokeDashoffset = '0';
+      head.style.opacity = '1';
     });
   });
 
