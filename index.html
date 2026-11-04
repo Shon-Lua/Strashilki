@@ -1248,7 +1248,7 @@ function detectGitHubRepo(){
   } catch (e) { return null; }
 }
 
-const GH_TREE_KEY = 'ghTreeCache_v14';
+const GH_TREE_KEY = 'ghTreeCache_v15';
 const GH_TREE_TTL = 60 * 60 * 1000;
 
 let ghTreeCache = null;
@@ -1278,7 +1278,14 @@ async function getFullTree(){
   for (const branch of branches) {
     try {
       const url = 'https://api.github.com/repos/' + gh.user + '/' + gh.repo + '/git/trees/' + encodeURIComponent(branch) + '?recursive=1';
-      const res = await fetch(url, { cache: 'no-store' });
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 9000);
+      let res;
+      try {
+        res = await fetch(url, { cache: 'no-store', signal: controller.signal });
+      } finally {
+        clearTimeout(timer);
+      }
       if (res.status === 403 || res.status === 429) { ghTreeDisabled = true; return null; }
       if (!res.ok) continue;
       const data = await res.json();
@@ -1437,23 +1444,18 @@ function extractNumber(str){
   return m ? parseInt(m[1], 10) : -1;
 }
 
-function resolveOneEpisode(key, val, fileIndex){
+function resolveOneEpisode(key, val){
   const parsed = parseJsonEntry(key, val);
-  const candidates = [...new Set([parsed.folderName, key, parsed.title].filter(Boolean))];
-  const folder = findEpisodeFolder(fileIndex, candidates);
+  const folder = String(parsed.folderName || parsed.title || key).trim();
   if (!folder) return null;
-  const files = fileIndex.filesByFolder.get(folder) || [];
-  const mp3 = files.find(file => /\.mp3$/i.test(file));
-  if (!mp3) return null;
-  const coverFile = files.find(file => /^cover\.(jpe?g|png|webp|gif)$/i.test(file)) || null;
-  const nameFile = files.find(file => file.toLowerCase() === 'name.txt') || null;
+  const encodedFolder = ['Episodes', folder];
   return {
     folderKey: key,
     folderName: folder,
-    title: parsed.title,
-    audioUrl: buildUrl(['Episodes', folder, mp3]),
-    coverUrl: coverFile ? buildUrl(['Episodes', folder, coverFile]) : null,
-    nameUrl: nameFile ? buildUrl(['Episodes', folder, nameFile]) : null,
+    title: parsed.title || folder,
+    audioUrl: buildUrl([...encodedFolder, folder + '.mp3']),
+    coverUrl: buildUrl([...encodedFolder, 'Cover.jpg']),
+    nameUrl: buildUrl([...encodedFolder, 'name.txt']),
     actualFolder: folder,
     dur: 0,
     resolved: true
@@ -1734,11 +1736,7 @@ async function buildSky(){
 
   if (!entries.length) return;
 
-  const tree = await getFullTree();
-  if (!tree) return;
-
-  const fileIndex = buildEpisodeFileIndex(tree);
-  EPISODES = entries.map(([key, val]) => resolveOneEpisode(key, val, fileIndex)).filter(Boolean);
+  EPISODES = entries.map(([key, val]) => resolveOneEpisode(key, val)).filter(Boolean);
   starEls = [];
   if (!EPISODES.length) return;
   detectNewEpisodeRelease();
@@ -1951,17 +1949,8 @@ function playAmbientFromQueue(){
 }
 
 async function getDataTracks(){
-  const tree = await getFullTree();
-  if (tree) {
-    return findDataTracks(tree);
-  }
-  const found = [];
-  for (let i = 1; i <= 10; i++) {
-    const ok = await probeDataFile(i);
-    if (ok) found.push(i);
-    else break;
-  }
-  return found;
+  const checks = await Promise.all(Array.from({ length: 10 }, (_, i) => probeDataFile(i + 1)));
+  return checks.map((ok, i) => ok ? i + 1 : 0).filter(Boolean);
 }
 
 async function startAmbient(){
