@@ -111,9 +111,10 @@
   .star-label{display:none}
 
   .map-arrow{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:210;opacity:1;overflow:hidden;transition:opacity .6s ease}
-  .map-arrow .arrow-outline{fill:none;stroke:rgba(31,13,27,.94);stroke-width:var(--arrow-outline-width,10px);stroke-linecap:round;stroke-linejoin:round}
-  .map-arrow .arrow-shaft{fill:none;stroke:var(--arrow-color,#f0e6da);stroke-width:var(--arrow-width,6px);stroke-linecap:round;stroke-linejoin:round}
-  .map-arrow .arrow-head{fill:var(--arrow-color,#f0e6da);stroke:rgba(31,13,27,.96);stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;opacity:0}
+  .map-arrow .arrow-outline{fill:none;stroke:rgba(42,8,15,.94);stroke-width:var(--arrow-outline-width,7px);stroke-linecap:round;stroke-linejoin:round}
+  .map-arrow .arrow-shaft{fill:none;stroke:var(--arrow-color,#e9dfd3);stroke-width:var(--arrow-width,3px);stroke-linecap:round;stroke-linejoin:round}
+  .map-arrow .arrow-head-outline{fill:none;stroke:rgba(42,8,15,.94);stroke-width:var(--arrow-head-outline-width,6px);stroke-linecap:round;stroke-linejoin:round;opacity:0}
+  .map-arrow .arrow-head{fill:none;stroke:var(--arrow-color,#e9dfd3);stroke-width:var(--arrow-head-width,3px);stroke-linecap:round;stroke-linejoin:round;opacity:0}
   .map-arrow .arrow-wobble{transform-box:fill-box;transform-origin:center;animation:mapArrowWobble 1.8s ease-in-out infinite}
   @keyframes mapArrowWobble{0%,100%{transform:translateY(0) rotate(0)}35%{transform:translateY(-1.2px) rotate(.35deg)}70%{transform:translateY(.6px) rotate(-.25deg)}}
   @media (prefers-reduced-motion:reduce){.map-arrow .arrow-wobble{animation:none}}
@@ -275,15 +276,14 @@
   .ageEnter{padding:14px 60px;background:transparent;border:1px solid rgba(255,255,255,.4);color:#eae6f2;font-family:'Special Elite', 'Courier New', monospace;font-weight:400;font-size:12px;letter-spacing:.48em;text-indent:.48em;text-transform:uppercase;cursor:pointer;transition:color .3s ease, border-color .3s ease, box-shadow .3s ease, letter-spacing .3s ease;border-radius:2px;-webkit-tap-highlight-color:transparent}
   .ageEnter:hover{color:#fff;border-color:#fff;box-shadow:0 0 50px rgba(255,255,255,.24);letter-spacing:.56em}
   .ageEnter:active{box-shadow:0 0 30px rgba(255,255,255,.35), inset 0 0 26px rgba(255,255,255,.1)}
-  #tutorialHand{position:fixed;left:0;top:0;width:112px;height:144px;z-index:260;pointer-events:none;opacity:0;visibility:hidden;transform-origin:49px 10px;will-change:left,top,transform,opacity;transition:opacity .24s ease,visibility .24s ease}
+  #tutorialHand{position:fixed;left:0;top:0;width:112px;height:144px;z-index:260;pointer-events:none;opacity:0;visibility:hidden;transform-origin:50px 11px;will-change:left,top,transform,opacity;transition:opacity .24s ease,visibility .24s ease}
   #tutorialHand.active{opacity:1;visibility:visible}
   #tutorialHand svg{display:block;width:112px;height:144px;overflow:visible;transform-origin:50% 50%}
-  #tutorialHand.mirror:not(.bottom-approach){transform-origin:63px 10px}
+  #tutorialHand.mirror{transform-origin:62px 11px}
   #tutorialHand.mirror svg{transform:scaleX(-1)}
-  #tutorialHand.bottom-approach{transform-origin:63px 134px}
-  #tutorialHand.bottom-approach svg{transform:rotate(180deg);transform-origin:50% 50%}
-  #tutorialHand .hand-outline{fill:none;stroke:#f5f3f2;stroke-width:3.1;stroke-linecap:round;stroke-linejoin:round;opacity:.98}
-  #tutorialHand .hand-detail{fill:none;stroke:#f5f3f2;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round;opacity:.78}
+  #tutorialHand.bottom-approach{transform-origin:50px 11px}
+  #tutorialHand.bottom-approach svg{transform:none;transform-origin:50% 50%}
+  #tutorialHand .hand-outline{fill:none;stroke:#f5f3f2;stroke-width:3.15;stroke-linecap:round;stroke-linejoin:round;opacity:.98}
   .star.tutorial-target .star-core{animation:tutorialStarGuidePulse 1.6s ease-in-out infinite!important;box-shadow:0 0 20px 7px rgba(255,255,255,.98),0 0 56px 18px rgba(220,205,255,.52)!important}
   .tutorial-demo-proxy{position:fixed!important;z-index:258!important;pointer-events:none!important;opacity:1!important;transition:none!important;animation:none!important;overflow:visible!important;will-change:left,top,transform,opacity;}
   .tutorial-demo-proxy .star-core,.tutorial-demo-proxy .star-flare{animation:none!important}
@@ -454,10 +454,7 @@
 </div>
 <div id="tutorialHand" aria-hidden="true">
   <svg viewBox="0 0 112 144" role="presentation" aria-hidden="true">
-    <path class="hand-outline" d="M35 136 C27 132 21 125 17 116 L7 95 C3 87 7 79 14 76 C20 73 26 78 30 86 L37 102 L35.5 29 C35.2 18 41 10.5 49.5 10.5 C58.5 10.5 64 17 64 29 L65 77 C65 69 69 64 75.5 65 C82 66 85 72 83 80 C86 72 92 69 98 73 C104 77 103 84 99 91 C104 94 103 101 98 107 L88 119 C80 130 68 136 55 139 C47 141 40 139 35 136 Z"/>
-    <path class="hand-detail" d="M65 91 C69 83 78 82 83 88 C87 94 83 101 77 104 C71 106 66 102 64 96 M76 108 C81 101 90 102 94 108 C97 114 92 120 85 122 C79 123 74 119 73 114 M30 99 C36 108 46 112 56 109 M28 118 C39 127 56 131 72 124"/>
-    <path class="hand-outline" d="M27 121 C39 131 58 134 75 125 L82 133 C68 143 44 144 29 133 Z"/>
-    <path class="hand-detail" d="M43 18 C45 14 49 12.5 53 13 C57 13.5 60 16 61 20"/>
+    <path class="hand-outline" d="M32 139 C25 136 23 129 27 123 L16 109 C10 102 11 94 17 89 C23 84 30 87 35 94 L39 101 L39 31 C39 19 44 11 51 11 C59 11 64 19 64 31 L64 78 C64 69 70 64 77 65 C85 65 89 71 89 80 L89 84 C90 76 96 72 102 76 C108 80 108 88 104 95 C110 92 114 98 111 105 L103 120 C96 134 82 141 66 143 C52 145 40 143 32 139 Z"/>
   </svg>
 </div>
 <div id="ageGate" role="dialog" aria-modal="true">
@@ -673,11 +670,11 @@ function cancelTutorialMotion(hideDropzone){
 }
 const TUTORIAL_HAND_WIDTH = 112;
 const TUTORIAL_HAND_HEIGHT = 144;
-const TUTORIAL_HAND_TIP_X = 49;
+const TUTORIAL_HAND_TIP_X = 51;
 const TUTORIAL_HAND_MIRROR_TIP_X = TUTORIAL_HAND_WIDTH - TUTORIAL_HAND_TIP_X;
-const TUTORIAL_HAND_TIP_Y = 10;
-const TUTORIAL_HAND_BOTTOM_TIP_X = 63;
-const TUTORIAL_HAND_BOTTOM_TIP_Y = 134;
+const TUTORIAL_HAND_TIP_Y = 11;
+const TUTORIAL_HAND_BOTTOM_TIP_X = TUTORIAL_HAND_TIP_X;
+const TUTORIAL_HAND_BOTTOM_TIP_Y = TUTORIAL_HAND_TIP_Y;
 let tutorialHandScale = 1;
 function setTutorialHandScale(scale){
   tutorialHandScale = Math.max(.3, Math.min(1, scale || 1));
@@ -691,7 +688,7 @@ function setTutorialHandScale(scale){
     svg.style.height = height + 'px';
   }
   const fromBottom = tutorialHand.classList.contains('bottom-approach');
-  tutorialHand.style.transformOrigin = (fromBottom ? 63 : 49) * tutorialHandScale + 'px ' + (fromBottom ? 134 : 10) * tutorialHandScale + 'px';
+  tutorialHand.style.transformOrigin = TUTORIAL_HAND_TIP_X * tutorialHandScale + 'px ' + TUTORIAL_HAND_TIP_Y * tutorialHandScale + 'px';
 }
 function tutorialHandPosition(x, y){
   const mirrored = tutorialHand.classList.contains('mirror');
@@ -807,12 +804,13 @@ function startTutorialCloseDemo(){
   let point;
   let mirrored = false;
   if (isMobile) {
-    tutorialHand.classList.add('bottom-approach', 'compact');
-    const coverRect = coverEl ? coverEl.getBoundingClientRect() : rect;
-    const desiredY = Math.max(22, coverRect.top - 7);
-    const scale = Math.max(.3, Math.min(.72, (desiredY - 4) / TUTORIAL_HAND_BOTTOM_TIP_Y));
+    tutorialHand.classList.remove('bottom-approach', 'compact', 'mirror');
+    const freeBelowCard = Math.max(34, innerHeight - rect.bottom - 8);
+    const scale = Math.max(.28, Math.min(.62, (freeBelowCard - 8) / TUTORIAL_HAND_HEIGHT));
     setTutorialHandScale(scale);
-    point = { x:innerWidth * .5, y:desiredY };
+    const handHeight = TUTORIAL_HAND_HEIGHT * tutorialHandScale;
+    const targetY = Math.min(innerHeight - handHeight - 5, rect.bottom + 9);
+    point = { x:innerWidth * .5, y:Math.max(12, targetY) };
   } else {
     setTutorialHandScale(1);
     tutorialHand.classList.remove('bottom-approach', 'compact');
@@ -831,8 +829,8 @@ function startTutorialCloseDemo(){
   placeTutorialHand(point.x, point.y);
   const animation = tutorialHand.animate([
     { transform:'translateY(0) rotate(-5deg) scale(1)', opacity:1, offset:0 },
-    { transform:'translateY(9px) rotate(1deg) scale(.96)', opacity:1, offset:.2 },
-    { transform:'translateY(1px) rotate(-3deg) scale(1.01)', opacity:1, offset:.42 },
+    { transform:'translateY(-7px) rotate(1deg) scale(.96)', opacity:1, offset:.2 },
+    { transform:'translateY(-1px) rotate(-3deg) scale(1.01)', opacity:1, offset:.42 },
     { transform:'translateY(0) rotate(-5deg) scale(1)', opacity:1, offset:.58 },
     { transform:'translateY(0) rotate(-5deg) scale(1)', opacity:1, offset:1 }
   ], { duration:1600, iterations:Infinity, easing:'ease-in-out' });
@@ -2077,148 +2075,130 @@ function showMapArrow(starEl){
   const rect = starEl.getBoundingClientRect();
   const vw = Math.max(1, innerWidth);
   const vh = Math.max(1, innerHeight);
-  const tx = rect.left + rect.width / 2;
-  const ty = rect.top + rect.height / 2;
+  const tx = rect.left + rect.width * .5;
+  const ty = rect.top + rect.height * .5;
   const margin = 30;
   const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
-  const directions = [
-    [1, 0], [-1, 0], [0, 1], [0, -1],
-    [.707, .707], [.707, -.707], [-.707, .707], [-.707, -.707]
-  ];
-  const candidates = directions.map(([dx, dy]) => {
-    let maxX = Infinity;
-    let maxY = Infinity;
-    if (dx > 0) maxX = (vw - margin - tx) / dx;
-    else if (dx < 0) maxX = (margin - tx) / dx;
-    if (dy > 0) maxY = (vh - margin - ty) / dy;
-    else if (dy < 0) maxY = (margin - ty) / dy;
-    return { dx, dy, max:Math.max(0, Math.min(maxX, maxY)) };
-  }).filter(item => item.max > 96);
+  const directions = [[1,0],[-1,0],[0,1],[0,-1],[.707,.707],[.707,-.707],[-.707,.707],[-.707,-.707]];
+  const candidates = directions.map(([dx,dy]) => {
+    const maxX = dx > 0 ? (vw - margin - tx) / dx : dx < 0 ? (margin - tx) / dx : Infinity;
+    const maxY = dy > 0 ? (vh - margin - ty) / dy : dy < 0 ? (margin - ty) / dy : Infinity;
+    return { dx, dy, max:Math.max(0, Math.min(maxX,maxY)) };
+  }).filter(item => item.max > 108);
   if (!candidates.length) return;
-  candidates.sort((a, b) => b.max - a.max);
-  const usable = candidates.filter(item => item.max >= Math.min(124, candidates[0].max));
-  const direction = usable[Math.floor(Math.random() * usable.length)] || candidates[0];
-  const dirX = direction.dx;
-  const dirY = direction.dy;
-  const perpX = -dirY;
-  const perpY = dirX;
-  const distance = Math.max(70, Math.min(162, direction.max - 28));
-  const sx = clamp(tx + dirX * distance, margin, vw - margin);
-  const sy = clamp(ty + dirY * distance, margin, vh - margin);
-  const tipDistance = Math.min(14, Math.max(8, distance * .085));
-  const tipX = clamp(tx + dirX * tipDistance, margin, vw - margin);
-  const tipY = clamp(ty + dirY * tipDistance, margin, vh - margin);
-  const headLength = 21 + Math.random() * 13;
-  const baseX = clamp(tipX + dirX * headLength, margin, vw - margin);
-  const baseY = clamp(tipY + dirY * headLength, margin, vh - margin);
-  const bodyDx = baseX - sx;
-  const bodyDy = baseY - sy;
-  const bodyLen = Math.max(1, Math.hypot(bodyDx, bodyDy));
-  const bodyPX = -bodyDy / bodyLen;
-  const bodyPY = bodyDx / bodyLen;
-  const bend = (Math.random() - .5) * Math.min(104, distance * .72);
-  const bend2 = bend * (.36 + Math.random() * .92);
-  const shape = Math.floor(Math.random() * 5);
-  let bodyD;
-
-  if (shape === 0) {
-    const c1x = clamp(sx + bodyDx * .25 + bodyPX * bend, margin, vw - margin);
-    const c1y = clamp(sy + bodyDy * .25 + bodyPY * bend, margin, vh - margin);
-    const c2x = clamp(sx + bodyDx * .77 - bodyPX * bend2, margin, vw - margin);
-    const c2y = clamp(sy + bodyDy * .77 - bodyPY * bend2, margin, vh - margin);
-    bodyD = 'M ' + sx + ' ' + sy + ' C ' + c1x + ' ' + c1y + ' ' + c2x + ' ' + c2y + ' ' + baseX + ' ' + baseY;
-  } else if (shape === 1) {
-    const qx = clamp((sx + baseX) / 2 + bodyPX * bend, margin, vw - margin);
-    const qy = clamp((sy + baseY) / 2 + bodyPY * bend, margin, vh - margin);
-    bodyD = 'M ' + sx + ' ' + sy + ' Q ' + qx + ' ' + qy + ' ' + baseX + ' ' + baseY;
-  } else if (shape === 2) {
-    const p1x = clamp(sx + bodyDx * .32 + bodyPX * bend * .42, margin, vw - margin);
-    const p1y = clamp(sy + bodyDy * .32 + bodyPY * bend * .42, margin, vh - margin);
-    const p2x = clamp(sx + bodyDx * .7 - bodyPX * bend2 * .36, margin, vw - margin);
-    const p2y = clamp(sy + bodyDy * .7 - bodyPY * bend2 * .36, margin, vh - margin);
-    bodyD = 'M ' + sx + ' ' + sy + ' C ' + p1x + ' ' + p1y + ' ' + p2x + ' ' + p2y + ' ' + baseX + ' ' + baseY;
-  } else if (shape === 3) {
-    const c1x = clamp(sx + bodyDx * .2 + bodyPX * (bend + 22), margin, vw - margin);
-    const c1y = clamp(sy + bodyDy * .2 + bodyPY * (bend + 22), margin, vh - margin);
-    const midX = clamp(sx + bodyDx * .56 - bodyPX * bend2 * .25, margin, vw - margin);
-    const midY = clamp(sy + bodyDy * .56 - bodyPY * bend2 * .25, margin, vh - margin);
-    const c2x = clamp(sx + bodyDx * .85 + bodyPX * (bend2 + 10), margin, vw - margin);
-    const c2y = clamp(sy + bodyDy * .85 + bodyPY * (bend2 + 10), margin, vh - margin);
-    bodyD = 'M ' + sx + ' ' + sy + ' C ' + c1x + ' ' + c1y + ' ' + midX + ' ' + midY + ' ' + midX + ' ' + midY + ' C ' + c2x + ' ' + c2y + ' ' + (baseX - bodyPX * 5) + ' ' + (baseY - bodyPY * 5) + ' ' + baseX + ' ' + baseY;
+  candidates.sort((a,b) => b.max - a.max);
+  const viable = candidates.filter(item => item.max >= Math.min(138,candidates[0].max));
+  const direction = viable[Math.floor(Math.random()*viable.length)] || candidates[0];
+  const dx = direction.dx;
+  const dy = direction.dy;
+  const px = -dy;
+  const py = dx;
+  const distance = Math.min(178, Math.max(104, direction.max - 24));
+  const startX = clamp(tx + dx * distance, margin, vw - margin);
+  const startY = clamp(ty + dy * distance, margin, vh - margin);
+  const tipGap = 8 + Math.random() * 4;
+  const tipX = clamp(tx + dx * tipGap, margin, vw - margin);
+  const tipY = clamp(ty + dy * tipGap, margin, vh - margin);
+  const headLength = 17 + Math.random() * 8;
+  const baseX = clamp(tipX + dx * headLength, margin, vw - margin);
+  const baseY = clamp(tipY + dy * headLength, margin, vh - margin);
+  const vx = baseX - startX;
+  const vy = baseY - startY;
+  const length = Math.max(1, Math.hypot(vx,vy));
+  const normalX = -vy / length;
+  const normalY = vx / length;
+  const curve = (Math.random() - .5) * Math.min(112, distance * .62);
+  const bend2 = curve * (.25 + Math.random() * .45);
+  const style = Math.floor(Math.random() * 4);
+  let shaftD;
+  if (style === 0) {
+    const c1x = clamp(startX + vx*.27 + normalX*curve, margin, vw-margin);
+    const c1y = clamp(startY + vy*.27 + normalY*curve, margin, vh-margin);
+    const c2x = clamp(startX + vx*.76 - normalX*bend2, margin, vw-margin);
+    const c2y = clamp(startY + vy*.76 - normalY*bend2, margin, vh-margin);
+    shaftD = 'M '+startX+' '+startY+' C '+c1x+' '+c1y+' '+c2x+' '+c2y+' '+baseX+' '+baseY;
+  } else if (style === 1) {
+    const qx = clamp((startX+baseX)*.5 + normalX*curve, margin, vw-margin);
+    const qy = clamp((startY+baseY)*.5 + normalY*curve, margin, vh-margin);
+    shaftD = 'M '+startX+' '+startY+' Q '+qx+' '+qy+' '+baseX+' '+baseY;
+  } else if (style === 2) {
+    const c1x = clamp(startX + vx*.34 + normalX*curve*.65, margin, vw-margin);
+    const c1y = clamp(startY + vy*.34 + normalY*curve*.65, margin, vh-margin);
+    const c2x = clamp(startX + vx*.72 + normalX*bend2*.72, margin, vw-margin);
+    const c2y = clamp(startY + vy*.72 + normalY*bend2*.72, margin, vh-margin);
+    shaftD = 'M '+startX+' '+startY+' C '+c1x+' '+c1y+' '+c2x+' '+c2y+' '+baseX+' '+baseY;
   } else {
-    const q1x = clamp(sx + bodyDx * .34 + bodyPX * bend, margin, vw - margin);
-    const q1y = clamp(sy + bodyDy * .34 + bodyPY * bend, margin, vh - margin);
-    const q2x = clamp(sx + bodyDx * .73 - bodyPX * bend2, margin, vw - margin);
-    const q2y = clamp(sy + bodyDy * .73 - bodyPY * bend2, margin, vh - margin);
-    bodyD = 'M ' + sx + ' ' + sy + ' Q ' + q1x + ' ' + q1y + ' ' + q2x + ' ' + q2y + ' Q ' + clamp(q2x + bodyDx * .25, margin, vw - margin) + ' ' + clamp(q2y + bodyDy * .25, margin, vh - margin) + ' ' + baseX + ' ' + baseY;
+    const c1x = clamp(startX + vx*.36 + normalX*curve, margin, vw-margin);
+    const c1y = clamp(startY + vy*.36 + normalY*curve, margin, vh-margin);
+    const c2x = clamp(startX + vx*.79 - normalX*bend2, margin, vw-margin);
+    const c2y = clamp(startY + vy*.79 - normalY*bend2, margin, vh-margin);
+    shaftD = 'M '+startX+' '+startY+' C '+c1x+' '+c1y+' '+c2x+' '+c2y+' '+baseX+' '+baseY;
   }
 
-  const headSpread = 11 + Math.random() * 10;
-  const headA = { x:baseX + perpX * headSpread, y:baseY + perpY * headSpread };
-  const headB = { x:baseX - perpX * headSpread * (.82 + Math.random() * .36), y:baseY - perpY * headSpread * (.82 + Math.random() * .36) };
-  headA.x = clamp(headA.x, margin, vw - margin);
-  headA.y = clamp(headA.y, margin, vh - margin);
-  headB.x = clamp(headB.x, margin, vw - margin);
-  headB.y = clamp(headB.y, margin, vh - margin);
-  const headBulge = 4 + Math.random() * 7;
-  const headD = 'M ' + headA.x + ' ' + headA.y +
-    ' Q ' + clamp(tipX + dirX * 8 + perpX * (headSpread + headBulge), margin, vw - margin) + ' ' + clamp(tipY + dirY * 8 + perpY * (headSpread + headBulge), margin, vh - margin) +
-    ' ' + tipX + ' ' + tipY +
-    ' Q ' + clamp(tipX + dirX * 8 - perpX * (headSpread + headBulge), margin, vw - margin) + ' ' + clamp(tipY + dirY * 8 - perpY * (headSpread + headBulge), margin, vh - margin) +
-    ' ' + headB.x + ' ' + headB.y +
-    ' Q ' + clamp(baseX + dirX * 5, margin, vw - margin) + ' ' + clamp(baseY + dirY * 5, margin, vh - margin) +
-    ' ' + headA.x + ' ' + headA.y + ' Z';
+  const spread = 8 + Math.random()*5;
+  const asymmetry = .82 + Math.random()*.36;
+  const leftX = clamp(baseX + normalX*spread, margin, vw-margin);
+  const leftY = clamp(baseY + normalY*spread, margin, vh-margin);
+  const rightX = clamp(baseX - normalX*spread*asymmetry, margin, vw-margin);
+  const rightY = clamp(baseY - normalY*spread*asymmetry, margin, vh-margin);
+  const curveAmount = 3 + Math.random()*4;
+  const leftHeadD = 'M '+leftX+' '+leftY+' Q '+clamp(tipX+dx*7+normalX*curveAmount,margin,vw-margin)+' '+clamp(tipY+dy*7+normalY*curveAmount,margin,vh-margin)+' '+tipX+' '+tipY;
+  const rightHeadD = 'M '+tipX+' '+tipY+' Q '+clamp(tipX+dx*7-normalX*curveAmount,margin,vw-margin)+' '+clamp(tipY+dy*7-normalY*curveAmount,margin,vh-margin)+' '+rightX+' '+rightY;
 
-  const palette = ['#f6df9e', '#f1c5d1', '#cbdaf6', '#d5e8c9', '#e7c9f0', '#f0c8a8'];
-  const arrowColor = palette[Math.floor(Math.random() * palette.length)];
-  const arrowWidth = 5.1 + Math.random() * 4.6;
-  const outlineWidth = arrowWidth + 4.5;
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('class', 'map-arrow');
-  svg.setAttribute('viewBox', '0 0 ' + vw + ' ' + vh);
-  svg.setAttribute('preserveAspectRatio', 'none');
-  svg.style.setProperty('--arrow-color', arrowColor);
-  svg.style.setProperty('--arrow-width', arrowWidth.toFixed(2) + 'px');
-  svg.style.setProperty('--arrow-outline-width', outlineWidth.toFixed(2) + 'px');
+  const palette = ['#e8ddd1','#d7beb3','#e7d0c3','#c9beb4','#ead6ca'];
+  const color = palette[Math.floor(Math.random()*palette.length)];
+  const shaftWidth = 2.35 + Math.random()*1.7;
+  const headWidth = Math.max(2.1, shaftWidth*.88);
+  const outlineWidth = shaftWidth + 3.1;
+  const headOutlineWidth = headWidth + 3.0;
 
-  const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-  group.setAttribute('class', 'arrow-wobble');
+  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('class','map-arrow');
+  svg.setAttribute('viewBox','0 0 '+vw+' '+vh);
+  svg.setAttribute('preserveAspectRatio','none');
+  svg.style.setProperty('--arrow-color',color);
+  svg.style.setProperty('--arrow-width',shaftWidth.toFixed(2)+'px');
+  svg.style.setProperty('--arrow-outline-width',outlineWidth.toFixed(2)+'px');
+  svg.style.setProperty('--arrow-head-width',headWidth.toFixed(2)+'px');
+  svg.style.setProperty('--arrow-head-outline-width',headOutlineWidth.toFixed(2)+'px');
+
+  const group = document.createElementNS('http://www.w3.org/2000/svg','g');
+  group.setAttribute('class','arrow-wobble');
   svg.appendChild(group);
-
   const makePath = (d, className, delay) => {
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path.setAttribute('d', d);
-    path.setAttribute('class', className);
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',d);
+    path.setAttribute('class',className);
     path._arrowDelay = delay;
     path.style.transition = 'none';
     group.appendChild(path);
     return path;
   };
 
-  const outline = makePath(bodyD, 'arrow-outline', 0);
-  const shaft = makePath(bodyD, 'arrow-shaft', 0.025);
-  const head = makePath(headD, 'arrow-head', 0.55);
-
+  const outline = makePath(shaftD,'arrow-outline',0);
+  const shaft = makePath(shaftD,'arrow-shaft',.025);
+  const headOutlineA = makePath(leftHeadD,'arrow-head-outline',.43);
+  const headOutlineB = makePath(rightHeadD,'arrow-head-outline',.49);
+  const headA = makePath(leftHeadD,'arrow-head',.455);
+  const headB = makePath(rightHeadD,'arrow-head',.515);
   document.body.appendChild(svg);
   currentArrow = svg;
 
-  [outline, shaft, head].forEach(path => {
-    let length = 100;
-    try { length = Math.max(1, path.getTotalLength()); } catch (e) {}
-    path.style.strokeDasharray = String(length);
-    path.style.strokeDashoffset = String(length);
-    path.style.transition = 'stroke-dashoffset ' + (shape === 2 ? '.76s' : '.9s') + ' cubic-bezier(.2,.8,.2,1) ' + path._arrowDelay + 's, opacity .22s ease ' + (path._arrowDelay + .1) + 's';
+  [outline,shaft,headOutlineA,headOutlineB,headA,headB].forEach(path => {
+    let pathLength = 100;
+    try { pathLength = Math.max(1,path.getTotalLength()); } catch(e) {}
+    path.style.strokeDasharray = String(pathLength);
+    path.style.strokeDashoffset = String(pathLength);
+    path.style.transition = 'stroke-dashoffset .82s cubic-bezier(.2,.8,.2,1) '+path._arrowDelay+'s,opacity .2s ease '+(path._arrowDelay+.08)+'s';
   });
 
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      if (!svg.isConnected) return;
-      outline.style.strokeDashoffset = '0';
-      shaft.style.strokeDashoffset = '0';
-      head.style.strokeDashoffset = '0';
-      head.style.opacity = '1';
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    if (!svg.isConnected) return;
+    [outline,shaft,headOutlineA,headOutlineB,headA,headB].forEach(path => {
+      path.style.strokeDashoffset = '0';
+      path.style.opacity = '1';
     });
-  });
+  }));
 
   setTimeout(() => {
     if (!svg.parentNode) return;
@@ -2226,9 +2206,10 @@ function showMapArrow(starEl){
     setTimeout(() => {
       if (svg.parentNode) svg.remove();
       if (currentArrow === svg) currentArrow = null;
-    }, 650);
-  }, 4600);
+    },650);
+  },4600);
 }
+
 function performSearch(rawQuery){
   const q = String(rawQuery || '').trim();
   if (q.length < 2) { showToast('введите название', 1800); return; }
