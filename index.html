@@ -4,11 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#000000">
-<meta name="description" content="Подкаст «Страшилки»: мистические истории, выпуски и аудиоплеер в ночном звёздном небе.">
+<meta name="description" content="Эти истории вас немного напугают или заинтригуют.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Страшилки">
 <meta property="og:title" content="Страшилки">
-<meta property="og:description" content="Мистические истории в ночном звёздном небе.">
+<meta property="og:description" content="Эти истории вас немного напугают или заинтригуют.">
 <meta property="og:image" content="./DATA/Logo.jpg">
 <title>Страшилки</title>
 <link rel="icon" type="image/jpeg" href="./DATA/Logo.jpg">
@@ -694,10 +694,14 @@ function markPlayed(folderKey){
   if (idx >= 0 && starEls[idx]) starEls[idx].classList.remove('unplayed');
 }
 
+const TUTORIAL_MODE = 1;
 const SKY_HINT_KEY = 'skyTutorialCompleted_v3';
 function shouldShowSkyHint(){
   if (tutorialCompletedThisSession) return false;
-  try { return localStorage.getItem(SKY_HINT_KEY) !== '1'; } catch (e) { return true; }
+  if (TUTORIAL_MODE === 0) return true;
+  return TUTORIAL_MODE === 1 ? (() => {
+    try { return localStorage.getItem(SKY_HINT_KEY) !== '1'; } catch (e) { return true; }
+  })() : false;
 }
 function cancelTutorialMotion(hideDropzone){
   clearTimeout(tutorialDemoTimer);
