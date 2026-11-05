@@ -1048,6 +1048,7 @@ async function maybeStartNewReleaseIntro(){
   newReleaseIntro.classList.add('show');
   newReleaseIntro.setAttribute('aria-hidden', 'false');
   newReleaseStar.style.opacity = '1';
+  playNewReleaseSound();
 
   const firstAnimation = newReleaseStar.animate([
     { transform:'translate(-50%,-50%) perspective(900px) rotateY(78deg) rotateZ(-28deg) scale(.025)', opacity:0, filter:'brightness(2.2) blur(12px)' },
@@ -1833,6 +1834,8 @@ function restoreLastPlayed(){
 
 let ambientActive = false;
 let ambientAudio = null;
+let releaseSoundAudio = null;
+let releaseSoundActive = false;
 let ambientGen = 0;
 let ambientQueue = [];
 let ambientQueuePos = 0;
@@ -1875,7 +1878,36 @@ function updateMuteIcon(){
 }
 
 function ambientShouldPlay(){
-  return ambientActive && !ambientMuted && !playing;
+  return ambientActive && !ambientMuted && !playing && !releaseSoundActive;
+}
+
+function playNewReleaseSound(){
+  releaseSoundActive = true;
+  if (ambientAudio) {
+    ambientAudio._fadeToken = (ambientAudio._fadeToken || 0) + 1;
+    try { ambientAudio.volume = 0; ambientAudio.pause(); } catch(e){}
+  }
+  if (!releaseSoundAudio) {
+    releaseSoundAudio = new Audio('DATA/Falling.mp3');
+    releaseSoundAudio.preload = 'auto';
+  }
+  const sound = releaseSoundAudio;
+  const finish = () => {
+    if (sound !== releaseSoundAudio || !releaseSoundActive) return;
+    releaseSoundActive = false;
+    applyAmbientState();
+  };
+  sound.onended = finish;
+  sound.onerror = finish;
+  try {
+    sound.pause();
+    sound.currentTime = 0;
+    sound.volume = 1;
+    const result = sound.play();
+    if (result && typeof result.catch === 'function') result.catch(finish);
+  } catch(e) {
+    finish();
+  }
 }
 
 function applyAmbientState(){
