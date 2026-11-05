@@ -200,7 +200,7 @@
   #shuffleBtn{margin-left:10px}
   .spinner-circle{transform-box: fill-box;transform-origin: center;animation: spinAnim 1s linear infinite}
   @keyframes spinAnim{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-  #miniPlayer{position:fixed;left:50%;bottom:22px;transform:translate(-50%, 200%);width:min(420px, calc(100% - 32px));display:grid;grid-template-columns:44px 1fr 40px;align-items:center;gap:12px;padding:10px 14px 10px 10px;background:rgba(8,8,10,.9);border:1px solid rgba(255,255,255,.1);border-radius:12px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:330;transition:transform .5s cubic-bezier(.2,.9,.3,1.2), opacity .35s ease;opacity:0;cursor:pointer;box-shadow:0 15px 50px rgba(0,0,0,.75), 0 0 0 1px rgba(0,0,0,.4);will-change:transform,opacity;touch-action:none}
+  #miniPlayer{position:fixed;left:50%;bottom:22px;transform:translate(-50%, 200%);width:min(420px, calc(100% - 32px));display:grid;grid-template-columns:44px 1fr 40px;align-items:center;gap:12px;padding:10px 14px 10px 10px;background:rgba(8,8,10,.9);border:1px solid rgba(255,255,255,.1);border-radius:12px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:310;transition:transform .5s cubic-bezier(.2,.9,.3,1.2), opacity .35s ease;opacity:0;cursor:pointer;box-shadow:0 15px 50px rgba(0,0,0,.75), 0 0 0 1px rgba(0,0,0,.4);will-change:transform,opacity;touch-action:none}
   #miniPlayer.show{transform:translate(-50%, 0);opacity:1}
   .mini-cover{width:44px;height:44px;border-radius:7px;overflow:hidden;background:#050505;box-shadow:0 0 0 1px rgba(255,255,255,.08);pointer-events:none}
   .mini-cover svg, .mini-cover img{display:block;width:100%;height:100%;object-fit:cover}
@@ -266,7 +266,7 @@
   .ageEnter{padding:14px 60px;background:transparent;border:1px solid rgba(255,255,255,.4);color:#eae6f2;font-family:'Special Elite', 'Courier New', monospace;font-weight:400;font-size:12px;letter-spacing:.48em;text-indent:.48em;text-transform:uppercase;cursor:pointer;transition:color .3s ease, border-color .3s ease, box-shadow .3s ease, letter-spacing .3s ease;border-radius:2px;-webkit-tap-highlight-color:transparent}
   .ageEnter:hover{color:#fff;border-color:#fff;box-shadow:0 0 50px rgba(255,255,255,.24);letter-spacing:.56em}
   .ageEnter:active{box-shadow:0 0 30px rgba(255,255,255,.35), inset 0 0 26px rgba(255,255,255,.1)}
-  #newReleaseIntro{position:fixed;inset:0;z-index:320;display:grid;place-items:center;overflow:hidden;background:radial-gradient(ellipse at 50% 48%,rgba(38,34,43,.72) 0%,rgba(7,6,10,.97) 54%,#000 100%);opacity:0;visibility:hidden;pointer-events:none;perspective:1100px;}
+  #newReleaseIntro{position:fixed;inset:0;z-index:320;display:grid;place-items:center;overflow:hidden;background:radial-gradient(ellipse at 50% 48%,rgba(38,34,43,.58) 0%,rgba(7,6,10,.78) 54%,rgba(0,0,0,.88) 100%);backdrop-filter:blur(13px);-webkit-backdrop-filter:blur(13px);opacity:0;visibility:hidden;pointer-events:none;perspective:1100px;}
   #newReleaseIntro.show{opacity:1;visibility:visible;pointer-events:auto;}
   .newReleaseSpace{position:absolute;inset:-20%;background-image:radial-gradient(1px 1px at 12% 22%,rgba(255,255,255,.72) 50%,transparent 100%),radial-gradient(1.5px 1.5px at 75% 18%,rgba(255,255,255,.64) 50%,transparent 100%),radial-gradient(1px 1px at 82% 73%,rgba(255,255,255,.6) 50%,transparent 100%),radial-gradient(1px 1px at 34% 82%,rgba(255,255,255,.55) 50%,transparent 100%),radial-gradient(1px 1px at 56% 11%,rgba(255,255,255,.46) 50%,transparent 100%),radial-gradient(1px 1px at 19% 66%,rgba(255,255,255,.44) 50%,transparent 100%);opacity:.7;}
   .newReleaseStar{position:absolute;left:50%;top:46%;width:min(58vw,58vh,540px);aspect-ratio:1;opacity:0;transform:translate(-50%,-50%) scale(.02) rotateY(72deg) rotateZ(-24deg);transform-style:preserve-3d;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 94%,50% 73%,21% 94%,32% 57%,2% 35%,39% 35%);background:radial-gradient(circle at 34% 26%,#fff 0%,#f2edf5 8%,#b5acbf 21%,#504a5a 44%,#16131c 70%,#030205 100%);filter:drop-shadow(0 0 18px rgba(255,255,255,.8)) drop-shadow(0 0 66px rgba(191,174,215,.42));will-change:transform,opacity;}
@@ -1836,6 +1836,10 @@ let ambientActive = false;
 let ambientAudio = null;
 let releaseSoundAudio = null;
 let releaseSoundActive = false;
+let releaseSoundPreloadPromise = null;
+let releaseSoundObjectUrl = null;
+const RELEASE_SOUND_CACHE = 'strashilki-audio-v1';
+const RELEASE_SOUND_PATH = 'DATA/Falling.mp3';
 let ambientGen = 0;
 let ambientQueue = [];
 let ambientQueuePos = 0;
@@ -1881,16 +1885,56 @@ function ambientShouldPlay(){
   return ambientActive && !ambientMuted && !playing && !releaseSoundActive;
 }
 
-function playNewReleaseSound(){
+function preloadNewReleaseSound(){
+  if (releaseSoundPreloadPromise) return releaseSoundPreloadPromise;
+  releaseSoundPreloadPromise = (async () => {
+    const soundUrl = new URL(RELEASE_SOUND_PATH, document.baseURI).href;
+    let response = null;
+    try {
+      if ('caches' in window) {
+        const cache = await caches.open(RELEASE_SOUND_CACHE);
+        response = await cache.match(soundUrl);
+        if (!response) {
+          const networkResponse = await fetch(soundUrl, { cache:'no-cache' });
+          if (!networkResponse.ok) throw new Error('Falling.mp3 unavailable');
+          try { await cache.put(soundUrl, networkResponse.clone()); } catch(e) {}
+          response = networkResponse;
+        }
+      } else {
+        const networkResponse = await fetch(soundUrl, { cache:'force-cache' });
+        if (!networkResponse.ok) throw new Error('Falling.mp3 unavailable');
+        response = networkResponse;
+      }
+      const blob = await response.blob();
+      if (!blob || !blob.size) throw new Error('Falling.mp3 is empty');
+      if (releaseSoundObjectUrl) URL.revokeObjectURL(releaseSoundObjectUrl);
+      releaseSoundObjectUrl = URL.createObjectURL(blob);
+      if (!releaseSoundAudio) {
+        releaseSoundAudio = new Audio();
+        releaseSoundAudio.preload = 'auto';
+      }
+      releaseSoundAudio.src = releaseSoundObjectUrl;
+      releaseSoundAudio.load();
+      return true;
+    } catch(e) {
+      if (!releaseSoundAudio) {
+        releaseSoundAudio = new Audio(soundUrl);
+        releaseSoundAudio.preload = 'auto';
+      }
+      return false;
+    }
+  })();
+  return releaseSoundPreloadPromise;
+}
+
+async function playNewReleaseSound(){
   releaseSoundActive = true;
   if (ambientAudio) {
     ambientAudio._fadeToken = (ambientAudio._fadeToken || 0) + 1;
     try { ambientAudio.volume = 0; ambientAudio.pause(); } catch(e){}
   }
-  if (!releaseSoundAudio) {
-    releaseSoundAudio = new Audio('DATA/Falling.mp3');
-    releaseSoundAudio.preload = 'auto';
-  }
+  try { await preloadNewReleaseSound(); } catch(e) {}
+  if (!releaseSoundAudio) releaseSoundAudio = new Audio(RELEASE_SOUND_PATH);
   const sound = releaseSoundAudio;
   const finish = () => {
     if (sound !== releaseSoundAudio || !releaseSoundActive) return;
@@ -4436,6 +4480,7 @@ async function init(){
   updatePageMap();
   loadPositions();
   startBgLoop();
+  preloadNewReleaseSound();
   removeMissingAppServiceWorker();
   loadPodcastInfo();
   buildSky();
