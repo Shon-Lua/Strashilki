@@ -116,18 +116,18 @@
   #topBar button.pageNav:active{box-shadow:none;filter:none}
   .pageNav i{font-style:normal;opacity:.55;color:#fff}
   #pageCurrent{color:#fff;opacity:1}
-  #pageMapPanel{position:fixed;top:68px;right:18px;width:min(430px,calc(100vw - 24px));z-index:76;padding:10px 11px 11px;border:1px solid rgba(190,180,205,.17);border-radius:3px;background:radial-gradient(ellipse at 22% 78%,rgba(105,15,29,.12),transparent 48%),radial-gradient(ellipse at 76% 22%,rgba(165,165,185,.075),transparent 53%),rgba(0,0,0,.94);box-shadow:0 22px 70px rgba(0,0,0,.88),inset 0 0 38px rgba(120,95,135,.035);opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-9px) scale(.985);transform-origin:top right;transition:opacity .24s ease,transform .28s cubic-bezier(.2,.8,.2,1),visibility .24s ease}
+  #pageMapPanel{position:fixed;top:68px;right:18px;width:min(430px,calc(100vw - 24px));z-index:76;padding:10px 11px 11px;border:1px solid rgba(170,178,210,.28);border-radius:4px;background:radial-gradient(ellipse at 78% 12%,rgba(104,112,145,.15),transparent 52%),radial-gradient(ellipse at 12% 88%,rgba(75,83,120,.12),transparent 55%),linear-gradient(145deg,rgba(8,10,19,.985),rgba(2,3,9,.99));box-shadow:0 16px 42px rgba(0,0,0,.78),inset 0 0 26px rgba(100,112,155,.1);opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-9px) scale(.985);transform-origin:top right;transition:opacity .24s ease,transform .28s cubic-bezier(.2,.8,.2,1),visibility .24s ease}
   #pageMapPanel.show{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0) scale(1)}
-  .pageMapFrame{position:relative;height:224px;overflow:hidden;border:1px solid rgba(180,165,195,.13);border-radius:2px;background:#000}
+  .pageMapFrame{position:relative;height:224px;overflow:hidden;border:1px solid rgba(170,178,210,.2);border-radius:3px;background:radial-gradient(ellipse at 78% 12%,rgba(104,112,145,.09),transparent 52%),linear-gradient(145deg,#070914,#020309)}
   .pageMapFrame::after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 48%,transparent 48%,rgba(0,0,0,.42) 100%)}
   #pageMapCanvas{display:block;width:100%;height:100%}
   .pageMapMeta{display:flex;align-items:center;justify-content:center;gap:10px;margin:9px 1px 5px;font-family:'Special Elite','Courier New',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase}
   #pageMapPageLabel{color:#e8e1ef;text-shadow:0 0 12px rgba(225,215,235,.22)}
   #pageMapSlider{display:block;width:100%;height:22px;margin:0;background:transparent;appearance:none;-webkit-appearance:none;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none}
-  #pageMapSlider::-webkit-slider-runnable-track{height:2px;background:linear-gradient(90deg,rgba(100,20,35,.72),rgba(210,198,220,.48),rgba(100,20,35,.72));border-radius:2px}
-  #pageMapSlider::-moz-range-track{height:2px;background:linear-gradient(90deg,rgba(100,20,35,.72),rgba(210,198,220,.48),rgba(100,20,35,.72));border-radius:2px}
-  #pageMapSlider::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:14px;height:14px;margin-top:-6px;border-radius:50%;border:1px solid rgba(245,238,250,.9);background:#c9c0d2;box-shadow:0 0 10px rgba(210,195,225,.72),0 0 24px rgba(125,35,55,.32)}
-  #pageMapSlider::-moz-range-thumb{width:13px;height:13px;border-radius:50%;border:1px solid rgba(245,238,250,.9);background:#c9c0d2;box-shadow:0 0 10px rgba(210,195,225,.72),0 0 24px rgba(125,35,55,.32)}
+  #pageMapSlider::-webkit-slider-runnable-track{height:2px;background:linear-gradient(90deg,rgba(112,126,166,.5),rgba(190,199,225,.58),rgba(112,126,166,.5));border-radius:2px}
+  #pageMapSlider::-moz-range-track{height:2px;background:linear-gradient(90deg,rgba(112,126,166,.5),rgba(190,199,225,.58),rgba(112,126,166,.5));border-radius:2px}
+  #pageMapSlider::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:14px;height:14px;margin-top:-6px;border-radius:50%;border:1px solid rgba(220,226,245,.92);background:#c9cfe0;box-shadow:0 0 10px rgba(190,199,225,.62),0 0 24px rgba(104,112,145,.26)}
+  #pageMapSlider::-moz-range-thumb{width:13px;height:13px;border-radius:50%;border:1px solid rgba(220,226,245,.92);background:#c9cfe0;box-shadow:0 0 10px rgba(190,199,225,.62),0 0 24px rgba(104,112,145,.26)}
   #pageMapSlider:focus-visible{outline:1px solid rgba(225,215,240,.6);outline-offset:3px}
   #infoBtn{position:fixed;top:24px;left:20px;z-index:82;background:none;border:0;padding:6px;width:36px;height:36px;display:grid;place-items:center;color:rgba(255,255,255,.88);cursor:pointer;-webkit-tap-highlight-color:transparent;text-shadow:0 0 10px rgba(0,0,0,.9);transition:color .2s ease}
   #infoBtn:hover{color:#fff}
@@ -208,11 +208,11 @@
   .mini-title{font-family:'IM Fell English', Georgia, serif;font-weight:400;font-size:14px;color:#e2ddee;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;position:relative;text-align:center}
   .mini-btn{width:40px;height:40px;border:none;background:transparent;color:#fff;cursor:pointer;display:grid;place-items:center;padding:0}
   .mini-btn svg{width:18px;height:18px;fill:currentColor}
-  #searchBox{position:fixed;top:68px;right:20px;width:min(320px, calc(100% - 40px));z-index:27;opacity:0;transform:translateY(-10px);pointer-events:none;transition:opacity .3s ease, transform .3s ease}
+  #searchBox{position:fixed;top:68px;right:20px;width:min(370px, calc(100% - 40px));z-index:77;opacity:0;transform:translateY(-10px);pointer-events:none;transition:opacity .3s ease, transform .3s ease}
   #searchBox.show{opacity:1;transform:translateY(0);pointer-events:auto}
-  #searchInput{width:100%;padding:12px 18px;background:rgba(8,6,10,.95);border:1px solid rgba(255,255,255,.15);border-radius:3px;color:#eae6f2;font-family:'IM Fell English', Georgia, serif;font-weight:400;font-size:15px;letter-spacing:.03em;outline:none;transition:border-color .25s ease, box-shadow .25s ease;box-shadow:0 10px 30px rgba(0,0,0,.85);-webkit-appearance:none}
-  #searchInput:focus{border-color:rgba(255,255,255,.55);box-shadow:0 10px 30px rgba(0,0,0,.85), 0 0 24px rgba(255,255,255,.12)}
-  #searchInput::placeholder{color:rgba(255,255,255,.28);letter-spacing:.04em}
+  #searchInput{width:100%;padding:12px 18px;background:linear-gradient(145deg,rgba(8,10,19,.985),rgba(2,3,9,.99));border:1px solid rgba(170,178,210,.28);border-radius:4px;color:#e2e5f0;font-family:'IM Fell English', Georgia, serif;font-weight:400;font-size:15px;letter-spacing:.03em;outline:none;transition:border-color .25s ease, box-shadow .25s ease;box-shadow:0 16px 42px rgba(0,0,0,.78),inset 0 0 20px rgba(100,112,155,.08);-webkit-appearance:none}
+  #searchInput:focus{border-color:rgba(190,199,225,.58);box-shadow:0 16px 42px rgba(0,0,0,.78),0 0 22px rgba(104,112,145,.16),inset 0 0 20px rgba(100,112,155,.1)}
+  #searchInput::placeholder{color:rgba(190,199,225,.48);letter-spacing:.04em}
   #searchInput::-webkit-search-cancel-button{
     -webkit-appearance:none;
     appearance:none;
@@ -225,13 +225,13 @@
     margin-left:6px;
   }
   #searchInput::-webkit-search-cancel-button:hover{opacity:1}
-  #searchSuggestions{margin-top:6px;background:rgba(8,6,10,.97);border:1px solid rgba(255,255,255,.12);border-radius:3px;box-shadow:0 10px 30px rgba(0,0,0,.9);max-height:260px;overflow-y:auto;display:none;-webkit-overflow-scrolling:touch}
+  #searchSuggestions{margin-top:6px;padding:5px;background:radial-gradient(ellipse at 78% 12%,rgba(104,112,145,.15),transparent 52%),radial-gradient(ellipse at 12% 88%,rgba(75,83,120,.12),transparent 55%),linear-gradient(145deg,rgba(8,10,19,.985),rgba(2,3,9,.99));border:1px solid rgba(170,178,210,.28);border-radius:4px;box-shadow:0 16px 42px rgba(0,0,0,.82),inset 0 0 26px rgba(100,112,155,.1);max-height:min(58vh,520px);overflow-y:auto;display:none;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:rgba(145,157,190,.5) rgba(5,7,15,.4)}
   #searchSuggestions.show{display:block}
-  .suggestion{padding:11px 16px;font-family:'IM Fell English', Georgia, serif;font-weight:400;font-size:14px;letter-spacing:.02em;color:#b8b2c5;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.05);transition:background .18s ease, color .18s ease;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .suggestion{padding:11px 12px;font-family:'IM Fell English', Georgia, serif;font-weight:400;font-size:14px;letter-spacing:.025em;color:#d0d2df;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.045);border-radius:2px;transition:background .18s ease,color .18s ease;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .suggestion:last-child{border-bottom:none}
-  .suggestion:hover{background:rgba(255,255,255,.06);color:#fff}
-  .suggestion.no-results{cursor:default;font-style:italic;color:rgba(255,255,255,.3);text-align:center}
-  .suggestion.no-results:hover{background:none;color:rgba(255,255,255,.3)}
+  .suggestion:hover,.suggestion:focus-visible{background:rgba(112,126,166,.16);color:#fff;outline:none}
+  .suggestion.no-results{cursor:default;font-style:italic;color:rgba(190,199,225,.42);text-align:center}
+  .suggestion.no-results:hover{background:none;color:rgba(190,199,225,.42)}
   #infoPanel{position:fixed;inset:0;z-index:80;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 36%,rgba(75,5,17,.97) 0%,rgba(34,0,7,.985) 48%,rgba(8,0,2,.995) 78%,#000 100%);opacity:0;pointer-events:none;transition:opacity .4s ease;padding:24px;overflow-y:auto;-webkit-overflow-scrolling:touch}
   #infoPanel.show{opacity:1;pointer-events:auto}
   .infoCard{position:relative;width:min(480px, 100%);padding:44px 34px 38px;border:1px solid rgba(112,18,34,.38);border-radius:4px;background:radial-gradient(ellipse at 50% 0%,rgba(47,3,12,.92),rgba(10,0,3,.94) 76%);text-align:left;margin:auto}
@@ -321,7 +321,8 @@
     #topBar button.pageNav{width:auto;height:auto;min-width:58px;padding:4px 6px}
     #pageMapPanel{top:54px;right:12px;width:min(430px,calc(100vw - 24px));padding:9px}
     .pageMapFrame{height:190px}
-    #searchBox{top:54px;right:12px;width:calc(100% - 24px);max-width:320px}
+    #searchBox{top:54px;right:12px;width:calc(100% - 24px);max-width:370px}
+    #searchSuggestions{max-height:min(48vh,440px)}
     .star{width:68px;height:68px}
     .toast{font-size:10px;padding:10px 16px;letter-spacing:.18em}
     .playerCard{width:88vw;gap:20px}
@@ -2405,6 +2406,8 @@ externalWarning.addEventListener('click', (e) => { if (e.target === externalWarn
 
 function openSearch(){
   closeQuickMenu();
+  searchInput.value = '';
+  renderSuggestions('');
   searchBox.classList.add('show');
   searchOpen = true;
   setTimeout(() => { if (searchOpen) searchInput.focus(); }, 80);
@@ -2469,7 +2472,8 @@ function findBestMatch(rawQuery){
 }
 function getSuggestions(rawQuery){
   const q = normalizeSearch(rawQuery);
-  if (!q || q.length < 1) return [];
+  if (!q) return EPISODES.map((ep, i) => ({ index: i, title: ep.title, score: 0 }));
+  if (q.length < 1) return [];
   const out = [];
   EPISODES.forEach((ep, i) => {
     const title = normalizeSearch(ep.title);
@@ -2482,12 +2486,11 @@ function getSuggestions(rawQuery){
 function renderSuggestions(rawQuery){
   const q = sanitizeSearchQuery(rawQuery).trim();
   searchSuggestions.replaceChildren();
-  if (!q) { searchSuggestions.classList.remove('show'); return; }
   const list = getSuggestions(q);
   if (!list.length) {
     const empty = document.createElement('div');
     empty.className = 'suggestion no-results';
-    empty.textContent = 'ничего не найдено';
+    empty.textContent = q ? 'ничего не найдено' : 'список выпусков пуст';
     searchSuggestions.appendChild(empty);
     searchSuggestions.classList.add('show');
     return;
@@ -4018,16 +4021,16 @@ function drawPageMap(){
   g.fillStyle = '#000';
   g.fillRect(0, 0, width, height);
 
-  const deepRed = g.createRadialGradient(width * .22, height * .72, 1, width * .22, height * .72, width * .7);
-  deepRed.addColorStop(0, 'rgba(105,8,25,.15)');
-  deepRed.addColorStop(.48, 'rgba(55,8,18,.075)');
-  deepRed.addColorStop(1, 'rgba(0,0,0,0)');
-  g.fillStyle = deepRed;
+  const slateHaze = g.createRadialGradient(width * .22, height * .72, 1, width * .22, height * .72, width * .7);
+  slateHaze.addColorStop(0, 'rgba(104,112,145,.15)');
+  slateHaze.addColorStop(.48, 'rgba(55,63,91,.075)');
+  slateHaze.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = slateHaze;
   g.fillRect(0, 0, width, height);
 
   const coldHaze = g.createRadialGradient(width * .76, height * .22, 1, width * .76, height * .22, width * .62);
-  coldHaze.addColorStop(0, 'rgba(155,155,175,.095)');
-  coldHaze.addColorStop(.52, 'rgba(62,57,75,.045)');
+  coldHaze.addColorStop(0, 'rgba(170,180,210,.095)');
+  coldHaze.addColorStop(.52, 'rgba(75,83,120,.065)');
   coldHaze.addColorStop(1, 'rgba(0,0,0,0)');
   g.fillStyle = coldHaze;
   g.fillRect(0, 0, width, height);
@@ -4065,18 +4068,18 @@ function drawPageMap(){
     const glowRadius = active ? 17 : 9;
     const glow = g.createRadialGradient(point.x, point.y, .2, point.x, point.y, glowRadius);
     glow.addColorStop(0, active ? 'rgba(255,248,255,.98)' : 'rgba(228,222,240,.75)');
-    glow.addColorStop(.32, active ? 'rgba(196,150,194,.48)' : 'rgba(165,155,190,.22)');
+    glow.addColorStop(.32, active ? 'rgba(190,199,225,.48)' : 'rgba(145,157,190,.22)');
     glow.addColorStop(1, 'rgba(150,120,170,0)');
     g.fillStyle = glow;
     g.beginPath();
     g.arc(point.x, point.y, glowRadius, 0, Math.PI * 2);
     g.fill();
-    g.fillStyle = active ? '#fff' : (played ? 'rgba(191,160,174,.78)' : 'rgba(230,225,240,.92)');
+    g.fillStyle = active ? '#fff' : (played ? 'rgba(160,172,202,.82)' : 'rgba(230,233,244,.92)');
     g.beginPath();
     g.arc(point.x, point.y, radius, 0, Math.PI * 2);
     g.fill();
     if (active) {
-      g.strokeStyle = 'rgba(235,215,242,.78)';
+      g.strokeStyle = 'rgba(205,215,240,.82)';
       g.lineWidth = 1;
       g.beginPath();
       g.arc(point.x, point.y, 8.5, 0, Math.PI * 2);
