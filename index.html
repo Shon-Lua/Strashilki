@@ -37,13 +37,6 @@
   .vignette{position:fixed;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 36%, rgba(0,0,0,.62) 78%, rgba(0,0,0,.97) 100%)}
   #skyWrap{position:fixed;inset:0;z-index:4;overflow:hidden;background:#000;isolation:isolate}
   #sky{position:absolute;top:0;left:0;width:100%;height:100%;transition:transform .95s cubic-bezier(.7,0,.28,1);background:#000}
-  #skyWrap::after{content:'';position:absolute;inset:-12% -4%;z-index:7;pointer-events:none;opacity:0;transform:translate3d(0,-72%,0) perspective(900px) rotateX(24deg) scaleY(.62);transform-origin:50% 50%;background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(18,12,23,.06) 33%,rgba(106,82,116,.12) 46%,rgba(224,211,230,.2) 49.6%,rgba(5,3,8,.56) 50.4%,rgba(30,20,34,.22) 56%,rgba(0,0,0,0) 100%);mix-blend-mode:screen;filter:blur(1.6px)}
-  #skyWrap.page-turn-forward::after{animation:hauntedPageTurnForward .96s cubic-bezier(.18,.72,.22,1) both}
-  #skyWrap.page-turn-back::after{animation:hauntedPageTurnBack .96s cubic-bezier(.18,.72,.22,1) both}
-  @keyframes hauntedPageTurnForward{0%{opacity:0;transform:translate3d(0,-72%,0) perspective(900px) rotateX(27deg) scaleY(.55)}18%{opacity:.56}48%{opacity:.34;transform:translate3d(0,-2%,0) perspective(900px) rotateX(0) scaleY(1)}72%{opacity:.2}100%{opacity:0;transform:translate3d(0,72%,0) perspective(900px) rotateX(-27deg) scaleY(.58)}}
-  @keyframes hauntedPageTurnBack{0%{opacity:0;transform:translate3d(0,72%,0) perspective(900px) rotateX(-27deg) scaleY(.55)}18%{opacity:.56}48%{opacity:.34;transform:translate3d(0,2%,0) perspective(900px) rotateX(0) scaleY(1)}72%{opacity:.2}100%{opacity:0;transform:translate3d(0,-72%,0) perspective(900px) rotateX(27deg) scaleY(.58)}}
-  #sky.page-turning{will-change:transform}
-  #sky.page-turning .page{backface-visibility:hidden}
   .page{position:absolute;left:0;width:100%;height:100vh;overflow:hidden;background:#000}
   .page-sky{position:absolute;inset:0;pointer-events:none}
   .page-sky svg{display:block;width:100%;height:100%}
@@ -139,12 +132,12 @@
   #infoBtn{position:fixed;top:24px;left:20px;z-index:82;background:none;border:0;padding:6px;width:36px;height:36px;display:grid;place-items:center;color:rgba(255,255,255,.88);cursor:pointer;-webkit-tap-highlight-color:transparent;text-shadow:0 0 10px rgba(0,0,0,.9);transition:color .2s ease}
   #infoBtn:hover{color:#fff}
   #infoBtn svg{width:20px;height:20px;display:block}
-  #quickMenu{position:fixed;top:22px;left:64px;width:204px;z-index:83;padding:6px;background:linear-gradient(145deg,rgba(24,3,8,.98),rgba(5,2,4,.985));border:1px solid rgba(160,65,77,.28);border-radius:4px;box-shadow:0 16px 42px rgba(0,0,0,.78),inset 0 0 24px rgba(110,8,22,.1);opacity:0;visibility:hidden;pointer-events:none;transform:translateX(-7px);transform-origin:left center;transition:opacity .18s ease,transform .22s ease,visibility .18s ease}
+  #quickMenu{position:fixed;top:22px;left:64px;width:204px;z-index:83;padding:6px;background:radial-gradient(ellipse at 78% 12%,rgba(104,112,145,.15),transparent 52%),radial-gradient(ellipse at 12% 88%,rgba(75,83,120,.12),transparent 55%),linear-gradient(145deg,rgba(8,10,19,.985),rgba(2,3,9,.99));border:1px solid rgba(170,178,210,.28);border-radius:4px;box-shadow:0 16px 42px rgba(0,0,0,.78),inset 0 0 26px rgba(100,112,155,.1);opacity:0;visibility:hidden;pointer-events:none;transform:translateX(-7px);transform-origin:left center;transition:opacity .18s ease,transform .22s ease,visibility .18s ease}
   #quickMenu.show{opacity:1;visibility:visible;pointer-events:auto;transform:translateX(0)}
-  .quickMenuItem{display:flex;align-items:center;gap:11px;width:100%;min-height:42px;padding:9px 11px;border:0;border-radius:2px;background:transparent;color:#d8c5c8;text-align:left;font-family:'IM Fell English',Georgia,serif;font-size:14px;letter-spacing:.035em;cursor:pointer;transition:background .18s ease,color .18s ease}
-  .quickMenuItem:hover,.quickMenuItem:focus-visible{background:rgba(115,15,32,.22);color:#fff;outline:none}
+  .quickMenuItem{display:flex;align-items:center;gap:11px;width:100%;min-height:42px;padding:9px 11px;border:0;border-radius:2px;background:transparent;color:#d0d2df;text-align:left;font-family:'IM Fell English',Georgia,serif;font-size:14px;letter-spacing:.035em;cursor:pointer;transition:background .18s ease,color .18s ease}
+  .quickMenuItem:hover,.quickMenuItem:focus-visible{background:rgba(112,126,166,.16);color:#fff;outline:none}
   .quickMenuItem + .quickMenuItem{border-top:1px solid rgba(255,255,255,.045)}
-  .quickMenuIcon{width:17px;min-width:17px;height:18px;display:grid;place-items:center;color:rgba(220,190,195,.68);font-family:Georgia,serif;font-size:17px}
+  .quickMenuIcon{width:17px;min-width:17px;height:18px;display:grid;place-items:center;color:rgba(190,199,225,.72);font-family:Georgia,serif;font-size:17px}
   #muteBtn.muted .quickMenuIcon{opacity:.45}
   #artsPanel{position:fixed;inset:0;z-index:84;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 50% 34%,rgba(70,4,15,.98),rgba(24,0,5,.99) 58%,#000 100%);opacity:0;pointer-events:none;visibility:hidden;transition:opacity .3s ease,visibility .3s ease;overflow-y:auto;-webkit-overflow-scrolling:touch}
   #artsPanel.show{opacity:1;pointer-events:auto;visibility:visible}
@@ -261,7 +254,7 @@
   .extGo:hover{border-color:#fff;color:#fff;box-shadow:0 0 34px rgba(255,255,255,.22);letter-spacing:.46em}
   .extCancel{margin-top:18px;font-family:'IM Fell English', Georgia, serif;font-weight:400;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:rgba(255,255,255,.28);cursor:pointer;transition:color .25s ease}
   .extCancel:hover{color:rgba(255,255,255,.65)}
-  #ageGate{position:fixed;inset:0;z-index:100;background:#000;opacity:1;transition:opacity .55s ease;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px;overscroll-behavior:contain}
+  #ageGate{position:fixed;inset:0;z-index:400;background:#000;opacity:1;transition:opacity .55s ease;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px;overscroll-behavior:contain}
   #ageGate.hide{opacity:0;pointer-events:none}
   .ageInner{display:flex;flex-direction:column;align-items:center;text-align:center;max-width:540px;margin:0 auto;min-height:100%;justify-content:center;padding:8px 0}
   .ageBrand{font-family:'Special Elite', 'Courier New', monospace;font-weight:400;font-size:clamp(16px, 4vw, 21px);letter-spacing:.5em;text-indent:.5em;text-transform:uppercase;color:#f3eff8;margin-bottom:14px;text-shadow:0 0 30px rgba(255,255,255,.18)}
@@ -367,23 +360,12 @@
     #skyWrap::after{filter:none;background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(42,30,48,.08) 47%,rgba(215,201,222,.12) 50%,rgba(0,0,0,.34) 51%,rgba(0,0,0,0) 100%)}
   }
 #sky{transition-duration:.28s}
-    #skyWrap.page-turn-forward::after{animation-duration:.3s}
-    #skyWrap.page-turn-back::after{animation-duration:.3s}
     .star.launching .star-core{animation:starLaunchPulse 280ms ease-out both!important}
     .star.launching .star-ring{animation:starLaunchOrbit 280ms ease-out both!important}
     .star.launching .star-flare{animation:none!important;opacity:.85}
     .star.drag-proxy.absorbing .star-core,.star.drag-proxy.absorbing .star-ring{animation:none!important}
     .dropzone.visible.hover::before{animation:none!important;opacity:0}
   }
-
-  body:has(#ageGate:not(.hide)) #miniPlayer{display:none!important;visibility:hidden!important;pointer-events:none!important}
-  #quickMenu{background:radial-gradient(1px 1px at 14% 18%,rgba(255,255,255,.8) 50%,transparent 100%),radial-gradient(1px 1px at 82% 22%,rgba(205,195,232,.72) 50%,transparent 100%),radial-gradient(1.2px 1.2px at 68% 76%,rgba(255,255,255,.65) 50%,transparent 100%),radial-gradient(1px 1px at 26% 84%,rgba(180,190,220,.65) 50%,transparent 100%),radial-gradient(ellipse at 50% 0%,rgba(64,58,83,.42),transparent 72%),linear-gradient(155deg,rgba(13,14,24,.985),rgba(4,5,12,.99));border:1px solid rgba(177,181,211,.28);box-shadow:0 16px 42px rgba(0,0,0,.78),inset 0 0 26px rgba(123,132,175,.09)}
-  .quickMenuItem{color:#d2d2e2}
-  .quickMenuItem:hover,.quickMenuItem:focus-visible{background:rgba(135,145,190,.16);color:#fff}
-  .quickMenuItem + .quickMenuItem{border-top-color:rgba(190,195,225,.09)}
-  .quickMenuIcon{color:rgba(196,201,225,.78)}
-  #skyWrap::after{display:none!important;content:none!important;animation:none!important}
-  #skyWrap.page-turn-forward::after,#skyWrap.page-turn-back::after{display:none!important;animation:none!important}
 </style>
 </head>
 <body>
@@ -4071,10 +4053,6 @@ document.addEventListener('pointerdown', (e) => {
   if (pageMapPanel.contains(e.target) || pageNavBtn.contains(e.target)) return;
   closePageMap();
 });
-sky.addEventListener('transitionend', (e) => {
-  if (e.propertyName === 'transform') sky.classList.remove('page-turning');
-});
-
 function goToPage(n, fromSlider){
   removeMapArrow();
   const nn = Math.max(0, Math.min(totalPages - 1, n));
@@ -4087,26 +4065,13 @@ function goToPage(n, fromSlider){
   if (tutorialStage === 'swipe') tutorialSwipePerformed();
   const pageHeight = getSkyPageHeight();
   if (fromSlider) {
-    sky.classList.remove('page-turning');
-    skyWrap.classList.remove('page-turn-forward', 'page-turn-back');
-    clearTimeout(pageTurnCleanupTimer);
     clearTimeout(pageSliderTransitionTimer);
     sky.style.transition = 'transform .18s cubic-bezier(.2,.65,.25,1)';
-    sky.style.transform = 'translateY(-' + (nn * pageHeight) + 'px)';
   } else {
     clearTimeout(pageSliderTransitionTimer);
-    sky.style.transition = '';
-    const turnClass = nn > previousPage ? 'page-turn-forward' : 'page-turn-back';
-    sky.classList.remove('page-turning');
-    void sky.offsetWidth;
-    sky.classList.add('page-turning');
-    skyWrap.classList.remove('page-turn-forward', 'page-turn-back');
-    void skyWrap.offsetWidth;
-    skyWrap.classList.add(turnClass);
-    clearTimeout(pageTurnCleanupTimer);
-    pageTurnCleanupTimer = setTimeout(() => skyWrap.classList.remove('page-turn-forward', 'page-turn-back'), 1020);
-    sky.style.transform = 'translateY(-' + (nn * pageHeight) + 'px)';
+    sky.style.transition = 'transform .55s cubic-bezier(.2,.65,.25,1)';
   }
+  sky.style.transform = 'translateY(-' + (nn * pageHeight) + 'px)';
   pageCurrentEl.textContent = nn + 1;
   updatePageMap();
   if (!fromSlider) preloadPageCovers(nn);
