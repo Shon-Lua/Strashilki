@@ -375,6 +375,15 @@
     .star.drag-proxy.absorbing .star-core,.star.drag-proxy.absorbing .star-ring{animation:none!important}
     .dropzone.visible.hover::before{animation:none!important;opacity:0}
   }
+
+  body:has(#ageGate:not(.hide)) #miniPlayer{display:none!important;visibility:hidden!important;pointer-events:none!important}
+  #quickMenu{background:radial-gradient(1px 1px at 14% 18%,rgba(255,255,255,.8) 50%,transparent 100%),radial-gradient(1px 1px at 82% 22%,rgba(205,195,232,.72) 50%,transparent 100%),radial-gradient(1.2px 1.2px at 68% 76%,rgba(255,255,255,.65) 50%,transparent 100%),radial-gradient(1px 1px at 26% 84%,rgba(180,190,220,.65) 50%,transparent 100%),radial-gradient(ellipse at 50% 0%,rgba(64,58,83,.42),transparent 72%),linear-gradient(155deg,rgba(13,14,24,.985),rgba(4,5,12,.99));border:1px solid rgba(177,181,211,.28);box-shadow:0 16px 42px rgba(0,0,0,.78),inset 0 0 26px rgba(123,132,175,.09)}
+  .quickMenuItem{color:#d2d2e2}
+  .quickMenuItem:hover,.quickMenuItem:focus-visible{background:rgba(135,145,190,.16);color:#fff}
+  .quickMenuItem + .quickMenuItem{border-top-color:rgba(190,195,225,.09)}
+  .quickMenuIcon{color:rgba(196,201,225,.78)}
+  #skyWrap::after{display:none!important;content:none!important;animation:none!important}
+  #skyWrap.page-turn-forward::after,#skyWrap.page-turn-back::after{display:none!important;animation:none!important}
 </style>
 </head>
 <body>
