@@ -129,10 +129,10 @@
   #pageMapSlider::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:14px;height:14px;margin-top:-6px;border-radius:50%;border:1px solid rgba(220,226,245,.92);background:#c9cfe0;box-shadow:0 0 10px rgba(190,199,225,.62),0 0 24px rgba(104,112,145,.26)}
   #pageMapSlider::-moz-range-thumb{width:13px;height:13px;border-radius:50%;border:1px solid rgba(220,226,245,.92);background:#c9cfe0;box-shadow:0 0 10px rgba(190,199,225,.62),0 0 24px rgba(104,112,145,.26)}
   #pageMapSlider:focus-visible{outline:1px solid rgba(225,215,240,.6);outline-offset:3px}
-  #infoBtn{position:fixed;top:24px;left:20px;z-index:82;background:none;border:0;padding:6px;width:36px;height:36px;display:grid;place-items:center;color:rgba(255,255,255,.88);cursor:pointer;-webkit-tap-highlight-color:transparent;text-shadow:0 0 10px rgba(0,0,0,.9);transition:color .2s ease}
+  #infoBtn{position:fixed;top:24px;left:20px;z-index:26;background:none;border:0;padding:6px;width:36px;height:36px;display:grid;place-items:center;color:rgba(255,255,255,.88);cursor:pointer;-webkit-tap-highlight-color:transparent;text-shadow:0 0 10px rgba(0,0,0,.9);transition:color .2s ease}
   #infoBtn:hover{color:#fff}
   #infoBtn svg{width:20px;height:20px;display:block}
-  #quickMenu{position:fixed;top:22px;left:64px;width:204px;z-index:83;padding:6px;background:radial-gradient(ellipse at 78% 12%,rgba(104,112,145,.15),transparent 52%),radial-gradient(ellipse at 12% 88%,rgba(75,83,120,.12),transparent 55%),linear-gradient(145deg,rgba(8,10,19,.985),rgba(2,3,9,.99));border:1px solid rgba(170,178,210,.28);border-radius:4px;box-shadow:0 16px 42px rgba(0,0,0,.78),inset 0 0 26px rgba(100,112,155,.1);opacity:0;visibility:hidden;pointer-events:none;transform:translateX(-7px);transform-origin:left center;transition:opacity .18s ease,transform .22s ease,visibility .18s ease}
+  #quickMenu{position:fixed;top:22px;left:64px;width:204px;z-index:27;padding:6px;background:radial-gradient(ellipse at 78% 12%,rgba(104,112,145,.15),transparent 52%),radial-gradient(ellipse at 12% 88%,rgba(75,83,120,.12),transparent 55%),linear-gradient(145deg,rgba(8,10,19,.985),rgba(2,3,9,.99));border:1px solid rgba(170,178,210,.28);border-radius:4px;box-shadow:0 16px 42px rgba(0,0,0,.78),inset 0 0 26px rgba(100,112,155,.1);opacity:0;visibility:hidden;pointer-events:none;transform:translateX(-7px);transform-origin:left center;transition:opacity .18s ease,transform .22s ease,visibility .18s ease}
   #quickMenu.show{opacity:1;visibility:visible;pointer-events:auto;transform:translateX(0)}
   .quickMenuItem{display:flex;align-items:center;gap:11px;width:100%;min-height:42px;padding:9px 11px;border:0;border-radius:2px;background:transparent;color:#d0d2df;text-align:left;font-family:'IM Fell English',Georgia,serif;font-size:14px;letter-spacing:.035em;cursor:pointer;transition:background .18s ease,color .18s ease}
   .quickMenuItem:hover,.quickMenuItem:focus-visible{background:rgba(112,126,166,.16);color:#fff;outline:none}
@@ -2346,6 +2346,37 @@ document.addEventListener('pointerdown', e => {
 });
 infoPanel.addEventListener('click', (e) => { if (e.target === infoPanel) closeInfoPanel(); });
 
+async function getRootArtsImages(){
+  const imagePattern = /\.(?:png|jpe?g|webp|gif|avif)$/i;
+  const gh = detectGitHubRepo();
+  if (gh) {
+    for (const branch of ['main', 'master', 'gh-pages']) {
+      try {
+        const url = 'https://api.github.com/repos/' + gh.user + '/' + gh.repo + '/contents/ARTS?ref=' + encodeURIComponent(branch);
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 8000);
+        let res;
+        try {
+          res = await fetch(url, { cache: 'no-store', signal: controller.signal });
+        } finally {
+          clearTimeout(timer);
+        }
+        if (res.status === 404) continue;
+        if (!res.ok) break;
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          return data
+            .filter(item => item && item.type === 'file' && item.name && imagePattern.test(item.name))
+            .map(item => ({ path: 'ARTS/' + item.name }));
+        }
+      } catch (e) {}
+    }
+  }
+  const tree = await getFullTree();
+  if (!Array.isArray(tree)) return null;
+  return tree.filter(item => item && item.type === 'blob' && typeof item.path === 'string' && /^ARTS\/[^/]+$/i.test(item.path) && imagePattern.test(item.path));
+}
+
 async function openArtsPanel(){
   closeQuickMenu();
   closeSearch();
@@ -2355,24 +2386,27 @@ async function openArtsPanel(){
   artsEmpty.hidden = false;
   artsEmpty.textContent = 'загрузка...';
   try {
-    const tree = await getFullTree();
-    const imagePattern = /\.(?:png|jpe?g|webp|gif|avif)$/i;
-    const prefixPattern = /^(?:arts?|artworks?|иллюстрации|арты)(?:\/|$)|^DATA\/(?:arts?|artworks?)(?:\/|$)/i;
-    const files = (tree || []).filter(item => item && item.type === 'blob' && item.path && prefixPattern.test(item.path) && imagePattern.test(item.path));
+    const files = await getRootArtsImages();
+    if (files === null) {
+      artsEmpty.hidden = false;
+      artsEmpty.textContent = 'не удалось загрузить список артов';
+      return;
+    }
     files.sort((a,b) => a.path.localeCompare(b.path, 'ru'));
     artsEmpty.hidden = files.length > 0;
-    artsEmpty.textContent = files.length ? '' : 'арты пока не добавлены';
+    artsEmpty.textContent = files.length ? '' : 'в папке ARTS пока нет изображений';
     for (const item of files) {
+      const fileName = item.path.split('/').pop();
       const figure = document.createElement('figure');
       figure.className = 'artsItem';
       const img = document.createElement('img');
       img.loading = 'lazy';
       img.decoding = 'async';
-      img.alt = item.path.split('/').pop();
+      img.alt = fileName;
       img.src = buildUrl(item.path.split('/'));
       img.addEventListener('error', () => figure.remove(), {once:true});
       const caption = document.createElement('figcaption');
-      caption.textContent = item.path.split('/').pop().replace(/\.[^.]+$/, '');
+      caption.textContent = fileName.replace(/\.[^.]+$/, '');
       figure.append(img, caption);
       artsGrid.appendChild(figure);
     }
