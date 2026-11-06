@@ -148,21 +148,21 @@
   .artsItem img{display:block;width:100%;aspect-ratio:1;object-fit:contain;background:#050304}
   .artsItem figcaption{padding:7px 3px 3px;color:rgba(225,205,210,.7);font:11px 'IM Fell English',Georgia,serif;overflow-wrap:anywhere}
   .artsEmpty{padding:35px 10px;text-align:center;color:rgba(220,190,195,.55);font:italic 14px 'IM Fell English',Georgia,serif}
-  #miniPlayer.panel-suppressed{display:none!important}
-  #artViewer{position:fixed;inset:0;z-index:110;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:calc(env(safe-area-inset-top,0px) + 18px) 18px calc(env(safe-area-inset-bottom,0px) + 18px);background:radial-gradient(ellipse at 50% 36%,rgba(45,5,13,.99),rgba(8,0,3,.995) 70%,#000);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .22s ease,visibility .22s ease}
-  #artViewer.show{opacity:1;visibility:visible;pointer-events:auto}
-  .artViewerTop{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);left:14px;right:14px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-  .artViewerName{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(235,220,225,.78);font:12px 'Special Elite','Courier New',monospace;letter-spacing:.08em}
-  .artViewerClose,.artViewerNav,.artViewerDownload{display:grid;place-items:center;border:1px solid rgba(220,190,200,.22);background:rgba(10,4,8,.72);color:#eee0e5;cursor:pointer}
-  .artViewerClose{width:42px;height:42px;font:26px Georgia,serif}
-  .artViewerStage{display:flex;align-items:center;justify-content:center;min-width:0;min-height:0;width:100%;height:calc(100% - 74px);gap:12px}
-  #artViewerImage{display:block;max-width:min(100%,1100px);max-height:100%;width:auto;height:auto;object-fit:contain;user-select:none;-webkit-user-drag:none;box-shadow:0 18px 70px rgba(0,0,0,.55)}
-  .artViewerNav{flex:0 0 42px;width:42px;height:52px;font:26px Georgia,serif}
-  .artViewerBottom{display:flex;align-items:center;justify-content:center;gap:18px;min-height:42px}
-  .artViewerCount{min-width:64px;text-align:center;color:rgba(235,220,225,.65);font:12px 'Special Elite','Courier New',monospace;letter-spacing:.12em}
-  .artViewerDownload{min-height:40px;padding:0 18px;font:12px 'Special Elite','Courier New',monospace;letter-spacing:.12em;text-transform:uppercase}
-  .artsItem{cursor:zoom-in}
   .artsItem img{cursor:zoom-in}
+  body.panel-hides-mini #miniPlayer{opacity:0!important;visibility:hidden!important;pointer-events:none!important;transform:translate(-50%,200%)!important}
+  #artViewer{position:fixed;inset:0;z-index:360;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:max(14px,env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-right,0px)) max(14px,env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px));background:rgba(0,0,0,.975);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .25s ease,visibility .25s ease;overscroll-behavior:contain}
+  #artViewer.show{opacity:1;visibility:visible;pointer-events:auto}
+  .artViewerBottom{width:100%;display:flex;align-items:center;justify-content:center;flex-shrink:0;z-index:2;padding-top:12px}
+  .artViewerCounter{color:rgba(232,218,223,.72);font:12px 'Special Elite','Courier New',monospace;letter-spacing:.18em;font-variant-numeric:tabular-nums;text-align:center}
+  .artViewerStage{position:relative;flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center;touch-action:pan-y}
+  .artViewerFigure{display:flex;align-items:center;justify-content:center;width:100%;height:100%;min-height:0;margin:0;pointer-events:none}
+  #artViewerImage{display:block;width:auto;height:auto;max-width:min(calc(100vw - 136px),1280px);max-height:calc(100vh - 105px);max-height:calc(100dvh - 105px);object-fit:contain;user-select:none;-webkit-user-drag:none;box-shadow:0 18px 80px rgba(0,0,0,.72)}
+  .artViewerNav{position:absolute;top:50%;z-index:2;transform:translateY(-50%);width:46px;height:54px;padding:0;border:0;border-radius:0;background:transparent;color:#fff;display:grid;place-items:center;cursor:pointer;transition:opacity .2s ease}
+  .artViewerNav svg{width:24px;height:24px;fill:none;stroke:#fff;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  .artViewerNav:hover{background:transparent;opacity:.72}
+  .artViewerNav:disabled{opacity:.15;cursor:default}
+  #artViewerPrev{left:max(8px,calc(50% - 680px))}
+  #artViewerNext{right:max(8px,calc(50% - 680px))}
   #toastContainer{position:fixed;top:calc(env(safe-area-inset-top, 0px) + 16px);left:50%;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;align-items:center;gap:8px;width:min(420px, calc(100% - 24px));pointer-events:none}
   .toast{position:relative;pointer-events:auto;max-width:100%;padding:12px 22px;background:rgba(8,5,7,.94);border:1px solid rgba(255,255,255,.1);border-radius:3px;font-family:'IM Fell English', Georgia, serif;font-weight:400;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:#ded9ea;text-align:center;box-shadow:0 10px 34px rgba(0,0,0,.85), 0 0 22px rgba(255,255,255,.03);transform:translate3d(0,-140%,0);opacity:0;transition:transform .45s cubic-bezier(.2,.9,.3,1.15), opacity .32s ease;will-change:transform,opacity;touch-action:none;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .toast.show{transform:translate3d(0,0,0);opacity:1}
@@ -198,7 +198,7 @@
   .timeTxt.right{text-align:right}
   .progressBar{flex:1;height:3px;position:relative;cursor:pointer;padding:9px 0;margin:-9px 0;touch-action:none}
   .progressBar::before{content:'';position:absolute;left:0;right:0;top:50%;height:3px;margin-top:-1.5px;background:rgba(255,255,255,.1);border-radius:3px}
-  .progressFill{position:absolute;left:0;top:50%;height:3px;margin-top:-1.5px;width:100%;background:#fff;border-radius:3px;transform:scaleX(0);transform-origin:left center;box-shadow:0 0 10px rgba(255,255,255,.85);transition:transform .12s linear;will-change:transform}
+  .progressFill{position:absolute;left:0;top:50%;height:3px;margin-top:-1.5px;width:100%;background:#fff;border-radius:3px;transform:scaleX(0);transform-origin:left center;filter:drop-shadow(0 0 5px rgba(255,255,255,.9));transition:transform .12s linear;will-change:transform}
   .progressKnob{position:absolute;top:50%;left:0%;width:11px;height:11px;border-radius:50%;background:#fff;transform:translate(-50%,-50%);box-shadow:0 0 12px rgba(255,255,255,.9);pointer-events:none;transition:left .12s linear}
   .progressBar.scrubbing .progressFill,.progressBar.scrubbing .progressKnob{transition:none!important}
   .controls{width:100%;display:flex;align-items:center;justify-content:center;gap:12px}
@@ -332,6 +332,12 @@
     #quickMenu{top:15px;left:52px;width:194px}
     #artsPanel{padding:14px}
     .artsCard{padding:20px 14px}
+    #artViewer{padding:10px}
+    #artViewerImage{max-width:calc(100vw - 68px);max-height:calc(100vh - 145px);max-height:calc(100dvh - 145px)}
+    .artViewerNav{width:36px;height:46px;background:transparent}
+    .artViewerNav svg{width:19px;height:19px}
+    #artViewerPrev{left:2px}
+    #artViewerNext{right:2px}
     .pageNav{font-size:12px;letter-spacing:.26em;gap:6px;margin-left:4px}
     #topBar button.pageNav{width:auto;height:auto;min-width:58px;padding:4px 6px}
     #pageMapPanel{top:54px;right:12px;width:min(430px,calc(100vw - 24px));padding:9px}
@@ -468,10 +474,21 @@
 <div id="artsPanel" aria-hidden="true">
   <div class="artsCard"><div class="artsHeading">Арты</div><div class="artsGrid" id="artsGrid"></div><div class="artsEmpty" id="artsEmpty" hidden></div></div>
 </div>
-<div id="artViewer" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Просмотр арта">
-  <div class="artViewerTop"><div class="artViewerName" id="artViewerName"></div><button class="artViewerClose" id="artViewerClose" type="button" aria-label="Закрыть">×</button></div>
-  <div class="artViewerStage"><button class="artViewerNav" id="artViewerPrev" type="button" aria-label="Предыдущий арт">‹</button><img id="artViewerImage" alt=""><button class="artViewerNav" id="artViewerNext" type="button" aria-label="Следующий арт">›</button></div>
-  <div class="artViewerBottom"><span class="artViewerCount" id="artViewerCount"></span><button class="artViewerDownload" id="artViewerDownload" type="button">Скачать</button></div>
+<div id="artViewer" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Просмотр артов">
+  <div class="artViewerStage" id="artViewerStage">
+    <button class="artViewerNav" id="artViewerPrev" type="button" aria-label="Предыдущий арт">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4L7 12l8 8"/></svg>
+    </button>
+    <figure class="artViewerFigure">
+      <img id="artViewerImage" alt="">
+    </figure>
+    <button class="artViewerNav" id="artViewerNext" type="button" aria-label="Следующий арт">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4l8 8-8 8"/></svg>
+    </button>
+  </div>
+  <div class="artViewerBottom">
+    <div class="artViewerCounter" id="artViewerCounter">0 / 0</div>
+  </div>
 </div>
 <div id="externalWarning">
   <div class="extCard">
@@ -589,11 +606,14 @@ const artsGrid = document.getElementById('artsGrid');
 const artsEmpty = document.getElementById('artsEmpty');
 const artViewer = document.getElementById('artViewer');
 const artViewerImage = document.getElementById('artViewerImage');
-const artViewerName = document.getElementById('artViewerName');
-const artViewerCount = document.getElementById('artViewerCount');
+const artViewerCounter = document.getElementById('artViewerCounter');
+const artViewerStage = document.getElementById('artViewerStage');
+const artViewerPrev = document.getElementById('artViewerPrev');
+const artViewerNext = document.getElementById('artViewerNext');
 let artsFiles = [];
-let currentArtIndex = -1;
-let artViewerPointerX = 0;
+let activeArtIndex = -1;
+let artViewerReturnFocus = null;
+let artSwipeStart = null;
 const externalWarning = document.getElementById('externalWarning');
 const extUrl = document.getElementById('extUrl');
 const searchBox = document.getElementById('searchBox');
@@ -1061,7 +1081,7 @@ async function maybeStartNewReleaseIntro(){
   closeQuickMenu();
   closePageMap();
   closeInfoPanel();
-  artsPanel.classList.remove('show');
+  closeArtsPanel();
   closeSearch();
   overlay.classList.remove('show');
   if (current >= 0) {
@@ -2348,9 +2368,16 @@ function openInfoPanel(){
     loadPodcastInfo();
   }
   infoPanel.classList.add('show');
-  syncMiniPlayerVisibility();
+  syncPanelMiniPlayer();
 }
-function closeInfoPanel(){ infoPanel.classList.remove('show'); syncMiniPlayerVisibility(); }
+function closeInfoPanel(){
+  infoPanel.classList.remove('show');
+  syncPanelMiniPlayer();
+}
+function syncPanelMiniPlayer(){
+  document.body.classList.toggle('panel-hides-mini',
+    infoPanel.classList.contains('show') || artsPanel.classList.contains('show'));
+}
 
 infoBtn.addEventListener('click', toggleQuickMenu);
 fullscreenBtn.addEventListener('click', () => {
@@ -2408,10 +2435,12 @@ async function getRootArtsImages(){
 async function openArtsPanel(){
   closeQuickMenu();
   closeSearch();
+  closeArtViewer();
   artsPanel.classList.add('show');
   artsPanel.setAttribute('aria-hidden','false');
-  syncMiniPlayerVisibility();
+  syncPanelMiniPlayer();
   artsGrid.replaceChildren();
+  artsFiles = [];
   artsEmpty.hidden = false;
   artsEmpty.textContent = 'загрузка...';
   try {
@@ -2422,22 +2451,48 @@ async function openArtsPanel(){
       return;
     }
     files.sort((a,b) => a.path.localeCompare(b.path, 'ru'));
-    artsFiles = files.slice();
-    artsEmpty.hidden = files.length > 0;
-    artsEmpty.textContent = files.length ? '' : 'в папке ARTS пока нет изображений';
-    for (const item of files) {
+    artsFiles = files.map(item => {
       const fileName = item.path.split('/').pop();
+      return {
+        path: item.path,
+        fileName,
+        url: buildUrl(item.path.split('/')),
+        failed: false
+      };
+    });
+    artsEmpty.hidden = artsFiles.length > 0;
+    artsEmpty.textContent = artsFiles.length ? '' : 'в папке ARTS пока нет изображений';
+    for (const art of artsFiles) {
       const figure = document.createElement('figure');
       figure.className = 'artsItem';
       const img = document.createElement('img');
       img.loading = 'lazy';
       img.decoding = 'async';
-      img.alt = fileName;
-      img.src = buildUrl(item.path.split('/'));
-      img.addEventListener('error', () => figure.remove(), {once:true});
-      img.addEventListener('click', () => openArtViewer(artsFiles.findIndex(x => x.path === item.path)));
+      img.alt = art.fileName;
+      img.tabIndex = 0;
+      img.setAttribute('role','button');
+      img.setAttribute('aria-label','Открыть арт ' + art.fileName);
+      img.src = art.url;
+      img.addEventListener('click', () => {
+        const index = artsFiles.indexOf(art);
+        if (index >= 0) openArtViewer(index, img);
+      });
+      img.addEventListener('keydown', event => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        const index = artsFiles.indexOf(art);
+        if (index >= 0) openArtViewer(index, img);
+      });
+      img.addEventListener('error', () => {
+        art.failed = true;
+        figure.remove();
+        if (!artsFiles.some(item => !item.failed)) {
+          artsEmpty.hidden = false;
+          artsEmpty.textContent = 'не удалось загрузить арты';
+        }
+      }, {once:true});
       const caption = document.createElement('figcaption');
-      caption.textContent = fileName.replace(/\.[^.]+$/, '');
+      caption.textContent = art.fileName.replace(/\.[^.]+$/, '');
       figure.append(img, caption);
       artsGrid.appendChild(figure);
     }
@@ -2446,79 +2501,107 @@ async function openArtsPanel(){
     artsEmpty.textContent = 'не удалось загрузить арты';
   }
 }
-function closeArtsPanel(){ artsPanel.classList.remove('show'); artsPanel.setAttribute('aria-hidden','true'); syncMiniPlayerVisibility(); }
+
+function getAvailableArts(){
+  return artsFiles.filter(art => !art.failed);
+}
+
+function findAvailableArtIndex(start, direction){
+  const count = artsFiles.length;
+  if (!count) return -1;
+  for (let step = 0; step < count; step++) {
+    const index = ((start + direction * step) % count + count) % count;
+    if (!artsFiles[index].failed) return index;
+  }
+  return -1;
+}
+
+function renderArtViewer(){
+  const art = artsFiles[activeArtIndex];
+  if (!art || art.failed) return;
+  const available = getAvailableArts();
+  const position = available.indexOf(art);
+  artViewerImage.onerror = () => {
+    if (artsFiles[activeArtIndex] !== art) return;
+    art.failed = true;
+    const next = findAvailableArtIndex(activeArtIndex + 1, 1);
+    if (next >= 0 && next !== activeArtIndex) {
+      activeArtIndex = next;
+      renderArtViewer();
+    } else {
+      artViewerCounter.textContent = '— / —';
+    }
+  };
+  artViewerImage.src = art.url;
+  artViewerImage.alt = art.fileName;
+  artViewerCounter.textContent = (position + 1) + ' / ' + available.length;
+  const disabled = available.length <= 1;
+  artViewerPrev.disabled = disabled;
+  artViewerNext.disabled = disabled;
+}
+
+function openArtViewer(index, sourceElement){
+  const art = artsFiles[index];
+  if (!art || art.failed) return;
+  activeArtIndex = index;
+  artViewerReturnFocus = sourceElement || document.activeElement;
+  renderArtViewer();
+  artViewer.classList.add('show');
+  artViewer.setAttribute('aria-hidden','false');
+}
+
+function closeArtViewer(){
+  if (!artViewer.classList.contains('show')) return;
+  artViewer.classList.remove('show');
+  artViewer.setAttribute('aria-hidden','true');
+  artViewerImage.onerror = null;
+  activeArtIndex = -1;
+  if (artViewerReturnFocus && artViewerReturnFocus.isConnected) {
+    try { artViewerReturnFocus.focus({preventScroll:true}); } catch (e) {}
+  }
+  artViewerReturnFocus = null;
+}
+
+function stepArtViewer(direction){
+  if (activeArtIndex < 0) return;
+  const next = findAvailableArtIndex(activeArtIndex + direction, direction);
+  if (next < 0 || next === activeArtIndex) return;
+  activeArtIndex = next;
+  renderArtViewer();
+}
+
+function closeArtsPanel(){
+  closeArtViewer();
+  artsPanel.classList.remove('show');
+  artsPanel.setAttribute('aria-hidden','true');
+  syncPanelMiniPlayer();
+}
+
+artViewerPrev.addEventListener('click', () => stepArtViewer(-1));
+artViewerNext.addEventListener('click', () => stepArtViewer(1));
+artViewer.addEventListener('click', event => {
+  if (event.target === artViewer) closeArtViewer();
+});
+artViewerStage.addEventListener('pointerdown', event => {
+  if (event.target.closest && event.target.closest('button')) return;
+  artSwipeStart = {x:event.clientX,y:event.clientY};
+});
+artViewerStage.addEventListener('pointerup', event => {
+  if (!artSwipeStart) return;
+  const dx = event.clientX - artSwipeStart.x;
+  const dy = event.clientY - artSwipeStart.y;
+  artSwipeStart = null;
+  if (Math.abs(dx) > 42 && Math.abs(dx) > Math.abs(dy) * 1.25) {
+    stepArtViewer(dx < 0 ? 1 : -1);
+  }
+});
+artViewerStage.addEventListener('pointercancel', () => { artSwipeStart = null; });
 
 document.getElementById('menuArtsBtn').addEventListener('click', () => {
   if (tutorialIsActive() && tutorialStage !== 'pages') return;
   openArtsPanel();
 });
 artsPanel.addEventListener('click', e => { if (e.target === artsPanel) closeArtsPanel(); });
-
-function artImageUrl(index){
-  const item = artsFiles[index];
-  return item ? buildUrl(item.path.split('/')) : '';
-}
-function renderArtViewer(){
-  if (currentArtIndex < 0 || currentArtIndex >= artsFiles.length) return;
-  const item = artsFiles[currentArtIndex];
-  const name = item.path.split('/').pop();
-  artViewerImage.src = artImageUrl(currentArtIndex);
-  artViewerImage.alt = name;
-  artViewerName.textContent = name;
-  artViewerCount.textContent = (currentArtIndex + 1) + ' / ' + artsFiles.length;
-  document.getElementById('artViewerPrev').disabled = artsFiles.length < 2;
-  document.getElementById('artViewerNext').disabled = artsFiles.length < 2;
-}
-function openArtViewer(index){
-  if (!Number.isInteger(index) || index < 0 || index >= artsFiles.length) return;
-  currentArtIndex = index;
-  renderArtViewer();
-  artViewer.classList.add('show');
-  artViewer.setAttribute('aria-hidden','false');
-  document.body.classList.add('art-viewer-open');
-}
-function closeArtViewer(){
-  artViewer.classList.remove('show');
-  artViewer.setAttribute('aria-hidden','true');
-  document.body.classList.remove('art-viewer-open');
-  artViewerImage.removeAttribute('src');
-  currentArtIndex = -1;
-}
-function stepArtViewer(delta){
-  if (!artsFiles.length || currentArtIndex < 0) return;
-  currentArtIndex = (currentArtIndex + delta + artsFiles.length) % artsFiles.length;
-  renderArtViewer();
-}
-async function downloadCurrentArt(){
-  if (currentArtIndex < 0 || currentArtIndex >= artsFiles.length) return;
-  const item = artsFiles[currentArtIndex];
-  const url = artImageUrl(currentArtIndex);
-  const filename = item.path.split('/').pop() || 'art';
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  link.rel = 'noopener';
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-}
-document.getElementById('artViewerClose').addEventListener('click', closeArtViewer);
-document.getElementById('artViewerPrev').addEventListener('click', () => stepArtViewer(-1));
-document.getElementById('artViewerNext').addEventListener('click', () => stepArtViewer(1));
-document.getElementById('artViewerDownload').addEventListener('click', downloadCurrentArt);
-artViewer.addEventListener('click', e => { if (e.target === artViewer) closeArtViewer(); });
-artViewer.addEventListener('pointerdown', e => { artViewerPointerX = e.clientX; });
-artViewer.addEventListener('pointerup', e => {
-  if (e.target.closest('button')) return;
-  const dx = e.clientX - artViewerPointerX;
-  if (Math.abs(dx) > 55) stepArtViewer(dx < 0 ? 1 : -1);
-});
-
-
-const miniPanelObserver = new MutationObserver(syncMiniPlayerVisibility);
-miniPanelObserver.observe(infoPanel, { attributes:true, attributeFilter:['class'] });
-miniPanelObserver.observe(artsPanel, { attributes:true, attributeFilter:['class'] });
-miniPanelObserver.observe(artViewer, { attributes:true, attributeFilter:['class'] });
 
 function openExternalWarning(url){
   pendingExternalUrl = url;
@@ -3684,17 +3767,12 @@ function updateFullUI(){
   updateIcons();
   updateActiveStars();
 }
-function syncMiniPlayerVisibility(){
-  const suppressed = infoPanel.classList.contains('show') || artsPanel.classList.contains('show') || artViewer.classList.contains('show');
-  miniPlayer.classList.toggle('panel-suppressed', suppressed);
-}
 function updateMiniUI(){
   if (current < 0 || !EPISODES[current]) { miniPlayer.classList.remove('show'); return; }
   const ep = EPISODES[current];
   applyMarquee(miniTitle, ep.title);
   setCoverTo(miniCover, ep, current);
   updateIcons();
-  syncMiniPlayerVisibility();
 }
 function openOverlay(){
   closeSearch();
@@ -3713,7 +3791,6 @@ function closeOverlay(){
     updateMiniUI();
     setTimeout(() => {
       miniPlayer.classList.add('show');
-      syncMiniPlayerVisibility();
       if (miniTitle._pendingMarquee) {
         setTimeout(() => {
           if (miniTitle._pendingMarquee) applyMarquee(miniTitle, miniTitle._pendingMarquee);
@@ -4489,7 +4566,7 @@ document.addEventListener('keydown', (e) => {
     else if (e.key === 'ArrowRight') { e.preventDefault(); stepArtViewer(1); }
     return;
   }
-  if (pageMapPanel.classList.contains('show')) return;
+  if (artsPanel.classList.contains('show') || pageMapPanel.classList.contains('show')) return;
   if (overlay.classList.contains('show') || infoPanel.classList.contains('show') ||
       externalWarning.classList.contains('show') || searchOpen) return;
   if (dragState) return;
@@ -4502,7 +4579,7 @@ let wheelTimer = null;
 window.addEventListener('wheel', (e) => {
   if (tutorialIsActive() && tutorialStage !== 'swipe') return;
   if (ageGateActive || overlay.classList.contains('show') ||
-      infoPanel.classList.contains('show') || externalWarning.classList.contains('show') ||
+      infoPanel.classList.contains('show') || artsPanel.classList.contains('show') || externalWarning.classList.contains('show') ||
       searchOpen || pageMapPanel.classList.contains('show') || dragState) return;
   wheelAccum += e.deltaY;
   clearTimeout(wheelTimer);
@@ -4524,7 +4601,7 @@ window.addEventListener('touchstart', (e) => {
   }
   if (pageMapPanel.classList.contains('show')) return;
   if (ageGateActive || overlay.classList.contains('show') ||
-      infoPanel.classList.contains('show') || externalWarning.classList.contains('show') ||
+      infoPanel.classList.contains('show') || artsPanel.classList.contains('show') || externalWarning.classList.contains('show') ||
       searchOpen || dragState) return;
   if (miniPlayer.contains(e.target) || pageMapPanel.contains(e.target) || pageNavBtn.contains(e.target) || document.getElementById('topBar').contains(e.target)) return;
   touchY = e.touches[0].clientY;
