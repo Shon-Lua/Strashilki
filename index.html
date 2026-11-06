@@ -144,9 +144,8 @@
   .artsCard{width:min(920px,100%);max-height:min(82vh,760px);overflow:auto;padding:28px;border:1px solid rgba(130,40,52,.32);background:rgba(5,1,3,.78);box-shadow:0 24px 70px rgba(0,0,0,.75)}
   .artsHeading{margin:0 0 20px;color:#eadadd;font:400 17px 'Special Elite','Courier New',monospace;letter-spacing:.22em;text-align:center;text-transform:uppercase}
   .artsGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
-  .artsItem{min-width:0;margin:0;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);padding:6px}
-  .artsItem img{display:block;width:100%;aspect-ratio:1;object-fit:contain;background:#050304}
-  .artsItem figcaption{padding:7px 3px 3px;color:rgba(225,205,210,.7);font:11px 'IM Fell English',Georgia,serif;overflow-wrap:anywhere}
+  .artsItem{min-width:0;margin:0;padding:0;border:0;background:transparent}
+  .artsItem img{display:block;width:100%;aspect-ratio:1;object-fit:contain;background:transparent}
   .artsEmpty{padding:35px 10px;text-align:center;color:rgba(220,190,195,.55);font:italic 14px 'IM Fell English',Georgia,serif}
   .artsItem img{cursor:zoom-in}
   body.panel-hides-mini #miniPlayer{opacity:0!important;visibility:hidden!important;pointer-events:none!important;transform:translate(-50%,200%)!important}
@@ -695,37 +694,69 @@ let pageStarts = [0];
 
 let storageResetPending = false;
 const POSITIONS_KEY = 'episodePositions_v2';
+const POSITION_ITEM_PREFIX = 'episodePosition_v1:';
 const LAST_KEY = 'lastPlayedKey_v1';
 let savedPositions = {};
 let lastPositionSave = 0;
 
 function loadPositions(){
+  const loaded = {};
   try {
-    const s = localStorage.getItem(POSITIONS_KEY);
-    if (s) {
-      const obj = JSON.parse(s);
-      if (obj && typeof obj === 'object' && !Array.isArray(obj)) savedPositions = obj;
+    const raw = localStorage.getItem(POSITIONS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        for (const [key, value] of Object.entries(parsed)) {
+          const time = Number(value);
+          if (key && Number.isFinite(time) && time > 0) loaded[key] = time;
+        }
+      }
+    }
+    for (let i = 0; i < localStorage.length; i++) {
+      const storageKey = localStorage.key(i);
+      if (!storageKey || !storageKey.startsWith(POSITION_ITEM_PREFIX)) continue;
+      const episodeKey = storageKey.slice(POSITION_ITEM_PREFIX.length);
+      const value = Number(localStorage.getItem(storageKey));
+      if (episodeKey && Number.isFinite(value) && value > 0 && !Number.isFinite(loaded[episodeKey])) {
+        loaded[episodeKey] = value;
+      }
     }
   } catch (e) {}
+  savedPositions = loaded;
 }
 function persistPositions(){
   if (storageResetPending) return;
   try { localStorage.setItem(POSITIONS_KEY, JSON.stringify(savedPositions)); } catch (e) {}
 }
+function storeEpisodePosition(folderKey, time){
+  if (storageResetPending || !folderKey || !Number.isFinite(time)) return;
+  const safeTime = Math.max(0, time);
+  if (safeTime > 0.5) {
+    savedPositions[folderKey] = safeTime;
+    try { localStorage.setItem(POSITION_ITEM_PREFIX + folderKey, String(safeTime)); } catch (e) {}
+  } else {
+    delete savedPositions[folderKey];
+    try { localStorage.removeItem(POSITION_ITEM_PREFIX + folderKey); } catch (e) {}
+  }
+  persistPositions();
+}
 function savePositionForCurrent(){
   if (storageResetPending || !episodeAudio || current < 0 || !EPISODES[current]) return;
+  const audio = episodeAudio;
+  const episode = EPISODES[current];
+  if (audio._episodeIndex !== current || !episode.folderKey) return;
   try {
-    const t = episodeAudio.currentTime;
-    const key = EPISODES[current].folderKey;
-    if (!key) return;
-    if (t > 2) savedPositions[key] = t;
-    else delete savedPositions[key];
-    persistPositions();
+    if (audio._positionRestoredFor !== current) restoreAudioPosition(current, audio);
+    saveLastPlayed(episode.folderKey);
+    if (audio._positionRestoredFor !== current) return;
+    const time = Number(audio.currentTime);
+    if (Number.isFinite(time)) storeEpisodePosition(episode.folderKey, time);
   } catch (e) {}
 }
 function clearPosition(folderKey){
   if (!folderKey) return;
   delete savedPositions[folderKey];
+  try { localStorage.removeItem(POSITION_ITEM_PREFIX + folderKey); } catch (e) {}
   persistPositions();
 }
 
@@ -2491,9 +2522,7 @@ async function openArtsPanel(){
           artsEmpty.textContent = 'не удалось загрузить арты';
         }
       }, {once:true});
-      const caption = document.createElement('figcaption');
-      caption.textContent = art.fileName.replace(/\.[^.]+$/, '');
-      figure.append(img, caption);
+      figure.append(img);
       artsGrid.appendChild(figure);
     }
   } catch (e) {
@@ -3026,12 +3055,14 @@ function clearAudio(audio){
 function restoreAudioPosition(index, audio){
   const ep = EPISODES[index];
   if (!ep || !audio || audio._positionRestoredFor === index) return;
-  if (!isFinite(audio.duration) || audio.duration <= 0) return;
-  const saved = savedPositions[ep.folderKey] || 0;
-  if (saved > 2 && saved < audio.duration - 5) {
-    try { audio.currentTime = saved; } catch(e) { return; }
+  if (!Number.isFinite(audio.duration) || audio.duration <= 0) return;
+  const saved = Math.max(0, Number(savedPositions[ep.folderKey]) || 0);
+  if (saved > 0.5) {
+    const target = Math.min(saved, Math.max(0, audio.duration - 0.5));
+    try { audio.currentTime = target; }
+    catch (e) { return; }
     if (current === index) {
-      elapsed = saved;
+      elapsed = target;
       updateProgress();
     }
   }
@@ -3054,22 +3085,24 @@ function attachEpisodeAudioEvents(index, audio){
     if (!ep || !isFinite(audio.duration) || audio.duration <= 0) return;
     ep.dur = audio.duration;
     if (current === index && episodeAudio === audio) {
+      restoreAudioPosition(index, audio);
       pDur.textContent = fmt(ep.dur);
       updateProgress();
     }
   });
   audio.addEventListener('timeupdate', () => {
     if (current !== index || episodeAudio !== audio || isProgressScrubbing) return;
+    if (audio._positionRestoredFor !== index) restoreAudioPosition(index, audio);
     elapsed = audio.currentTime;
     updateProgress();
+    if (audio._positionRestoredFor !== index) return;
     const now = Date.now();
     if (now - lastPositionSave > 1500) {
       lastPositionSave = now;
       const ep = EPISODES[index];
       if (ep && ep.folderKey) {
-        if (audio.currentTime > 2) savedPositions[ep.folderKey] = audio.currentTime;
-        else delete savedPositions[ep.folderKey];
-        persistPositions();
+        storeEpisodePosition(ep.folderKey, audio.currentTime);
+        saveLastPlayed(ep.folderKey);
       }
     }
   });
@@ -3083,6 +3116,10 @@ function attachEpisodeAudioEvents(index, audio){
   audio.addEventListener('pause', () => {
     if (current !== index || episodeAudio !== audio) return;
     savePositionForCurrent();
+  });
+  audio.addEventListener('canplay', () => {
+    if (current !== index || episodeAudio !== audio) return;
+    restoreAudioPosition(index, audio);
   });
   audio.addEventListener('ended', () => {
     if (current === index && episodeAudio === audio) onTrackEnd();
@@ -4428,10 +4465,7 @@ function seekToClientX(clientX, rect, commit){
   if (!commit) return;
   try { audio.currentTime = targetTime; } catch(e) { return; }
   if (current >= 0 && EPISODES[current]) {
-    const key = EPISODES[current].folderKey;
-    if (elapsed > 2) savedPositions[key] = elapsed;
-    else delete savedPositions[key];
-    persistPositions();
+    storeEpisodePosition(EPISODES[current].folderKey, elapsed);
   }
 }
 
@@ -4628,6 +4662,7 @@ window.addEventListener('touchend', (e) => {
 
 window.addEventListener('pagehide', () => { savePositionForCurrent(); clearDragTrail(); stopBgLoop(); });
 window.addEventListener('beforeunload', savePositionForCurrent);
+window.addEventListener('freeze', savePositionForCurrent);
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
