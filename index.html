@@ -148,6 +148,21 @@
   .artsItem img{display:block;width:100%;aspect-ratio:1;object-fit:contain;background:#050304}
   .artsItem figcaption{padding:7px 3px 3px;color:rgba(225,205,210,.7);font:11px 'IM Fell English',Georgia,serif;overflow-wrap:anywhere}
   .artsEmpty{padding:35px 10px;text-align:center;color:rgba(220,190,195,.55);font:italic 14px 'IM Fell English',Georgia,serif}
+
+  body:has(#infoPanel.show) #miniPlayer,body:has(#artsPanel.show) #miniPlayer{opacity:0!important;visibility:hidden!important;pointer-events:none!important;transform:translate(-50%,200%)!important}
+  #artViewer{position:fixed;inset:0;z-index:360;display:flex;align-items:center;justify-content:center;padding:64px 18px 84px;background:rgba(0,0,0,.97);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .22s ease,visibility .22s ease}
+  #artViewer.show{opacity:1;visibility:visible;pointer-events:auto}
+  #artViewerImage{display:block;max-width:min(100%,1200px);max-height:100%;width:auto;height:auto;object-fit:contain;user-select:none;-webkit-user-drag:none}
+  .artViewerTop{position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);left:16px;right:16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  #artViewerName{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#e8dfe2;font:12px 'Special Elite','Courier New',monospace;letter-spacing:.1em}
+  .artViewerActions{display:flex;align-items:center;gap:8px}
+  .artViewerButton{min-width:40px;height:40px;padding:0 12px;border:1px solid rgba(220,190,195,.24);border-radius:3px;background:rgba(20,8,12,.8);color:#eee1e4;font:12px 'Special Elite','Courier New',monospace;cursor:pointer}
+  .artViewerButton:hover{border-color:rgba(255,255,255,.65);color:#fff}
+  .artViewerNav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:60px;border:1px solid rgba(255,255,255,.16);background:rgba(0,0,0,.48);color:#fff;font-size:28px;cursor:pointer}
+  #artViewerPrev{left:12px}#artViewerNext{right:12px}
+  .artViewerBottom{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);display:flex;justify-content:center;align-items:center;gap:16px;color:rgba(235,220,225,.7);font:11px 'Special Elite','Courier New',monospace;letter-spacing:.12em}
+  @media(max-width:640px){#artViewer{padding:58px 8px 76px}.artViewerNav{width:34px;height:48px;font-size:22px}#artViewerPrev{left:4px}#artViewerNext{right:4px}.artViewerButton{height:36px;min-width:36px;padding:0 9px}}
+
   #toastContainer{position:fixed;top:calc(env(safe-area-inset-top, 0px) + 16px);left:50%;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;align-items:center;gap:8px;width:min(420px, calc(100% - 24px));pointer-events:none}
   .toast{position:relative;pointer-events:auto;max-width:100%;padding:12px 22px;background:rgba(8,5,7,.94);border:1px solid rgba(255,255,255,.1);border-radius:3px;font-family:'IM Fell English', Georgia, serif;font-weight:400;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:#ded9ea;text-align:center;box-shadow:0 10px 34px rgba(0,0,0,.85), 0 0 22px rgba(255,255,255,.03);transform:translate3d(0,-140%,0);opacity:0;transition:transform .45s cubic-bezier(.2,.9,.3,1.15), opacity .32s ease;will-change:transform,opacity;touch-action:none;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .toast.show{transform:translate3d(0,0,0);opacity:1}
@@ -452,6 +467,19 @@
 </div>
 <div id="artsPanel" aria-hidden="true">
   <div class="artsCard"><div class="artsHeading">Арты</div><div class="artsGrid" id="artsGrid"></div><div class="artsEmpty" id="artsEmpty" hidden></div></div>
+</div>
+<div id="artViewer" aria-hidden="true">
+  <div class="artViewerTop">
+    <div id="artViewerName"></div>
+    <div class="artViewerActions">
+      <button class="artViewerButton" id="artViewerDownload" type="button">Скачать</button>
+      <button class="artViewerButton" id="artViewerClose" type="button" aria-label="Закрыть">✕</button>
+    </div>
+  </div>
+  <button class="artViewerNav" id="artViewerPrev" type="button" aria-label="Предыдущий арт">‹</button>
+  <img id="artViewerImage" alt="">
+  <button class="artViewerNav" id="artViewerNext" type="button" aria-label="Следующий арт">›</button>
+  <div class="artViewerBottom"><span id="artViewerCounter">1 / 1</span><span>← →</span></div>
 </div>
 <div id="externalWarning">
   <div class="extCard">
@@ -2377,6 +2405,49 @@ async function getRootArtsImages(){
   return tree.filter(item => item && item.type === 'blob' && typeof item.path === 'string' && /^ARTS\/[^/]+$/i.test(item.path) && imagePattern.test(item.path));
 }
 
+let artsFiles = [];
+let currentArtIndex = -1;
+let artViewerPointer = null;
+const artViewer = document.getElementById('artViewer');
+const artViewerImage = document.getElementById('artViewerImage');
+const artViewerName = document.getElementById('artViewerName');
+const artViewerCounter = document.getElementById('artViewerCounter');
+const artViewerDownload = document.getElementById('artViewerDownload');
+
+function showArtAt(index){
+  if (!artsFiles.length) return;
+  currentArtIndex = (index + artsFiles.length) % artsFiles.length;
+  const item = artsFiles[currentArtIndex];
+  const fileName = item.path.split('/').pop();
+  const url = buildUrl(item.path.split('/'));
+  artViewerImage.src = url;
+  artViewerImage.alt = fileName;
+  artViewerName.textContent = fileName;
+  artViewerCounter.textContent = (currentArtIndex + 1) + ' / ' + artsFiles.length;
+  artViewerDownload.onclick = () => {
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.rel = 'noopener';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  };
+}
+function openArtViewer(index){
+  if (!artsFiles.length) return;
+  showArtAt(index);
+  artViewer.classList.add('show');
+  artViewer.setAttribute('aria-hidden','false');
+}
+function closeArtViewer(){
+  artViewer.classList.remove('show');
+  artViewer.setAttribute('aria-hidden','true');
+  artViewerImage.removeAttribute('src');
+  currentArtIndex = -1;
+}
+function stepArt(direction){ if (currentArtIndex >= 0) showArtAt(currentArtIndex + direction); }
+
 async function openArtsPanel(){
   closeQuickMenu();
   closeSearch();
@@ -2393,9 +2464,10 @@ async function openArtsPanel(){
       return;
     }
     files.sort((a,b) => a.path.localeCompare(b.path, 'ru'));
+    artsFiles = files.slice();
     artsEmpty.hidden = files.length > 0;
     artsEmpty.textContent = files.length ? '' : 'в папке ARTS пока нет изображений';
-    for (const item of files) {
+    files.forEach((item, index) => {
       const fileName = item.path.split('/').pop();
       const figure = document.createElement('figure');
       figure.className = 'artsItem';
@@ -2405,11 +2477,21 @@ async function openArtsPanel(){
       img.alt = fileName;
       img.src = buildUrl(item.path.split('/'));
       img.addEventListener('error', () => figure.remove(), {once:true});
+      img.tabIndex = 0;
+      img.setAttribute('role','button');
+      img.setAttribute('aria-label','Открыть арт ' + fileName);
+      img.addEventListener('click', () => openArtViewer(index));
+      img.addEventListener('keydown', event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          openArtViewer(index);
+        }
+      });
       const caption = document.createElement('figcaption');
       caption.textContent = fileName.replace(/\.[^.]+$/, '');
       figure.append(img, caption);
       artsGrid.appendChild(figure);
-    }
+    });
   } catch (e) {
     artsEmpty.hidden = false;
     artsEmpty.textContent = 'не удалось загрузить арты';
@@ -2421,6 +2503,31 @@ document.getElementById('menuArtsBtn').addEventListener('click', () => {
   openArtsPanel();
 });
 artsPanel.addEventListener('click', e => { if (e.target === artsPanel) closeArtsPanel(); });
+
+document.getElementById('artViewerClose').addEventListener('click', closeArtViewer);
+document.getElementById('artViewerPrev').addEventListener('click', () => stepArt(-1));
+document.getElementById('artViewerNext').addEventListener('click', () => stepArt(1));
+artViewer.addEventListener('click', event => {
+  if (event.target === artViewer) closeArtViewer();
+});
+artViewerImage.addEventListener('pointerdown', event => {
+  if (event.isPrimary) artViewerPointer = {x:event.clientX,y:event.clientY,id:event.pointerId};
+});
+artViewerImage.addEventListener('pointerup', event => {
+  if (!artViewerPointer || event.pointerId !== artViewerPointer.id) return;
+  const dx = event.clientX - artViewerPointer.x;
+  const dy = event.clientY - artViewerPointer.y;
+  artViewerPointer = null;
+  if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.25) stepArt(dx < 0 ? 1 : -1);
+});
+artViewerImage.addEventListener('pointercancel', () => { artViewerPointer = null; });
+document.addEventListener('keydown', event => {
+  if (!artViewer.classList.contains('show')) return;
+  if (event.key === 'Escape') { closeArtViewer(); event.stopImmediatePropagation(); }
+  else if (event.key === 'ArrowLeft') { stepArt(-1); event.stopImmediatePropagation(); }
+  else if (event.key === 'ArrowRight') { stepArt(1); event.stopImmediatePropagation(); }
+}, true);
+
 
 function openExternalWarning(url){
   pendingExternalUrl = url;
