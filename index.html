@@ -343,8 +343,8 @@
     #infoBtn svg{width:18px;height:18px}
     #quickMenu{top:15px;left:52px;width:194px}
     #artsPanel{padding:0;place-items:stretch;background:#000;overflow:hidden}
-    .artsClose{top:max(12px,env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));width:46px;height:46px;background:rgba(8,8,10,.9);border-color:rgba(255,255,255,.22)}
-    .artsCard{width:100%;max-width:100%;max-height:100vh;max-height:100dvh;padding:calc(env(safe-area-inset-top,0px) + 66px) max(env(safe-area-inset-right,0px),10px) max(env(safe-area-inset-bottom,0px),12px) max(env(safe-area-inset-left,0px),10px);border:none;border-radius:0;background:#000;box-shadow:none}
+    .artsClose{top:env(safe-area-inset-top,0px);right:max(10px,env(safe-area-inset-right,0px));width:46px;height:46px;background:rgba(8,8,10,.9);border-color:rgba(255,255,255,.22);border-top-left-radius:0;border-top-right-radius:0}
+    .artsCard{width:100%;max-width:100%;max-height:100vh;max-height:100dvh;padding:calc(env(safe-area-inset-top,0px) + 60px) max(env(safe-area-inset-right,0px),10px) max(env(safe-area-inset-bottom,0px),12px) max(env(safe-area-inset-left,0px),10px);border:none;border-radius:0;background:#000;box-shadow:none}
     .artsGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
     .artsItem img{object-fit:cover;border-radius:5px}
     .artsEmpty:not([hidden]){min-height:60vh;display:flex;align-items:center;justify-content:center;padding:40px 20px;text-align:center;font-size:14px;line-height:1.7}
