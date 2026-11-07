@@ -141,13 +141,23 @@
   #muteBtn.muted .quickMenuIcon{opacity:.45}
   #artsPanel{position:fixed;inset:0;z-index:84;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 50% 34%,rgba(70,4,15,.98),rgba(24,0,5,.99) 58%,#000 100%);opacity:0;pointer-events:none;visibility:hidden;transition:opacity .3s ease,visibility .3s ease;overflow-y:auto;-webkit-overflow-scrolling:touch}
   #artsPanel.show{opacity:1;pointer-events:auto;visibility:visible}
+  .artsClose{position:fixed;top:max(14px,env(safe-area-inset-top,0px));right:max(14px,env(safe-area-inset-right,0px));z-index:2;width:44px;height:44px;padding:0;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(8,8,10,.85);color:#fff;cursor:pointer;display:grid;place-items:center;transition:background .2s ease,border-color .2s ease,transform .15s ease;-webkit-tap-highlight-color:transparent}
+  .artsClose:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.35)}
+  .artsClose:active{transform:scale(.94)}
+  .artsClose svg{width:20px;height:20px;display:block}
   .artsCard{width:min(920px,100%);max-height:min(82vh,760px);overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:rgba(145,157,190,.5) rgba(5,7,15,.4);padding:28px;border:1px solid rgba(130,40,52,.32);background:rgba(5,1,3,.78);box-shadow:0 24px 70px rgba(0,0,0,.75)}
-  .artsHeading{margin:0 0 20px;color:#eadadd;font:400 17px 'Special Elite','Courier New',monospace;letter-spacing:.22em;text-align:center;text-transform:uppercase}
   .artsGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
   .artsItem{min-width:0;margin:0;padding:0;border:0;background:transparent}
-  .artsItem img{display:block;width:100%;aspect-ratio:1;object-fit:contain;background:transparent}
+  .artsItem img{display:block;width:100%;aspect-ratio:1;object-fit:contain;background:transparent;cursor:zoom-in}
   .artsEmpty{padding:35px 10px;text-align:center;color:rgba(220,190,195,.55);font:italic 14px 'IM Fell English',Georgia,serif}
-  .artsItem img{cursor:zoom-in}
+  @media (min-width:1200px){
+    .artsCard{width:min(1120px,100%);max-height:min(86vh,900px);padding:32px}
+    .artsGrid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px}
+  }
+  @media (min-width:1600px){
+    .artsCard{width:min(1320px,100%);max-height:min(88vh,1100px);padding:36px}
+    .artsGrid{grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px}
+  }
   body.panel-hides-mini #miniPlayer{opacity:0!important;visibility:hidden!important;pointer-events:none!important;transform:translate(-50%,200%)!important}
   #artViewer{position:fixed;inset:0;z-index:360;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:max(14px,env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-right,0px)) max(14px,env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px));background:rgba(0,0,0,.975);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .25s ease,visibility .25s ease;overscroll-behavior:contain}
   #artViewer.show{opacity:1;visibility:visible;pointer-events:auto}
@@ -332,8 +342,12 @@
     #infoBtn{top:16px;left:12px;width:32px;height:32px;padding:5px}
     #infoBtn svg{width:18px;height:18px}
     #quickMenu{top:15px;left:52px;width:194px}
-    #artsPanel{padding:14px}
-    .artsCard{padding:20px 14px}
+    #artsPanel{padding:0;place-items:stretch;background:#000;overflow:hidden}
+    .artsClose{top:max(12px,env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));width:46px;height:46px;background:rgba(8,8,10,.9);border-color:rgba(255,255,255,.22)}
+    .artsCard{width:100%;max-width:100%;max-height:100vh;max-height:100dvh;padding:calc(env(safe-area-inset-top,0px) + 66px) max(env(safe-area-inset-right,0px),10px) max(env(safe-area-inset-bottom,0px),12px) max(env(safe-area-inset-left,0px),10px);border:none;border-radius:0;background:#000;box-shadow:none}
+    .artsGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    .artsItem img{object-fit:cover;border-radius:5px}
+    .artsEmpty:not([hidden]){min-height:60vh;display:flex;align-items:center;justify-content:center;padding:40px 20px;text-align:center;font-size:14px;line-height:1.7}
     #artViewer{padding:10px}
     #artViewerImage{max-width:calc(100vw - 68px);max-height:calc(100vh - 145px);max-height:calc(100dvh - 145px)}
     .artViewerNav{width:36px;height:46px;background:transparent}
@@ -474,7 +488,10 @@
   <div class="infoCard"><div id="infoContent"></div></div>
 </div>
 <div id="artsPanel" aria-hidden="true">
-  <div class="artsCard"><div class="artsHeading">Арты</div><div class="artsGrid" id="artsGrid"></div><div class="artsEmpty" id="artsEmpty" hidden></div></div>
+  <button class="artsClose" id="artsCloseBtn" type="button" aria-label="Закрыть галерею">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+  </button>
+  <div class="artsCard"><div class="artsGrid" id="artsGrid"></div><div class="artsEmpty" id="artsEmpty" hidden></div></div>
 </div>
 <div id="artViewer" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Просмотр артов">
   <div class="artViewerStage" id="artViewerStage">
@@ -606,6 +623,7 @@ const fullscreenMenuLabel = document.getElementById('fullscreenMenuLabel');
 const artsPanel = document.getElementById('artsPanel');
 const artsGrid = document.getElementById('artsGrid');
 const artsEmpty = document.getElementById('artsEmpty');
+const artsCloseBtn = document.getElementById('artsCloseBtn');
 const artViewer = document.getElementById('artViewer');
 const artViewerImage = document.getElementById('artViewerImage');
 const artViewerCounter = document.getElementById('artViewerCounter');
@@ -2636,6 +2654,10 @@ document.getElementById('menuArtsBtn').addEventListener('click', () => {
   openArtsPanel();
 });
 artsPanel.addEventListener('click', e => { if (e.target === artsPanel) closeArtsPanel(); });
+artsCloseBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  closeArtsPanel();
+});
 
 function openExternalWarning(url){
   pendingExternalUrl = url;
