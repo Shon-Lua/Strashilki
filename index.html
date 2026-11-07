@@ -141,7 +141,7 @@
   #muteBtn.muted .quickMenuIcon{opacity:.45}
   #artsPanel{position:fixed;inset:0;z-index:84;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 50% 34%,rgba(70,4,15,.98),rgba(24,0,5,.99) 58%,#000 100%);opacity:0;pointer-events:none;visibility:hidden;transition:opacity .3s ease,visibility .3s ease;overflow-y:auto;-webkit-overflow-scrolling:touch}
   #artsPanel.show{opacity:1;pointer-events:auto;visibility:visible}
-  .artsCard{width:min(920px,100%);max-height:min(82vh,760px);overflow:auto;padding:28px;border:1px solid rgba(130,40,52,.32);background:rgba(5,1,3,.78);box-shadow:0 24px 70px rgba(0,0,0,.75)}
+  .artsCard{width:min(920px,100%);max-height:min(82vh,760px);overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:rgba(145,157,190,.5) rgba(5,7,15,.4);padding:28px;border:1px solid rgba(130,40,52,.32);background:rgba(5,1,3,.78);box-shadow:0 24px 70px rgba(0,0,0,.75)}
   .artsHeading{margin:0 0 20px;color:#eadadd;font:400 17px 'Special Elite','Courier New',monospace;letter-spacing:.22em;text-align:center;text-transform:uppercase}
   .artsGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
   .artsItem{min-width:0;margin:0;padding:0;border:0;background:transparent}
