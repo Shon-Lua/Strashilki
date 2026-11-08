@@ -36,9 +36,11 @@
   @keyframes grainMove{0%{transform:translate3d(0,0,0)}33%{transform:translate3d(-3%,2%,0)}66%{transform:translate3d(2%,-3%,0)}100%{transform:translate3d(0,0,0)}}
   .vignette{position:fixed;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 36%, rgba(0,0,0,.62) 78%, rgba(0,0,0,.97) 100%)}
   #skyWrap{position:fixed;inset:0;z-index:4;overflow:hidden;background:#000;isolation:isolate}
-  #sky{position:absolute;top:0;left:0;width:100%;height:100%;transition:transform .95s cubic-bezier(.7,0,.28,1);background:#000}
+  #sky{position:absolute;top:0;left:0;width:100%;height:100%;transition:transform .84s cubic-bezier(.22,.72,.2,1);transform:translate3d(0,0,0);will-change:transform;backface-visibility:hidden;background:#000}
   .page{position:absolute;left:0;width:100%;height:100vh;overflow:hidden;background:#000}
   .page-sky{position:absolute;inset:0;pointer-events:none}
+  .page:not(.page-active) .star-core,.page:not(.page-active) .star-flare{animation-play-state:paused!important}
+  .page:not(.page-active) .star.unplayed::before,.page:not(.page-active) .star.searched::after{animation-play-state:paused!important}
   .page-sky svg{display:block;width:100%;height:100%}
   .star{position:absolute;width:78px;height:78px;transform:translate(-50%,-50%);background:none;border:none;padding:0;cursor:grab;display:grid;place-items:center;-webkit-tap-highlight-color:transparent;touch-action:none;z-index:5}
   .star.revealing{pointer-events:none}
@@ -335,7 +337,7 @@
     #searchInput{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(8,8,10,.97)}
     #searchSuggestions{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(8,8,10,.97)}
     .toast{backdrop-filter:none;-webkit-backdrop-filter:none}
-    #sky{transition:transform .8s cubic-bezier(.7,0,.28,1)}
+    #sky{transition:transform .78s cubic-bezier(.22,.72,.2,1)}
     .star-core{box-shadow:0 0 8px 2px rgba(255,255,255,.9), 0 0 20px 6px rgba(255,255,255,.22)}
     .star:hover .star-core{box-shadow:0 0 12px 3px rgba(255,255,255,.95), 0 0 32px 10px rgba(255,255,255,.3)}
     .star-flare{animation:none;opacity:.55}
@@ -405,7 +407,7 @@
 
   @media (max-width:768px){
     #skyWrap::after{filter:none;background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(42,30,48,.08) 47%,rgba(215,201,222,.12) 50%,rgba(0,0,0,.34) 51%,rgba(0,0,0,0) 100%)}
-    #sky{transition-duration:.28s}
+    #sky{transition-duration:.76s}
     .star.launching .star-core{animation:starLaunchPulse 280ms ease-out both!important}
     .star.launching .star-ring{animation:starLaunchOrbit 280ms ease-out both!important}
     .star.launching .star-flare{animation:none!important;opacity:.85}
@@ -1160,7 +1162,7 @@ async function maybeStartNewReleaseIntro(){
   dropzone.classList.remove('visible', 'hover');
 
   const targetPage = getPageForIndex(episodeIndex);
-  if (targetPage !== currentPage) goToPage(targetPage);
+  if (targetPage !== currentPage) goToPage(targetPage, false, true);
   newReleaseTitle.textContent = pendingNewRelease.title || EPISODES[episodeIndex].title || 'Новый выпуск';
   newReleaseIntro.classList.add('show');
   newReleaseIntro.setAttribute('aria-hidden', 'false');
@@ -1652,7 +1654,7 @@ function updateSkyPageGeometry(){
     page.style.top = (index * pageHeight) + 'px';
   });
   sky.style.height = (Math.max(1, pageNodes.length) * pageHeight) + 'px';
-  sky.style.transform = 'translateY(' + (-currentPage * pageHeight) + 'px)';
+  sky.style.transform = 'translate3d(0,' + (-currentPage * pageHeight) + 'px,0)';
   requestAnimationFrame(() => { sky.style.transition = previousTransition; });
 }
 
@@ -1934,7 +1936,7 @@ async function buildSky(){
   const fragment = document.createDocumentFragment();
   for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
     const page = document.createElement('div');
-    page.className = 'page';
+    page.className = pageIndex === 0 ? 'page page-active' : 'page';
     const pageHeight = getSkyPageHeight();
     page.style.top = (pageIndex * pageHeight) + 'px';
     page.style.height = pageHeight + 'px';
@@ -3091,7 +3093,7 @@ function performSearch(rawQuery, preferredIndex){
   closeSearch();
   const targetPage = getPageForIndex(idx);
   const needsNav = targetPage !== currentPage;
-  if (needsNav) goToPage(targetPage);
+  if (needsNav) goToPage(targetPage, false, true);
   const starEl = starEls[idx];
   if (!starEl) return;
   starEl.classList.add('searched');
@@ -3566,7 +3568,7 @@ function switchToEpisode(index, autoPlay){
     if (switchToken !== resolveToken) return;
     setCurrentTrack(index);
     const page = getPageForIndex(index);
-    if (page !== currentPage) goToPage(page);
+    if (page !== currentPage) goToPage(page, false, true);
     if (autoPlay) play();
     else {
       preloadEpisodeDuration(index);
@@ -4551,7 +4553,7 @@ pageMapSlider.addEventListener('change', () => {
   clearTimeout(pageSliderTransitionTimer);
   pageSliderTransitionTimer = setTimeout(() => {
     sky.style.transition = '';
-    sky.style.transform = 'translateY(-' + (currentPage * getSkyPageHeight()) + 'px)';
+    sky.style.transform = 'translate3d(0,' + (-currentPage * getSkyPageHeight()) + 'px,0)';
     void sky.offsetHeight;
     requestAnimationFrame(() => requestAnimationFrame(() => refreshStarRingLayout(true)));
   }, 240);
@@ -4562,28 +4564,51 @@ document.addEventListener('pointerdown', (e) => {
   if (pageMapPanel.contains(e.target) || pageNavBtn.contains(e.target)) return;
   closePageMap();
 });
-function goToPage(n, fromSlider){
+let pageTurnLocked = false;
+function finishPageTurn(){
+  if (pageTurnCleanupTimer) clearTimeout(pageTurnCleanupTimer);
+  pageTurnCleanupTimer = 0;
+  pageTurnLocked = false;
+}
+function setActiveSkyPage(pageIndex){
+  const pages = sky.querySelectorAll('.page');
+  pages.forEach((page, index) => page.classList.toggle('page-active', index === pageIndex));
+}
+sky.addEventListener('transitionend', event => {
+  if (event.target === sky && event.propertyName === 'transform') finishPageTurn();
+});
+function goToPage(n, fromSlider, force){
   removeMapArrow();
   const nn = Math.max(0, Math.min(totalPages - 1, n));
   if (nn === currentPage) {
     updatePageMap();
-    return;
+    return false;
   }
-  const previousPage = currentPage;
+  if (pageTurnLocked && !fromSlider && !force) return false;
+  if (pageTurnCleanupTimer) clearTimeout(pageTurnCleanupTimer);
+  pageTurnCleanupTimer = 0;
+  pageTurnLocked = false;
+
   currentPage = nn;
+  setActiveSkyPage(nn);
   if (tutorialStage === 'swipe') tutorialSwipePerformed();
   const pageHeight = getSkyPageHeight();
+  clearTimeout(pageSliderTransitionTimer);
+
   if (fromSlider) {
-    clearTimeout(pageSliderTransitionTimer);
-    sky.style.transition = 'transform .18s cubic-bezier(.2,.65,.25,1)';
+    sky.style.transition = 'transform 220ms cubic-bezier(.22,.72,.2,1)';
   } else {
-    clearTimeout(pageSliderTransitionTimer);
-    sky.style.transition = 'transform .55s cubic-bezier(.2,.65,.25,1)';
+    pageTurnLocked = true;
+    const duration = isMobile ? 760 : 840;
+    sky.style.transition = 'transform ' + duration + 'ms cubic-bezier(.22,.72,.2,1)';
+    pageTurnCleanupTimer = setTimeout(finishPageTurn, duration + 140);
   }
-  sky.style.transform = 'translateY(-' + (nn * pageHeight) + 'px)';
+
+  sky.style.transform = 'translate3d(0,' + (-nn * pageHeight) + 'px,0)';
   pageCurrentEl.textContent = nn + 1;
   updatePageMap();
   if (!fromSlider) preloadPageCovers(nn);
+  return true;
 }
 function loadEpisode(n){
   if (EPISODES.length === 0) return;
@@ -4765,6 +4790,7 @@ miniPlayBtn.addEventListener('click', (e) => {
 
 document.addEventListener('keydown', (e) => {
   if (ageGateActive) return;
+  if (pageTurnLocked && ['ArrowDown','ArrowUp','PageDown','PageUp'].includes(e.key)) return;
   if (e.key === 'Escape') {
     if (artViewer.classList.contains('show')) { closeArtViewer(); return; }
     if (quickMenu.classList.contains('show')) { closeQuickMenu(); return; }
@@ -4792,6 +4818,7 @@ let wheelAccum = 0;
 let wheelTimer = null;
 window.addEventListener('wheel', (e) => {
   if (tutorialIsActive() && tutorialStage !== 'swipe') return;
+  if (pageTurnLocked) return;
   if (ageGateActive || overlay.classList.contains('show') ||
       infoPanel.classList.contains('show') || artsPanel.classList.contains('show') || externalWarning.classList.contains('show') ||
       searchOpen || pageMapPanel.classList.contains('show') || dragState) return;
@@ -4813,7 +4840,7 @@ window.addEventListener('touchstart', (e) => {
   if (tutorialIsActive()) {
     if (tutorialStage !== 'swipe' || !skyWrap.contains(e.target) || (e.target.closest && e.target.closest('.star'))) return;
   }
-  if (pageMapPanel.classList.contains('show')) return;
+  if (pageMapPanel.classList.contains('show') || pageTurnLocked) return;
   if (ageGateActive || overlay.classList.contains('show') ||
       infoPanel.classList.contains('show') || artsPanel.classList.contains('show') || externalWarning.classList.contains('show') ||
       searchOpen || dragState) return;
@@ -4830,7 +4857,6 @@ window.addEventListener('touchend', (e) => {
   if (Math.abs(dy) > 55 && Math.abs(dy) > Math.abs(dx) * 1.2) {
     if (dy > 0) goToPage(currentPage + 1);
     else goToPage(currentPage - 1);
-    tutorialSwipePerformed();
   }
 }, { passive: true });
 
