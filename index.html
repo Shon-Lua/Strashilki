@@ -147,9 +147,17 @@
   .artsClose svg{width:20px;height:20px;display:block}
   .artsCard{width:min(920px,100%);max-height:min(82vh,760px);overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:rgba(145,157,190,.5) rgba(5,7,15,.4);padding:28px;border:1px solid rgba(130,40,52,.32);background:rgba(5,1,3,.78);box-shadow:0 24px 70px rgba(0,0,0,.75)}
   .artsGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
-  .artsItem{min-width:0;margin:0;padding:0;border:0;background:transparent}
-  .artsItem img{display:block;width:100%;aspect-ratio:1;object-fit:contain;background:transparent;cursor:zoom-in}
-  .artsEmpty{padding:35px 10px;text-align:center;color:rgba(220,190,195,.55);font:italic 14px 'IM Fell English',Georgia,serif}
+  .artsItem{position:relative;min-width:0;margin:0;padding:0;border:0;background:transparent;overflow:hidden}
+  .artsItem img{display:block;width:100%;aspect-ratio:1;object-fit:contain;background:transparent;cursor:zoom-in;opacity:1;transition:opacity .22s ease}
+  .artsItem.is-loading img{opacity:0}
+  .artsItem.is-loading::after,.artsEmpty.is-loading::after{content:'';position:absolute;left:50%;top:50%;width:27px;height:27px;margin:-14px 0 0 -14px;border:1px solid rgba(225,218,235,.24);border-top-color:rgba(255,255,255,.95);border-right-color:rgba(220,215,235,.64);border-radius:50%;animation:artLoaderSpin .8s linear infinite;pointer-events:none}
+  @keyframes artLoaderSpin{to{transform:rotate(360deg)}}
+  .artsEmpty{position:relative;padding:35px 10px;text-align:center;color:rgba(220,190,195,.55);font:italic 14px 'IM Fell English',Georgia,serif}
+  .artsEmpty.is-loading{min-height:180px;color:transparent}
+  #artsTopBtn{position:fixed;right:max(22px,env(safe-area-inset-right,0px) + 16px);bottom:max(22px,env(safe-area-inset-bottom,0px) + 16px);z-index:5;width:44px;height:44px;padding:0;display:grid;place-items:center;border:1px solid rgba(220,215,235,.18);border-radius:50%;background:rgba(8,8,10,.88);color:#fff;box-shadow:0 8px 28px rgba(0,0,0,.48);opacity:0;visibility:hidden;pointer-events:none;transform:translateY(8px);transition:opacity .2s ease,visibility .2s ease,transform .2s ease;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+  #artsTopBtn.visible{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0)}
+  #artsTopBtn svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  #artViewer.is-loading::before{content:'';position:absolute;left:50%;top:50%;width:34px;height:34px;margin:-17px 0 0 -17px;border:1px solid rgba(225,218,235,.2);border-top-color:#fff;border-right-color:rgba(220,215,235,.65);border-radius:50%;animation:artLoaderSpin .8s linear infinite;pointer-events:none;z-index:1}
   @media (min-width:1200px){
     .artsCard{width:min(1120px,100%);max-height:min(86vh,900px);padding:32px}
     .artsGrid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px}
@@ -347,6 +355,7 @@
     .artsCard{width:100%;max-width:100%;max-height:100vh;max-height:100dvh;padding:0 max(env(safe-area-inset-right,0px),10px) max(env(safe-area-inset-bottom,0px),12px) max(env(safe-area-inset-left,0px),10px);border:none;border-radius:0;background:#000;box-shadow:none}
     .artsGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
     .artsItem img{object-fit:cover;border-radius:5px}
+    #artsTopBtn{right:max(14px,env(safe-area-inset-right,0px) + 8px);bottom:max(14px,env(safe-area-inset-bottom,0px) + 8px);width:42px;height:42px}
     .artsEmpty:not([hidden]){min-height:60vh;display:flex;align-items:center;justify-content:center;padding:40px 20px;text-align:center;font-size:14px;line-height:1.7}
     #artViewer{padding:10px}
     #artViewerImage{max-width:calc(100vw - 68px);max-height:calc(100vh - 145px);max-height:calc(100dvh - 145px)}
@@ -396,8 +405,7 @@
 
   @media (max-width:768px){
     #skyWrap::after{filter:none;background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(42,30,48,.08) 47%,rgba(215,201,222,.12) 50%,rgba(0,0,0,.34) 51%,rgba(0,0,0,0) 100%)}
-  }
-#sky{transition-duration:.28s}
+    #sky{transition-duration:.28s}
     .star.launching .star-core{animation:starLaunchPulse 280ms ease-out both!important}
     .star.launching .star-ring{animation:starLaunchOrbit 280ms ease-out both!important}
     .star.launching .star-flare{animation:none!important;opacity:.85}
@@ -492,6 +500,9 @@
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
   </button>
   <div class="artsCard"><div class="artsGrid" id="artsGrid"></div><div class="artsEmpty" id="artsEmpty" hidden></div></div>
+  <button id="artsTopBtn" type="button" aria-label="В начало списка артов" title="В начало списка">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 14l7-7 7 7M12 7v12"/></svg>
+  </button>
 </div>
 <div id="artViewer" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Просмотр артов">
   <div class="artViewerStage" id="artViewerStage">
@@ -559,11 +570,15 @@ function escapeHtml(str){
 }
 
 function fitRingTitle(text, radius, fontSize, letterSpacing){
-  const maxLen = 2 * Math.PI * radius * 0.9;
-  const charW = fontSize * 0.55 + letterSpacing;
+  const source = String(text || '').replace(/\s+/g, ' ').trim();
+  const maxLen = 2 * Math.PI * radius * 0.86;
+  const charW = fontSize * 0.56 + letterSpacing;
   const maxChars = Math.max(6, Math.floor(maxLen / charW));
-  if (text.length <= maxChars) return text;
-  return text.slice(0, maxChars - 1).trim() + '…';
+  if (source.length <= maxChars) return source;
+  let clipped = source.slice(0, maxChars - 1).trim();
+  const lastSpace = clipped.lastIndexOf(' ');
+  if (lastSpace > Math.floor(maxChars * 0.52)) clipped = clipped.slice(0, lastSpace).trim();
+  return clipped + '…';
 }
 
 const isMobile = innerWidth < 700;
@@ -621,9 +636,11 @@ const muteMenuLabel = document.getElementById('muteMenuLabel');
 const fullscreenBtn = document.getElementById('fullscreenBtn');
 const fullscreenMenuLabel = document.getElementById('fullscreenMenuLabel');
 const artsPanel = document.getElementById('artsPanel');
+const artsCard = artsPanel.querySelector('.artsCard');
 const artsGrid = document.getElementById('artsGrid');
 const artsEmpty = document.getElementById('artsEmpty');
 const artsCloseBtn = document.getElementById('artsCloseBtn');
+const artsTopBtn = document.getElementById('artsTopBtn');
 const artViewer = document.getElementById('artViewer');
 const artViewerImage = document.getElementById('artViewerImage');
 const artViewerCounter = document.getElementById('artViewerCounter');
@@ -1643,7 +1660,7 @@ let lastStarRingLayout = '';
 function refreshStarRingLayout(force){
   const layoutWidth = document.documentElement.clientWidth || innerWidth;
   const layoutKey = layoutWidth <= 640 ? 'small' : 'large';
-  if (!force && lastStarRingLayout === layoutKey) return;
+  const updateRingGeometry = !!force || lastStarRingLayout !== layoutKey;
   lastStarRingLayout = layoutKey;
   const small = layoutKey === 'small';
   const ringSize = small ? 108 : 132;
@@ -1651,9 +1668,18 @@ function refreshStarRingLayout(force){
   const center = ringSize / 2;
   const fontSize = small ? 8 : 9;
   const letterSpacing = small ? .5 : .7;
+  const pageHeight = getSkyPageHeight();
+  const safeMargin = ringSize / 2 + 7;
   const pathD = 'M ' + center + ' ' + (center + radius) + ' a ' + radius + ' ' + radius + ' 0 1 1 0 -' + (radius * 2) + ' a ' + radius + ' ' + radius + ' 0 1 1 0 ' + (radius * 2);
   starEls.forEach((star, index) => {
     if (!star) return;
+    const x = (parseFloat(star.style.left) || 50) * innerWidth / 100;
+    const y = (parseFloat(star.style.top) || 50) * pageHeight / 100;
+    const safeX = Math.max(safeMargin, Math.min(innerWidth - safeMargin, x));
+    const safeY = Math.max(safeMargin, Math.min(pageHeight - safeMargin, y));
+    star.style.left = (safeX / Math.max(1, innerWidth) * 100) + '%';
+    star.style.top = (safeY / Math.max(1, pageHeight) * 100) + '%';
+    if (!updateRingGeometry) return;
     const ring = star.querySelector('.star-ring');
     const path = ring && ring.querySelector('defs path');
     const text = ring && ring.querySelector('.ring-text');
@@ -1671,6 +1697,8 @@ function refreshStarRingLayout(force){
 
 function getExclusionZones(){
   const zones = [];
+  const vw = Math.max(1, innerWidth);
+  const vh = Math.max(1, innerHeight);
   const bar = document.getElementById('topBar');
   if (bar) {
     const r = bar.getBoundingClientRect();
@@ -1708,7 +1736,14 @@ function getExclusionZones(){
       y2: Math.min(1, (vh - 22 + starClearance) / vh)
     });
   }
-  return zones;
+  const ringMarginX = ((vw <= 640 ? 108 : 132) / 2 + 7) / vw;
+  const ringMarginY = ((vw <= 640 ? 108 : 132) / 2 + 7) / vh;
+  return zones.map(z => ({
+    x1: Math.max(0, z.x1 - ringMarginX),
+    y1: Math.max(0, z.y1 - ringMarginY),
+    x2: Math.min(1, z.x2 + ringMarginX),
+    y2: Math.min(1, z.y2 + ringMarginY)
+  }));
 }
 function inZone(x, y, z){ return x >= z.x1 && x <= z.x2 && y >= z.y1 && y <= z.y2; }
 
@@ -1716,11 +1751,17 @@ function generateChaoticPositions(count){
   const positions = [];
   if (count === 0) return positions;
   const zones = getExclusionZones();
-  const vw = innerWidth;
-
-  const ringSize = vw < 700 ? 108 : 132;
+  const vw = Math.max(1, innerWidth);
+  const vh = Math.max(1, getSkyPageHeight());
+  const ringSize = vw <= 640 ? 108 : 132;
+  const edgeX = Math.min(0.42, (ringSize / 2 + 7) / vw);
+  const edgeY = Math.min(0.42, (ringSize / 2 + 7) / vh);
+  const minX = edgeX;
+  const maxX = 1 - edgeX;
+  const minY = Math.max(0.12, edgeY);
+  const maxY = Math.min(0.88, 1 - edgeY);
   const baseMinDx = ringSize / vw;
-  const baseMinDy = vw < 700 ? 0.25 : 0.24;
+  const baseMinDy = vw <= 640 ? 0.25 : 0.24;
   let density = 1;
   if (count > 10) density = 0.7;
   else if (count > 8) density = 0.8;
@@ -1731,11 +1772,10 @@ function generateChaoticPositions(count){
 
   let attempts = 0;
   const maxAttempts = count * 400;
-
   while (positions.length < count && attempts < maxAttempts) {
     attempts++;
-    const x = 0.06 + Math.random() * 0.88;
-    const y = 0.13 + Math.random() * 0.74;
+    const x = minX + Math.random() * Math.max(0, maxX - minX);
+    const y = minY + Math.random() * Math.max(0, maxY - minY);
 
     let ok = true;
     for (const z of zones) if (inZone(x, y, z)) { ok = false; break; }
@@ -1749,17 +1789,16 @@ function generateChaoticPositions(count){
     if (ok) positions.push([x, y]);
   }
 
+  const cols = Math.max(1, Math.ceil(Math.sqrt(count * (vw / vh))));
+  const rows = Math.max(1, Math.ceil(count / cols));
   while (positions.length < count) {
     const i = positions.length;
-    const cols = Math.ceil(Math.sqrt(count));
     const c = i % cols;
     const r = Math.floor(i / cols);
-    positions.push([
-      0.1 + (c / cols) * 0.8 + (Math.random() - 0.5) * 0.04,
-      0.15 + (r / Math.max(1, Math.ceil(count / cols))) * 0.7 + (Math.random() - 0.5) * 0.04
-    ]);
+    const x = minX + ((c + 0.5) / cols) * (maxX - minX);
+    const y = minY + ((r + 0.5) / rows) * (maxY - minY);
+    positions.push([Math.max(minX, Math.min(maxX, x)), Math.max(minY, Math.min(maxY, y))]);
   }
-
   return positions;
 }
 
@@ -2491,13 +2530,17 @@ async function openArtsPanel(){
   artsPanel.classList.add('show');
   artsPanel.setAttribute('aria-hidden','false');
   syncPanelMiniPlayer();
+  artsCard.scrollTo({top:0,behavior:'auto'});
+  artsTopBtn.classList.remove('visible');
   artsGrid.replaceChildren();
   artsFiles = [];
   artsEmpty.hidden = false;
-  artsEmpty.textContent = 'загрузка...';
+  artsEmpty.classList.add('is-loading');
+  artsEmpty.textContent = '';
   try {
     const files = await getRootArtsImages();
     if (files === null) {
+      artsEmpty.classList.remove('is-loading');
       artsEmpty.hidden = false;
       artsEmpty.textContent = 'не удалось загрузить список артов';
       return;
@@ -2512,11 +2555,12 @@ async function openArtsPanel(){
         failed: false
       };
     });
+    artsEmpty.classList.remove('is-loading');
     artsEmpty.hidden = artsFiles.length > 0;
     artsEmpty.textContent = artsFiles.length ? '' : 'в папке ARTS пока нет изображений';
     for (const art of artsFiles) {
       const figure = document.createElement('figure');
-      figure.className = 'artsItem';
+      figure.className = 'artsItem is-loading';
       const img = document.createElement('img');
       img.loading = 'lazy';
       img.decoding = 'async';
@@ -2524,7 +2568,7 @@ async function openArtsPanel(){
       img.tabIndex = 0;
       img.setAttribute('role','button');
       img.setAttribute('aria-label','Открыть арт ' + art.fileName);
-      img.src = art.url;
+      img.addEventListener('load', () => figure.classList.remove('is-loading'), {once:true});
       img.addEventListener('click', () => {
         const index = artsFiles.indexOf(art);
         if (index >= 0) openArtViewer(index, img);
@@ -2545,8 +2589,11 @@ async function openArtsPanel(){
       }, {once:true});
       figure.append(img);
       artsGrid.appendChild(figure);
+      img.src = art.url;
+      if (img.complete && img.naturalWidth) figure.classList.remove('is-loading');
     }
   } catch (e) {
+    artsEmpty.classList.remove('is-loading');
     artsEmpty.hidden = false;
     artsEmpty.textContent = 'не удалось загрузить арты';
   }
@@ -2573,6 +2620,7 @@ function renderArtViewer(){
   const position = available.indexOf(art);
   artViewerImage.onerror = () => {
     if (artsFiles[activeArtIndex] !== art) return;
+    artViewer.classList.remove('is-loading');
     art.failed = true;
     const next = findAvailableArtIndex(activeArtIndex + 1, 1);
     if (next >= 0 && next !== activeArtIndex) {
@@ -2582,8 +2630,13 @@ function renderArtViewer(){
       artViewerCounter.textContent = '— / —';
     }
   };
+  artViewer.classList.add('is-loading');
+  artViewerImage.onload = () => {
+    if (artsFiles[activeArtIndex] === art) artViewer.classList.remove('is-loading');
+  };
   artViewerImage.src = art.url;
   artViewerImage.alt = art.fileName;
+  if (artViewerImage.complete && artViewerImage.naturalWidth) artViewer.classList.remove('is-loading');
   artViewerCounter.textContent = (position + 1) + ' / ' + available.length;
   const disabled = available.length <= 1;
   artViewerPrev.disabled = disabled;
@@ -2602,9 +2655,10 @@ function openArtViewer(index, sourceElement){
 
 function closeArtViewer(){
   if (!artViewer.classList.contains('show')) return;
-  artViewer.classList.remove('show');
+  artViewer.classList.remove('show','is-loading');
   artViewer.setAttribute('aria-hidden','true');
   artViewerImage.onerror = null;
+  artViewerImage.onload = null;
   activeArtIndex = -1;
   if (artViewerReturnFocus && artViewerReturnFocus.isConnected) {
     try { artViewerReturnFocus.focus({preventScroll:true}); } catch (e) {}
@@ -2654,6 +2708,13 @@ document.getElementById('menuArtsBtn').addEventListener('click', () => {
   openArtsPanel();
 });
 artsPanel.addEventListener('click', e => { if (e.target === artsPanel) closeArtsPanel(); });
+artsCard.addEventListener('scroll', () => {
+  artsTopBtn.classList.toggle('visible', artsCard.scrollTop > 260);
+}, {passive:true});
+artsTopBtn.addEventListener('click', event => {
+  event.stopPropagation();
+  artsCard.scrollTo({top:0,behavior:'smooth'});
+});
 artsCloseBtn.addEventListener('click', (e) => {
   e.stopPropagation();
   closeArtsPanel();
@@ -2700,58 +2761,89 @@ searchBtn.addEventListener('click', () => {
 });
 
 function normalizeSearch(str){
-  return String(str).toLowerCase()
+  let value = String(str ?? '');
+  try { value = value.normalize('NFKC'); } catch (e) {}
+  return value.toLowerCase()
     .replace(/ё/g, 'е')
-    .replace(/[^\wа-я\s]/gi, ' ')
+    .replace(/[^a-zа-я0-9]+/gi, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
-function titleScore(q, title){
-  if (q === title) return 1;
-  if (title.includes(q)) return 0.7 + 0.3 * (q.length / title.length);
-  if (q.includes(title)) return 0.7 + 0.3 * (title.length / q.length);
-  const dist = levenshtein(q, title);
-  const maxLen = Math.max(q.length, title.length);
-  return Math.max(0, 1 - dist / maxLen);
+function searchTokenScore(queryToken, titleToken){
+  if (!queryToken || !titleToken) return 0;
+  if (queryToken === titleToken) return 1;
+  if (titleToken.startsWith(queryToken)) return 0.92 + 0.06 * (queryToken.length / titleToken.length);
+  if (queryToken.startsWith(titleToken)) return 0.78 + 0.08 * (titleToken.length / queryToken.length);
+  if (titleToken.includes(queryToken)) return 0.86 + 0.06 * (queryToken.length / titleToken.length);
+  if (queryToken.includes(titleToken)) return 0.7 + 0.08 * (titleToken.length / queryToken.length);
+  const shortest = Math.min(queryToken.length, titleToken.length);
+  if (shortest < 4) return 0;
+  const distance = levenshtein(queryToken, titleToken);
+  const maxLength = Math.max(queryToken.length, titleToken.length);
+  const tolerance = shortest <= 5 ? 1 : (shortest <= 9 ? 2 : Math.max(2, Math.floor(shortest * 0.22)));
+  if (distance > tolerance) return 0;
+  return 0.72 + 0.2 * (1 - distance / maxLength);
 }
-function tokenScore(q, title){
-  const qT = q.split(' ').filter(Boolean);
-  const tT = title.split(' ').filter(Boolean);
-  if (!qT.length || !tT.length) return 0;
-  let matched = 0;
-  qT.forEach(qt => {
-    const hit = tT.some(tt => {
-      if (tt === qt) return true;
-      if (tt.includes(qt) || qt.includes(tt)) return true;
-      const thr = Math.max(1, Math.floor(Math.min(qt.length, tt.length) / 3));
-      return levenshtein(qt, tt) <= thr;
+function scoreSearchMatch(query, title){
+  if (!query || !title) return 0;
+  if (query === title) return 1;
+  if (title.startsWith(query)) return 0.985;
+  if (title.includes(query)) return 0.94 + 0.04 * (query.length / title.length);
+
+  const queryTokens = query.split(' ').filter(Boolean);
+  const titleTokens = title.split(' ').filter(Boolean);
+  if (!queryTokens.length || !titleTokens.length) return 0;
+
+  const compactTitle = title.replace(/\s/g, '');
+  const tokenMatches = queryTokens.map(token => {
+    let best = 0;
+    let bestIndex = -1;
+    titleTokens.forEach((candidate, index) => {
+      const score = searchTokenScore(token, candidate);
+      if (score > best) { best = score; bestIndex = index; }
     });
-    if (hit) matched++;
+    if (compactTitle.includes(token)) best = Math.max(best, 0.84);
+    return { score: best, index: bestIndex };
   });
-  return matched / qT.length;
+
+  const total = tokenMatches.reduce((sum, item) => sum + item.score, 0);
+  const average = total / queryTokens.length;
+  const matchedCount = tokenMatches.filter(item => item.score >= 0.52).length;
+  const coverage = matchedCount / queryTokens.length;
+  let orderBonus = 0;
+  if (tokenMatches.length > 1) {
+    let previous = -1;
+    let ordered = 0;
+    tokenMatches.forEach(item => {
+      if (item.index >= 0 && item.index > previous) { ordered++; previous = item.index; }
+    });
+    orderBonus = ordered / tokenMatches.length;
+  } else {
+    orderBonus = coverage;
+  }
+  return Math.min(0.98, average * 0.68 + coverage * 0.24 + orderBonus * 0.08);
 }
 function findBestMatch(rawQuery){
   const q = normalizeSearch(rawQuery);
   if (!q || q.length < 2) return -1;
-  let best = -1, bestScore = 0;
+  let best = -1;
+  let bestScore = 0;
   EPISODES.forEach((ep, i) => {
-    const title = normalizeSearch(ep.title);
-    const s = Math.max(titleScore(q, title), tokenScore(q, title) * 0.95);
-    if (s > bestScore) { bestScore = s; best = i; }
+    const score = scoreSearchMatch(q, normalizeSearch(ep.title));
+    if (score > bestScore) { bestScore = score; best = i; }
   });
-  return bestScore >= 0.55 ? best : -1;
+  return bestScore >= 0.57 ? best : -1;
 }
 function getSuggestions(rawQuery){
   const q = normalizeSearch(rawQuery);
   if (!q) return EPISODES.map((ep, i) => ({ index: i, title: ep.title, score: 0 }));
-  if (q.length < 1) return [];
   const out = [];
   EPISODES.forEach((ep, i) => {
-    const title = normalizeSearch(ep.title);
-    const s = Math.max(titleScore(q, title), tokenScore(q, title) * 0.95);
-    if (s >= 0.22) out.push({ index: i, title: ep.title, score: s });
+    const score = scoreSearchMatch(q, normalizeSearch(ep.title));
+    const threshold = q.includes(' ') ? 0.38 : 0.42;
+    if (score >= threshold) out.push({ index: i, title: ep.title, score });
   });
-  out.sort((a, b) => b.score - a.score);
+  out.sort((a, b) => b.score - a.score || a.title.length - b.title.length);
   return out.slice(0, 6);
 }
 function renderSuggestions(rawQuery){
@@ -2968,6 +3060,13 @@ function performSearch(rawQuery){
   setTimeout(() => { starEl.classList.remove('searched'); }, 6000);
 }
 
+const ambientStars = Array.from({length:isMobile ? 16 : 30}, () => ({
+  x: Math.random(),
+  y: Math.random(),
+  r: 0.45 + Math.random() * (isMobile ? 0.65 : 0.9),
+  phase: Math.random() * Math.PI * 2,
+  speed: 0.0007 + Math.random() * 0.0015
+}));
 const spheres = [];
 const sphereCount = isMobile ? 3 : 7;
 for (let i = 0; i < sphereCount; i++) {
@@ -3005,6 +3104,16 @@ function drawBg(t){
     ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.fill();
   }
+  ctx.globalCompositeOperation = 'lighter';
+  for (const star of ambientStars) {
+    const shimmer = 0.12 + (0.5 + 0.5 * Math.sin(t * star.speed + star.phase)) * 0.34;
+    ctx.globalAlpha = shimmer;
+    ctx.fillStyle = '#e9e7f2';
+    ctx.beginPath();
+    ctx.arc(star.x * W, star.y * H, star.r * dpr, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
   ctx.globalCompositeOperation = 'source-over';
 }
 
