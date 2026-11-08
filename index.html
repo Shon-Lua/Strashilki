@@ -102,7 +102,7 @@
 
   .star-label{display:none}
 
-  .map-arrow{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:210;opacity:1;overflow:hidden;transition:opacity .6s ease}
+  .map-arrow{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:8;opacity:1;overflow:hidden;transition:opacity .6s ease}
   .map-arrow .marker-circle{fill:none;stroke:#fff;stroke-width:var(--marker-width,3.8px);stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;opacity:.98}
   #topBar{position:fixed;top:24px;right:20px;z-index:26;display:flex;align-items:center;gap:2px}
   #topBar button{background:none;border:none;padding:6px;width:34px;height:34px;display:grid;place-items:center;color:rgba(255,255,255,.92);cursor:pointer;transition:color .3s ease, filter .3s ease, opacity .3s ease;-webkit-tap-highlight-color:transparent;text-shadow:0 0 10px rgba(0,0,0,.9)}
@@ -1723,21 +1723,26 @@ function getExclusionZones(){
     });
   }
   if (innerWidth < 700 && miniPlayer) {
-    const vw = innerWidth, vh = innerHeight;
+    const vw = Math.max(1, innerWidth), vh = Math.max(1, innerHeight);
     const playerWidth = miniPlayer.offsetWidth || Math.min(420, vw - 32);
     const playerHeight = miniPlayer.offsetHeight || 60;
-    const playerLeft = (vw - playerWidth) / 2;
-    const playerTop = vh - 22 - playerHeight;
-    const starClearance = 42;
+    const playerVisible = miniPlayer.classList.contains('show') &&
+      !document.body.classList.contains('panel-hides-mini');
+    const playerRect = playerVisible ? miniPlayer.getBoundingClientRect() : null;
+    const playerLeft = playerRect ? playerRect.left : (vw - playerWidth) / 2;
+    const playerTop = playerRect ? playerRect.top : (vh - 22 - playerHeight);
+    const playerRight = playerRect ? playerRect.right : (playerLeft + playerWidth);
+    const playerBottom = playerRect ? playerRect.bottom : (vh - 22);
+    const starClearance = 8;
     zones.push({
       x1: Math.max(0, (playerLeft - starClearance) / vw),
       y1: Math.max(0, (playerTop - starClearance) / vh),
-      x2: Math.min(1, (playerLeft + playerWidth + starClearance) / vw),
-      y2: Math.min(1, (vh - 22 + starClearance) / vh)
+      x2: Math.min(1, (playerRight + starClearance) / vw),
+      y2: Math.min(1, (playerBottom + starClearance) / vh)
     });
   }
-  const ringMarginX = ((vw <= 640 ? 108 : 132) / 2 + 7) / vw;
-  const ringMarginY = ((vw <= 640 ? 108 : 132) / 2 + 7) / vh;
+  const ringMarginX = ((vw <= 640 ? 108 : 132) / 2 + 5) / vw;
+  const ringMarginY = ((vw <= 640 ? 108 : 132) / 2 + 5) / vh;
   return zones.map(z => ({
     x1: Math.max(0, z.x1 - ringMarginX),
     y1: Math.max(0, z.y1 - ringMarginY),
@@ -1748,57 +1753,81 @@ function getExclusionZones(){
 function inZone(x, y, z){ return x >= z.x1 && x <= z.x2 && y >= z.y1 && y <= z.y2; }
 
 function generateChaoticPositions(count){
-  const positions = [];
-  if (count === 0) return positions;
-  const zones = getExclusionZones();
+  if (!count) return [];
+
   const vw = Math.max(1, innerWidth);
   const vh = Math.max(1, getSkyPageHeight());
   const ringSize = vw <= 640 ? 108 : 132;
-  const edgeX = Math.min(0.42, (ringSize / 2 + 7) / vw);
-  const edgeY = Math.min(0.42, (ringSize / 2 + 7) / vh);
+  const edgeX = Math.min(0.46, (ringSize / 2 + 8) / vw);
+  const edgeY = Math.min(0.46, (ringSize / 2 + 8) / vh);
   const minX = edgeX;
   const maxX = 1 - edgeX;
-  const minY = Math.max(0.12, edgeY);
-  const maxY = Math.min(0.88, 1 - edgeY);
-  const baseMinDx = ringSize / vw;
-  const baseMinDy = vw <= 640 ? 0.25 : 0.24;
-  let density = 1;
-  if (count > 10) density = 0.7;
-  else if (count > 8) density = 0.8;
-  else if (count > 6) density = 0.88;
+  const minY = edgeY;
+  const maxY = 1 - edgeY;
+  const zones = getExclusionZones();
+  const positions = [];
+  const candidates = [];
+  const candidateCount = Math.max(1600, count * 420);
 
-  const minDx = Math.max(0.1, baseMinDx * density);
-  const minDy = Math.max(0.16, baseMinDy * density);
-
-  let attempts = 0;
-  const maxAttempts = count * 400;
-  while (positions.length < count && attempts < maxAttempts) {
-    attempts++;
+  for (let i = 0; i < candidateCount; i++) {
     const x = minX + Math.random() * Math.max(0, maxX - minX);
     const y = minY + Math.random() * Math.max(0, maxY - minY);
-
-    let ok = true;
-    for (const z of zones) if (inZone(x, y, z)) { ok = false; break; }
-    if (!ok) continue;
-
-    for (const p of positions) {
-      const dx = Math.abs(p[0] - x) / minDx;
-      const dy = Math.abs(p[1] - y) / minDy;
-      if (dx * dx + dy * dy < 1) { ok = false; break; }
+    if (zones.some(zone => inZone(x, y, zone))) continue;
+    candidates.push([x, y]);
+  }
+  if (candidates.length < count) {
+    for (let i = 0; i < count * 180; i++) {
+      const x = minX + Math.random() * Math.max(0, maxX - minX);
+      const y = minY + Math.random() * Math.max(0, maxY - minY);
+      candidates.push([x, y]);
     }
-    if (ok) positions.push([x, y]);
   }
 
-  const cols = Math.max(1, Math.ceil(Math.sqrt(count * (vw / vh))));
-  const rows = Math.max(1, Math.ceil(count / cols));
-  while (positions.length < count) {
-    const i = positions.length;
-    const c = i % cols;
-    const r = Math.floor(i / cols);
-    const x = minX + ((c + 0.5) / cols) * (maxX - minX);
-    const y = minY + ((r + 0.5) / rows) * (maxY - minY);
-    positions.push([Math.max(minX, Math.min(maxX, x)), Math.max(minY, Math.min(maxY, y))]);
+  // Farthest-point sampling spreads a small set of stars over the full usable sky.
+  while (positions.length < count && candidates.length) {
+    let bestIndex = 0;
+    let bestDistance = -1;
+
+    if (!positions.length) {
+      bestIndex = Math.floor(Math.random() * candidates.length);
+    } else {
+      for (let i = 0; i < candidates.length; i++) {
+        const candidate = candidates[i];
+        const px = candidate[0] * vw;
+        const py = candidate[1] * vh;
+        let nearest = Infinity;
+        for (const point of positions) {
+          const dx = (candidate[0] - point[0]) * vw;
+          const dy = (candidate[1] - point[1]) * vh;
+          const distance = dx * dx + dy * dy;
+          if (distance < nearest) nearest = distance;
+        }
+        if (nearest > bestDistance) {
+          bestDistance = nearest;
+          bestIndex = i;
+        }
+      }
+    }
+
+    const chosen = candidates.splice(bestIndex, 1)[0];
+    positions.push(chosen);
   }
+
+  // Very narrow viewports may leave too few valid samples around the controls.
+  // Fill any remaining positions evenly rather than stacking them near the center.
+  if (positions.length < count) {
+    const cols = Math.max(1, Math.ceil(Math.sqrt(count * (vw / vh))));
+    const rows = Math.max(1, Math.ceil(count / cols));
+    for (let i = positions.length; i < count; i++) {
+      const cell = i - positions.length;
+      const col = cell % cols;
+      const row = Math.floor(cell / cols);
+      const x = minX + ((col + 0.5) / cols) * (maxX - minX);
+      const y = minY + ((row + 0.5) / rows) * (maxY - minY);
+      positions.push([x, y]);
+    }
+  }
+
   return positions;
 }
 
@@ -2886,7 +2915,17 @@ searchInput.addEventListener('input', () => {
   catch (e) { searchSuggestions.replaceChildren(); searchSuggestions.classList.remove('show'); }
 });
 searchInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') { e.preventDefault(); performSearch(searchInput.value); }
+  if (e.isComposing) return;
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    const firstSuggestion = searchSuggestions.querySelector('.suggestion:not(.no-results)');
+    const firstIndex = firstSuggestion ? Number(firstSuggestion.dataset.index) : -1;
+    if (Number.isInteger(firstIndex) && firstIndex >= 0 && firstIndex < EPISODES.length) {
+      performSearch(searchInput.value, firstIndex);
+    } else {
+      performSearch(searchInput.value);
+    }
+  }
   else if (e.key === 'Escape') { e.preventDefault(); closeSearch(); }
   else if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','PageUp','PageDown'].includes(e.key)) e.stopPropagation();
 });
@@ -3023,7 +3062,7 @@ function showMapArrow(starEl){
     }, 620);
   }, 4700);
 }
-function performSearch(rawQuery){
+function performSearch(rawQuery, preferredIndex){
   const originalRaw = String(rawQuery ?? '');
   if (originalRaw === 'localStorage_RST') {
     closeSearch();
@@ -3045,7 +3084,8 @@ function performSearch(rawQuery){
   }
   const q = sanitizeSearchQuery(originalRaw).trim();
   if (q.length < 2) { showToast('введите название', 1800); return; }
-  const idx = findBestMatch(q);
+  const hasPreferredIndex = Number.isInteger(preferredIndex) && preferredIndex >= 0 && preferredIndex < EPISODES.length;
+  const idx = hasPreferredIndex ? preferredIndex : findBestMatch(q);
   if (idx < 0) { showToast('выпуск не найден', 2200); return; }
   clearSearchedState();
   closeSearch();
