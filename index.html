@@ -4570,6 +4570,38 @@ function finishPageTurn(){
   pageTurnCleanupTimer = 0;
   pageTurnLocked = false;
 }
+function getSkyTranslateY(){
+  const value = getComputedStyle(sky).transform;
+  if (!value || value === 'none') return 0;
+  try {
+    if (window.DOMMatrixReadOnly) return new DOMMatrixReadOnly(value).m42;
+    if (window.WebKitCSSMatrix) return new WebKitCSSMatrix(value).m42;
+  } catch (e) {}
+  const matrix3d = value.match(/^matrix3d\((.+)\)$/);
+  if (matrix3d) {
+    const parts = matrix3d[1].split(',');
+    return Number(parts[13]) || 0;
+  }
+  const matrix = value.match(/^matrix\((.+)\)$/);
+  if (matrix) {
+    const parts = matrix[1].split(',');
+    return Number(parts[5]) || 0;
+  }
+  return 0;
+}
+function clampSkyTranslateY(y){
+  const max = Math.max(0, (totalPages - 1) * getSkyPageHeight());
+  return Math.max(-max, Math.min(0, y));
+}
+function applyImmediateSkyPosition(y){
+  if (pageTurnCleanupTimer) clearTimeout(pageTurnCleanupTimer);
+  pageTurnCleanupTimer = 0;
+  pageTurnLocked = false;
+  const safeY = clampSkyTranslateY(y);
+  sky.style.transition = 'none';
+  sky.style.transform = 'translate3d(0,' + safeY + 'px,0)';
+  return safeY;
+}
 function setActiveSkyPage(pageIndex){
   const pages = sky.querySelectorAll('.page');
   pages.forEach((page, index) => page.classList.toggle('page-active', index === pageIndex));
@@ -4580,11 +4612,13 @@ sky.addEventListener('transitionend', event => {
 function goToPage(n, fromSlider, force){
   removeMapArrow();
   const nn = Math.max(0, Math.min(totalPages - 1, n));
-  if (nn === currentPage) {
+  const pageHeight = getSkyPageHeight();
+  const destinationY = -nn * pageHeight;
+  const startY = getSkyTranslateY();
+  if (nn === currentPage && Math.abs(startY - destinationY) < 1.5) {
     updatePageMap();
     return false;
   }
-  if (pageTurnLocked && !fromSlider && !force) return false;
   if (pageTurnCleanupTimer) clearTimeout(pageTurnCleanupTimer);
   pageTurnCleanupTimer = 0;
   pageTurnLocked = false;
@@ -4592,19 +4626,20 @@ function goToPage(n, fromSlider, force){
   currentPage = nn;
   setActiveSkyPage(nn);
   if (tutorialStage === 'swipe') tutorialSwipePerformed();
-  const pageHeight = getSkyPageHeight();
   clearTimeout(pageSliderTransitionTimer);
 
+  let duration;
   if (fromSlider) {
-    sky.style.transition = 'transform 220ms cubic-bezier(.22,.72,.2,1)';
+    duration = 220;
   } else {
-    pageTurnLocked = true;
-    const duration = isMobile ? 760 : 840;
-    sky.style.transition = 'transform ' + duration + 'ms cubic-bezier(.22,.72,.2,1)';
-    pageTurnCleanupTimer = setTimeout(finishPageTurn, duration + 140);
+    const distanceInPages = Math.abs(destinationY - startY) / pageHeight;
+    duration = Math.round(Math.max(360, Math.min(760, 330 + distanceInPages * 170)));
   }
+  sky.style.transition = 'transform ' + duration + 'ms cubic-bezier(.16,.78,.22,1)';
+  sky.style.transform = 'translate3d(0,' + destinationY + 'px,0)';
+  pageTurnLocked = true;
+  pageTurnCleanupTimer = setTimeout(finishPageTurn, duration + 160);
 
-  sky.style.transform = 'translate3d(0,' + (-nn * pageHeight) + 'px,0)';
   pageCurrentEl.textContent = nn + 1;
   updatePageMap();
   if (!fromSlider) preloadPageCovers(nn);
@@ -4790,7 +4825,6 @@ miniPlayBtn.addEventListener('click', (e) => {
 
 document.addEventListener('keydown', (e) => {
   if (ageGateActive) return;
-  if (pageTurnLocked && ['ArrowDown','ArrowUp','PageDown','PageUp'].includes(e.key)) return;
   if (e.key === 'Escape') {
     if (artViewer.classList.contains('show')) { closeArtViewer(); return; }
     if (quickMenu.classList.contains('show')) { closeQuickMenu(); return; }
@@ -4810,55 +4844,111 @@ document.addEventListener('keydown', (e) => {
   if (overlay.classList.contains('show') || infoPanel.classList.contains('show') ||
       externalWarning.classList.contains('show') || searchOpen) return;
   if (dragState) return;
-  if (e.key === 'ArrowDown' || e.key === 'PageDown') { e.preventDefault(); goToPage(currentPage + 1); }
-  else if (e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); goToPage(currentPage - 1); }
+  if (e.key === 'ArrowDown' || e.key === 'PageDown') { e.preventDefault(); goToPage(currentPage + 1, false, true); }
+  else if (e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); goToPage(currentPage - 1, false, true); }
 });
 
-let wheelAccum = 0;
-let wheelTimer = null;
+let wheelIdleTimer = null;
+let wheelScrollY = 0;
+let wheelScrollActive = false;
 window.addEventListener('wheel', (e) => {
   if (tutorialIsActive() && tutorialStage !== 'swipe') return;
-  if (pageTurnLocked) return;
   if (ageGateActive || overlay.classList.contains('show') ||
       infoPanel.classList.contains('show') || artsPanel.classList.contains('show') || externalWarning.classList.contains('show') ||
       searchOpen || pageMapPanel.classList.contains('show') || dragState) return;
-  wheelAccum += e.deltaY;
-  clearTimeout(wheelTimer);
-  wheelTimer = setTimeout(() => {
-    if (Math.abs(wheelAccum) > 28) {
-      if (wheelAccum > 0) goToPage(currentPage + 1);
-      else goToPage(currentPage - 1);
-    }
-    wheelAccum = 0;
-  }, 70);
-}, { passive: true });
+  if (e.ctrlKey || Math.abs(e.deltaY) < Math.abs(e.deltaX)) return;
+  e.preventDefault();
 
-let touchY = 0;
-let touchX = 0;
+  const pageHeight = getSkyPageHeight();
+  if (!wheelScrollActive) {
+    wheelScrollY = getSkyTranslateY();
+    wheelScrollActive = true;
+  }
+  let delta = e.deltaY;
+  if (e.deltaMode === 1) delta *= 40;
+  else if (e.deltaMode === 2) delta *= pageHeight;
+  if (e.deltaMode === 0 && Math.abs(delta) >= 80) {
+    delta = Math.sign(delta) * pageHeight * 0.88;
+  } else {
+    delta *= isMobile ? 1.15 : 1.3;
+  }
+  wheelScrollY = applyImmediateSkyPosition(wheelScrollY - delta);
+
+  clearTimeout(wheelIdleTimer);
+  wheelIdleTimer = setTimeout(() => {
+    wheelIdleTimer = null;
+    wheelScrollActive = false;
+    const targetPage = Math.round(-wheelScrollY / getSkyPageHeight());
+    goToPage(targetPage, false, true);
+  }, 145);
+}, { passive: false });
+
 let touchActive = false;
+let touchDraggingSky = false;
+let touchStartY = 0;
+let touchStartX = 0;
+let touchStartTranslateY = 0;
+let touchLastY = 0;
+let touchLastTime = 0;
+let touchVelocityY = 0;
 window.addEventListener('touchstart', (e) => {
   if (tutorialIsActive()) {
     if (tutorialStage !== 'swipe' || !skyWrap.contains(e.target) || (e.target.closest && e.target.closest('.star'))) return;
   }
-  if (pageMapPanel.classList.contains('show') || pageTurnLocked) return;
+  if (pageMapPanel.classList.contains('show')) return;
   if (ageGateActive || overlay.classList.contains('show') ||
       infoPanel.classList.contains('show') || artsPanel.classList.contains('show') || externalWarning.classList.contains('show') ||
-      searchOpen || dragState) return;
+      searchOpen || dragState || e.touches.length !== 1) return;
   if (miniPlayer.contains(e.target) || pageMapPanel.contains(e.target) || pageNavBtn.contains(e.target) || document.getElementById('topBar').contains(e.target)) return;
-  touchY = e.touches[0].clientY;
-  touchX = e.touches[0].clientX;
+
+  clearTimeout(wheelIdleTimer);
+  wheelIdleTimer = null;
+  wheelScrollActive = false;
+  touchStartY = touchLastY = e.touches[0].clientY;
+  touchStartX = e.touches[0].clientX;
+  touchLastTime = performance.now();
+  touchVelocityY = 0;
+  touchStartTranslateY = getSkyTranslateY();
   touchActive = true;
+  touchDraggingSky = false;
 }, { passive: true });
-window.addEventListener('touchend', (e) => {
-  if (!touchActive || dragState) return;
-  touchActive = false;
-  const dy = touchY - e.changedTouches[0].clientY;
-  const dx = touchX - e.changedTouches[0].clientX;
-  if (Math.abs(dy) > 55 && Math.abs(dy) > Math.abs(dx) * 1.2) {
-    if (dy > 0) goToPage(currentPage + 1);
-    else goToPage(currentPage - 1);
+window.addEventListener('touchmove', (e) => {
+  if (!touchActive || dragState || e.touches.length !== 1) return;
+  const touch = e.touches[0];
+  const totalX = touch.clientX - touchStartX;
+  const totalY = touch.clientY - touchStartY;
+  if (!touchDraggingSky) {
+    if (Math.abs(totalY) < 5 || Math.abs(totalY) <= Math.abs(totalX) * 1.08) return;
+    touchDraggingSky = true;
   }
-}, { passive: true });
+  e.preventDefault();
+  const now = performance.now();
+  const dt = Math.max(1, now - touchLastTime);
+  touchVelocityY = (touch.clientY - touchLastY) / dt;
+  touchLastY = touch.clientY;
+  touchLastTime = now;
+  applyImmediateSkyPosition(touchStartTranslateY + totalY);
+}, { passive: false });
+function finishSkyTouch(cancelled){
+  if (!touchActive) return;
+  touchActive = false;
+  if (!touchDraggingSky) return;
+  const currentY = getSkyTranslateY();
+  const height = getSkyPageHeight();
+  const velocity = cancelled ? 0 : touchVelocityY;
+  const projectedY = clampSkyTranslateY(currentY + Math.max(-2.2 * height, Math.min(2.2 * height, velocity * 230)));
+  let targetPage = Math.round(-projectedY / height);
+  const currentOffset = -currentY / height;
+  if (!cancelled && Math.abs(velocity) > 0.32) {
+    if (velocity < 0) targetPage = Math.max(targetPage, Math.floor(currentOffset) + 1);
+    else targetPage = Math.min(targetPage, Math.ceil(currentOffset) - 1);
+  }
+  targetPage = Math.max(0, Math.min(totalPages - 1, targetPage));
+  touchDraggingSky = false;
+  goToPage(targetPage, false, true);
+}
+window.addEventListener('touchend', () => finishSkyTouch(false), { passive: true });
+window.addEventListener('touchcancel', () => finishSkyTouch(true), { passive: true });
 
 window.addEventListener('pagehide', () => { savePositionForCurrent(); clearDragTrail(); stopBgLoop(); });
 window.addEventListener('beforeunload', savePositionForCurrent);
