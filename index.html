@@ -1654,8 +1654,13 @@ function updateSkyPageGeometry(){
     page.style.top = (index * pageHeight) + 'px';
   });
   sky.style.height = (Math.max(1, pageNodes.length) * pageHeight) + 'px';
-  sky.style.transform = 'translate3d(0,' + (-currentPage * pageHeight) + 'px,0)';
-  requestAnimationFrame(() => { sky.style.transition = previousTransition; });
+  const visualPage = skyMotionActive ? skyMotionPosition : currentPage;
+  sky.style.transform = 'translate3d(0,' + (-visualPage * pageHeight) + 'px,0)';
+  if (skyMotionActive) {
+    sky.style.transition = 'none';
+  } else {
+    requestAnimationFrame(() => { sky.style.transition = previousTransition; });
+  }
 }
 
 let lastStarRingLayout = '';
@@ -4565,42 +4570,104 @@ document.addEventListener('pointerdown', (e) => {
   closePageMap();
 });
 let pageTurnLocked = false;
+let skyMotionFrame = 0;
+let skyMotionActive = false;
+let skyMotionPosition = 0;
+let skyMotionVelocity = 0;
+let skyMotionTarget = 0;
+let skyMotionLastTime = 0;
+
+function readSkyPosition(){
+  const pageHeight = getSkyPageHeight();
+  let translateY = 0;
+  try {
+    const transform = getComputedStyle(sky).transform;
+    if (transform && transform !== 'none') {
+      if (typeof DOMMatrixReadOnly !== 'undefined') {
+        translateY = new DOMMatrixReadOnly(transform).m42;
+      } else {
+        const matrix3d = transform.match(/^matrix3d\((.+)\)$/);
+        const matrix2d = transform.match(/^matrix\((.+)\)$/);
+        if (matrix3d) translateY = Number(matrix3d[1].split(',')[13]) || 0;
+        else if (matrix2d) translateY = Number(matrix2d[1].split(',')[5]) || 0;
+      }
+    }
+  } catch (e) {}
+  return Math.max(0, Math.min(Math.max(0, totalPages - 1), -translateY / pageHeight));
+}
+function writeSkyPosition(position){
+  const pageHeight = getSkyPageHeight();
+  const safe = Math.max(0, Math.min(Math.max(0, totalPages - 1), position));
+  sky.style.transform = 'translate3d(0,' + (-safe * pageHeight) + 'px,0)';
+  return safe;
+}
+function stopSkyMotion(){
+  const position = skyMotionActive ? skyMotionPosition : readSkyPosition();
+  if (skyMotionFrame) cancelAnimationFrame(skyMotionFrame);
+  skyMotionFrame = 0;
+  skyMotionActive = false;
+  skyMotionVelocity = 0;
+  skyMotionLastTime = 0;
+  skyMotionPosition = position;
+  if (pageTurnCleanupTimer) clearTimeout(pageTurnCleanupTimer);
+  pageTurnCleanupTimer = 0;
+  pageTurnLocked = false;
+  sky.style.transition = 'none';
+  writeSkyPosition(position);
+  void sky.offsetHeight;
+  return position;
+}
 function finishPageTurn(){
   if (pageTurnCleanupTimer) clearTimeout(pageTurnCleanupTimer);
   pageTurnCleanupTimer = 0;
   pageTurnLocked = false;
 }
-function getSkyTranslateY(){
-  const value = getComputedStyle(sky).transform;
-  if (!value || value === 'none') return 0;
-  try {
-    if (window.DOMMatrixReadOnly) return new DOMMatrixReadOnly(value).m42;
-    if (window.WebKitCSSMatrix) return new WebKitCSSMatrix(value).m42;
-  } catch (e) {}
-  const matrix3d = value.match(/^matrix3d\((.+)\)$/);
-  if (matrix3d) {
-    const parts = matrix3d[1].split(',');
-    return Number(parts[13]) || 0;
+function runSkyMotionFrame(time){
+  skyMotionFrame = 0;
+  if (!skyMotionActive) return;
+  if (document.hidden) { skyMotionLastTime = 0; return; }
+  const dt = skyMotionLastTime ? Math.max(0.001, Math.min(0.035, (time - skyMotionLastTime) / 1000)) : 1 / 60;
+  skyMotionLastTime = time;
+  const difference = skyMotionTarget - skyMotionPosition;
+  const stiffness = isMobile ? 82 : 90;
+  const damping = isMobile ? 18 : 19;
+  skyMotionVelocity += (difference * stiffness - skyMotionVelocity * damping) * dt;
+  skyMotionPosition += skyMotionVelocity * dt;
+  const maxPage = Math.max(0, totalPages - 1);
+  if (skyMotionPosition < 0) { skyMotionPosition = 0; skyMotionVelocity = Math.max(0, skyMotionVelocity); }
+  if (skyMotionPosition > maxPage) { skyMotionPosition = maxPage; skyMotionVelocity = Math.min(0, skyMotionVelocity); }
+  writeSkyPosition(skyMotionPosition);
+
+  if (Math.abs(skyMotionTarget - skyMotionPosition) < 0.0015 && Math.abs(skyMotionVelocity) < 0.018) {
+    skyMotionPosition = skyMotionTarget;
+    skyMotionVelocity = 0;
+    writeSkyPosition(skyMotionPosition);
+    skyMotionActive = false;
+    skyMotionLastTime = 0;
+    pageTurnLocked = false;
+    sky.style.transition = '';
+    sky.style.willChange = '';
+    return;
   }
-  const matrix = value.match(/^matrix\((.+)\)$/);
-  if (matrix) {
-    const parts = matrix[1].split(',');
-    return Number(parts[5]) || 0;
-  }
-  return 0;
+  skyMotionFrame = requestAnimationFrame(runSkyMotionFrame);
 }
-function clampSkyTranslateY(y){
-  const max = Math.max(0, (totalPages - 1) * getSkyPageHeight());
-  return Math.max(-max, Math.min(0, y));
-}
-function applyImmediateSkyPosition(y){
+function animateSkyToPage(targetPage){
+  const target = Math.max(0, Math.min(Math.max(0, totalPages - 1), targetPage));
   if (pageTurnCleanupTimer) clearTimeout(pageTurnCleanupTimer);
   pageTurnCleanupTimer = 0;
-  pageTurnLocked = false;
-  const safeY = clampSkyTranslateY(y);
-  sky.style.transition = 'none';
-  sky.style.transform = 'translate3d(0,' + safeY + 'px,0)';
-  return safeY;
+  if (!skyMotionActive) {
+    skyMotionPosition = readSkyPosition();
+    skyMotionVelocity = 0;
+    skyMotionLastTime = 0;
+    sky.style.transition = 'none';
+    writeSkyPosition(skyMotionPosition);
+    void sky.offsetHeight;
+    skyMotionActive = true;
+    sky.style.willChange = 'transform';
+  }
+  skyMotionTarget = target;
+  pageTurnLocked = true;
+  if (!skyMotionFrame) skyMotionFrame = requestAnimationFrame(runSkyMotionFrame);
 }
 function setActiveSkyPage(pageIndex){
   const pages = sky.querySelectorAll('.page');
@@ -4612,37 +4679,35 @@ sky.addEventListener('transitionend', event => {
 function goToPage(n, fromSlider, force){
   removeMapArrow();
   const nn = Math.max(0, Math.min(totalPages - 1, n));
-  const pageHeight = getSkyPageHeight();
-  const destinationY = -nn * pageHeight;
-  const startY = getSkyTranslateY();
-  if (nn === currentPage && Math.abs(startY - destinationY) < 1.5) {
+  const currentVisual = skyMotionActive ? skyMotionPosition : readSkyPosition();
+  if (nn === currentPage && (!fromSlider) && (!force || (skyMotionActive && skyMotionTarget === nn) || (!skyMotionActive && Math.abs(currentVisual - nn) < 0.0015))) {
+    sky.style.transition = '';
     updatePageMap();
     return false;
   }
-  if (pageTurnCleanupTimer) clearTimeout(pageTurnCleanupTimer);
-  pageTurnCleanupTimer = 0;
-  pageTurnLocked = false;
 
+  const pageChanged = nn !== currentPage;
   currentPage = nn;
   setActiveSkyPage(nn);
-  if (tutorialStage === 'swipe') tutorialSwipePerformed();
+  if (pageChanged && tutorialStage === 'swipe') tutorialSwipePerformed();
+  const pageHeight = getSkyPageHeight();
   clearTimeout(pageSliderTransitionTimer);
 
-  let duration;
   if (fromSlider) {
-    duration = 220;
+    stopSkyMotion();
+    sky.style.transition = 'transform 220ms cubic-bezier(.22,.72,.2,1)';
+    pageTurnLocked = true;
+    pageTurnCleanupTimer = setTimeout(finishPageTurn, 360);
+    sky.style.transform = 'translate3d(0,' + (-nn * pageHeight) + 'px,0)';
   } else {
-    const distanceInPages = Math.abs(destinationY - startY) / pageHeight;
-    duration = Math.round(Math.max(360, Math.min(760, 330 + distanceInPages * 170)));
+    if (pageTurnCleanupTimer) clearTimeout(pageTurnCleanupTimer);
+    pageTurnCleanupTimer = 0;
+    animateSkyToPage(nn);
   }
-  sky.style.transition = 'transform ' + duration + 'ms cubic-bezier(.16,.78,.22,1)';
-  sky.style.transform = 'translate3d(0,' + destinationY + 'px,0)';
-  pageTurnLocked = true;
-  pageTurnCleanupTimer = setTimeout(finishPageTurn, duration + 160);
 
   pageCurrentEl.textContent = nn + 1;
   updatePageMap();
-  if (!fromSlider) preloadPageCovers(nn);
+  if (!fromSlider && pageChanged) preloadPageCovers(nn);
   return true;
 }
 function loadEpisode(n){
@@ -4844,53 +4909,61 @@ document.addEventListener('keydown', (e) => {
   if (overlay.classList.contains('show') || infoPanel.classList.contains('show') ||
       externalWarning.classList.contains('show') || searchOpen) return;
   if (dragState) return;
-  if (e.key === 'ArrowDown' || e.key === 'PageDown') { e.preventDefault(); goToPage(currentPage + 1, false, true); }
-  else if (e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); goToPage(currentPage - 1, false, true); }
+  if (e.key === 'ArrowDown' || e.key === 'PageDown') { e.preventDefault(); goToPage(currentPage + 1); }
+  else if (e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); goToPage(currentPage - 1); }
 });
 
-let wheelIdleTimer = null;
-let wheelScrollY = 0;
-let wheelScrollActive = false;
+let wheelAccum = 0;
+let wheelTimer = 0;
+let wheelGestureStartPage = 0;
+let wheelGestureActive = false;
 window.addEventListener('wheel', (e) => {
   if (tutorialIsActive() && tutorialStage !== 'swipe') return;
   if (ageGateActive || overlay.classList.contains('show') ||
       infoPanel.classList.contains('show') || artsPanel.classList.contains('show') || externalWarning.classList.contains('show') ||
-      searchOpen || pageMapPanel.classList.contains('show') || dragState) return;
-  if (e.ctrlKey || Math.abs(e.deltaY) < Math.abs(e.deltaX)) return;
+      searchOpen || pageMapPanel.classList.contains('show') || dragState || e.ctrlKey) return;
+
+  let delta = e.deltaY;
+  if (e.deltaMode === 1) delta *= 16;
+  else if (e.deltaMode === 2) delta *= getSkyPageHeight();
+  if (!Number.isFinite(delta) || delta === 0) return;
   e.preventDefault();
 
-  const pageHeight = getSkyPageHeight();
-  if (!wheelScrollActive) {
-    wheelScrollY = getSkyTranslateY();
-    wheelScrollActive = true;
+  if (!wheelGestureActive) {
+    wheelGestureActive = true;
+    wheelGestureStartPage = currentPage;
+    wheelAccum = 0;
   }
-  let delta = e.deltaY;
-  if (e.deltaMode === 1) delta *= 40;
-  else if (e.deltaMode === 2) delta *= pageHeight;
-  if (e.deltaMode === 0 && Math.abs(delta) >= 80) {
-    delta = Math.sign(delta) * pageHeight * 0.88;
-  } else {
-    delta *= isMobile ? 1.15 : 1.3;
-  }
-  wheelScrollY = applyImmediateSkyPosition(wheelScrollY - delta);
+  wheelAccum += delta;
+  const magnitude = Math.abs(wheelAccum);
+  const steps = magnitude < 28 ? 0 : Math.max(1, Math.floor((magnitude + 55) / 110));
+  const targetPage = wheelGestureStartPage + (steps ? Math.sign(wheelAccum) * steps : 0);
+  if (targetPage !== currentPage) goToPage(targetPage, false, true);
 
-  clearTimeout(wheelIdleTimer);
-  wheelIdleTimer = setTimeout(() => {
-    wheelIdleTimer = null;
-    wheelScrollActive = false;
-    const targetPage = Math.round(-wheelScrollY / getSkyPageHeight());
-    goToPage(targetPage, false, true);
-  }, 145);
+  clearTimeout(wheelTimer);
+  wheelTimer = setTimeout(() => {
+    wheelTimer = 0;
+    wheelGestureActive = false;
+    wheelAccum = 0;
+  }, 135);
 }, { passive: false });
 
+let touchY = 0;
+let touchX = 0;
 let touchActive = false;
-let touchDraggingSky = false;
-let touchStartY = 0;
-let touchStartX = 0;
-let touchStartTranslateY = 0;
-let touchLastY = 0;
-let touchLastTime = 0;
-let touchVelocityY = 0;
+let touchPageDragging = false;
+let touchPageStartPosition = 0;
+let touchPageLastPosition = 0;
+function settleTouchPageGesture(dy){
+  const currentVisual = touchPageDragging ? touchPageLastPosition : readSkyPosition();
+  let target = Math.round(currentVisual);
+  if (Math.abs(dy) > 55 && target === Math.round(touchPageStartPosition)) {
+    target = Math.round(touchPageStartPosition) + Math.sign(dy);
+  }
+  target = Math.max(0, Math.min(totalPages - 1, target));
+  goToPage(target, false, true);
+  touchPageDragging = false;
+}
 window.addEventListener('touchstart', (e) => {
   if (tutorialIsActive()) {
     if (tutorialStage !== 'swipe' || !skyWrap.contains(e.target) || (e.target.closest && e.target.closest('.star'))) return;
@@ -4898,57 +4971,49 @@ window.addEventListener('touchstart', (e) => {
   if (pageMapPanel.classList.contains('show')) return;
   if (ageGateActive || overlay.classList.contains('show') ||
       infoPanel.classList.contains('show') || artsPanel.classList.contains('show') || externalWarning.classList.contains('show') ||
-      searchOpen || dragState || e.touches.length !== 1) return;
-  if (miniPlayer.contains(e.target) || pageMapPanel.contains(e.target) || pageNavBtn.contains(e.target) || document.getElementById('topBar').contains(e.target)) return;
-
-  clearTimeout(wheelIdleTimer);
-  wheelIdleTimer = null;
-  wheelScrollActive = false;
-  touchStartY = touchLastY = e.touches[0].clientY;
-  touchStartX = e.touches[0].clientX;
-  touchLastTime = performance.now();
-  touchVelocityY = 0;
-  touchStartTranslateY = getSkyTranslateY();
+      searchOpen || dragState) return;
+  if (miniPlayer.contains(e.target) || pageMapPanel.contains(e.target) || pageNavBtn.contains(e.target) ||
+      document.getElementById('topBar').contains(e.target) || (e.target.closest && e.target.closest('.star,button,input'))) return;
+  if (!e.touches || e.touches.length !== 1) return;
+  touchY = e.touches[0].clientY;
+  touchX = e.touches[0].clientX;
   touchActive = true;
-  touchDraggingSky = false;
+  touchPageDragging = false;
+  touchPageStartPosition = 0;
+  touchPageLastPosition = 0;
 }, { passive: true });
 window.addEventListener('touchmove', (e) => {
-  if (!touchActive || dragState || e.touches.length !== 1) return;
+  if (!touchActive || !e.touches || e.touches.length !== 1 || dragState) return;
   const touch = e.touches[0];
-  const totalX = touch.clientX - touchStartX;
-  const totalY = touch.clientY - touchStartY;
-  if (!touchDraggingSky) {
-    if (Math.abs(totalY) < 5 || Math.abs(totalY) <= Math.abs(totalX) * 1.08) return;
-    touchDraggingSky = true;
+  const dy = touchY - touch.clientY;
+  const dx = touchX - touch.clientX;
+  if (!touchPageDragging) {
+    if (Math.abs(dy) < 9 || Math.abs(dy) <= Math.abs(dx) * 1.15) return;
+    touchPageStartPosition = stopSkyMotion();
+    touchPageDragging = true;
   }
   e.preventDefault();
-  const now = performance.now();
-  const dt = Math.max(1, now - touchLastTime);
-  touchVelocityY = (touch.clientY - touchLastY) / dt;
-  touchLastY = touch.clientY;
-  touchLastTime = now;
-  applyImmediateSkyPosition(touchStartTranslateY + totalY);
+  const nextPosition = Math.max(0, Math.min(totalPages - 1, touchPageStartPosition + dy / getSkyPageHeight()));
+  touchPageLastPosition = writeSkyPosition(nextPosition);
 }, { passive: false });
-function finishSkyTouch(cancelled){
+window.addEventListener('touchend', (e) => {
+  if (!touchActive || dragState) return;
+  touchActive = false;
+  const changed = e.changedTouches && e.changedTouches[0];
+  const dy = changed ? touchY - changed.clientY : 0;
+  const dx = changed ? touchX - changed.clientX : 0;
+  if (touchPageDragging) {
+    settleTouchPageGesture(dy);
+  } else if (Math.abs(dy) > 55 && Math.abs(dy) > Math.abs(dx) * 1.2) {
+    const base = Math.round(readSkyPosition());
+    goToPage(base + (dy > 0 ? 1 : -1), false, true);
+  }
+}, { passive: true });
+window.addEventListener('touchcancel', () => {
   if (!touchActive) return;
   touchActive = false;
-  if (!touchDraggingSky) return;
-  const currentY = getSkyTranslateY();
-  const height = getSkyPageHeight();
-  const velocity = cancelled ? 0 : touchVelocityY;
-  const projectedY = clampSkyTranslateY(currentY + Math.max(-2.2 * height, Math.min(2.2 * height, velocity * 230)));
-  let targetPage = Math.round(-projectedY / height);
-  const currentOffset = -currentY / height;
-  if (!cancelled && Math.abs(velocity) > 0.32) {
-    if (velocity < 0) targetPage = Math.max(targetPage, Math.floor(currentOffset) + 1);
-    else targetPage = Math.min(targetPage, Math.ceil(currentOffset) - 1);
-  }
-  targetPage = Math.max(0, Math.min(totalPages - 1, targetPage));
-  touchDraggingSky = false;
-  goToPage(targetPage, false, true);
-}
-window.addEventListener('touchend', () => finishSkyTouch(false), { passive: true });
-window.addEventListener('touchcancel', () => finishSkyTouch(true), { passive: true });
+  if (touchPageDragging) settleTouchPageGesture(0);
+}, { passive: true });
 
 window.addEventListener('pagehide', () => { savePositionForCurrent(); clearDragTrail(); stopBgLoop(); });
 window.addEventListener('beforeunload', savePositionForCurrent);
@@ -4964,6 +5029,7 @@ document.addEventListener('visibilitychange', () => {
     updateSkyPageGeometry();
     refreshStarRingLayout();
     startBgLoop();
+    if (skyMotionActive && !skyMotionFrame) skyMotionFrame = requestAnimationFrame(runSkyMotionFrame);
     if (pageMapPanel.classList.contains('show')) updatePageMap();
   }
 });
