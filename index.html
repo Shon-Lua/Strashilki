@@ -40,7 +40,7 @@
   #sky.sky-moving{will-change:transform}
   #sky.sky-moving .star-core,#sky.sky-moving .star-flare,#sky.sky-moving .star.unplayed::before,#sky.sky-moving .star.searched::after{animation-play-state:paused!important}
   body.sky-page-moving .grain{animation-play-state:paused!important}
-  .page{position:absolute;left:0;width:100%;height:100vh;overflow:hidden;background:#000;contain:layout paint style;backface-visibility:hidden}
+  .page{position:absolute;left:0;width:100%;height:100vh;overflow:hidden;background:#000;contain:layout paint style;content-visibility:auto;contain-intrinsic-size:100vh;backface-visibility:hidden}
   .page-sky{position:absolute;inset:0;pointer-events:none}
   .page:not(.page-active) .star-core,.page:not(.page-active) .star-flare{animation-play-state:paused!important}
   .page:not(.page-active) .star.unplayed::before,.page:not(.page-active) .star.searched::after{animation-play-state:paused!important}
@@ -417,6 +417,18 @@
     .star.drag-proxy.absorbing .star-core,.star.drag-proxy.absorbing .star-ring{animation:none!important}
     .dropzone.visible.hover::before{animation:none!important;opacity:0}
   }
+
+  #quickMenu,#pageMapPanel,#searchInput,#searchSuggestions{
+    -webkit-backdrop-filter:none!important;
+    backdrop-filter:none!important;
+  }
+  #quickMenu,#pageMapPanel,#searchSuggestions{background:rgba(8,8,10,.97)}
+  #searchInput{background:rgba(8,8,10,.97)}
+  body.ui-panel-open .grain{animation-play-state:paused!important}
+  body.ui-panel-open .star-core,
+  body.ui-panel-open .star-flare,
+  body.ui-panel-open .star.unplayed::before,
+  body.ui-panel-open .star.searched::after{animation-play-state:paused!important}
 </style>
 </head>
 <body>
@@ -724,6 +736,11 @@ const ICON_MUTE_OFF = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 
 
 let ageGateActive = true;
 let searchOpen = false;
+let searchInputTimer = 0;
+let activeSuggestionResults = [];
+let renderedSuggestionCount = 0;
+const SUGGESTION_BATCH_SIZE = 28;
+let normalizedEpisodeSearchIndex = [];
 let currentArrow = null;
 let searchArrowTimer = null;
 let EPISODES = [];
@@ -1641,24 +1658,39 @@ function getPageForIndex(idx){
   return 0;
 }
 
+let cachedSkyPageHeight = 0;
 function getSkyPageHeight(){
+  if (cachedSkyPageHeight > 0) return cachedSkyPageHeight;
   const rect = skyWrap.getBoundingClientRect();
   const height = rect.height || skyWrap.clientHeight || document.documentElement.clientHeight || innerHeight;
-  return Math.max(1, Math.round(height));
+  cachedSkyPageHeight = Math.max(1, Math.round(height));
+  return cachedSkyPageHeight;
 }
 
 function updateSkyPageGeometry(){
-  const pageHeight = getSkyPageHeight();
+  const rect = skyWrap.getBoundingClientRect();
+  const measuredHeight = rect.height || skyWrap.clientHeight || document.documentElement.clientHeight || innerHeight;
+  const pageHeight = Math.max(1, Math.round(measuredHeight));
   const pageNodes = sky.querySelectorAll('.page');
+  const expectedSkyHeight = (Math.max(1, pageNodes.length) * pageHeight) + 'px';
+  const heightChanged = cachedSkyPageHeight !== pageHeight;
+  if (!heightChanged && sky.style.height === expectedSkyHeight) return;
+
+  const visualPage = pageNodes.length ? readSkyPosition() : currentPage;
+  cachedSkyPageHeight = pageHeight;
   const previousTransition = sky.style.transition;
   sky.style.transition = 'none';
   pageNodes.forEach((page, index) => {
-    page.style.height = pageHeight + 'px';
-    page.style.top = (index * pageHeight) + 'px';
+    const pageTop = (index * pageHeight) + 'px';
+    if (page.style.height !== pageHeight + 'px') page.style.height = pageHeight + 'px';
+    if (page.style.top !== pageTop) page.style.top = pageTop;
   });
-  sky.style.height = (Math.max(1, pageNodes.length) * pageHeight) + 'px';
-  const visualPage = Math.max(0, Math.min(Math.max(0, totalPages - 1), currentPage));
+  sky.style.height = expectedSkyHeight;
   sky.style.transform = 'translate3d(0,' + (-visualPage * pageHeight) + 'px,0)';
+  if (touchPageDragging) {
+    touchPageLastPosition = visualPage;
+    pendingTouchPagePosition = visualPage;
+  }
   requestAnimationFrame(() => {
     if (!touchPageDragging) sky.style.transition = previousTransition;
   });
@@ -1927,6 +1959,7 @@ async function buildSky(){
   if (!entries.length) return;
 
   EPISODES = entries.map(([key, val]) => resolveOneEpisode(key, val)).filter(Boolean);
+  rebuildEpisodeSearchIndex();
   starEls = [];
   if (!EPISODES.length) return;
   detectNewEpisodeRelease();
@@ -1957,6 +1990,7 @@ async function buildSky(){
   }
   while (sky.firstChild) sky.removeChild(sky.firstChild);
   sky.appendChild(fragment);
+  activeSkyPageNode = pages[0] || null;
   updateSkyPageGeometry();
   refreshStarRingLayout();
 
@@ -2376,9 +2410,11 @@ async function loadPodcastInfo(){
 }
 
 function closeQuickMenu(){
+  const wasOpen = quickMenu.classList.contains('show');
   quickMenu.classList.remove('show');
   quickMenu.setAttribute('aria-hidden','true');
   infoBtn.setAttribute('aria-expanded','false');
+  if (wasOpen) syncUIPerformanceState();
 }
 const SITE_FULLSCREEN_PREF_KEY = 'siteFullscreenEnabled_v1';
 function getSavedFullscreenPreference(){
@@ -2466,18 +2502,17 @@ document.addEventListener('webkitfullscreenchange', updateFullscreenMenuLabel);
 document.addEventListener('MSFullscreenChange', updateFullscreenMenuLabel);
 function openQuickMenu(){
   const r = infoBtn.getBoundingClientRect();
-  quickMenu.style.left = '0px';
-  quickMenu.style.top = '0px';
-  quickMenu.classList.add('show');
-  quickMenu.setAttribute('aria-hidden','false');
   const w = quickMenu.offsetWidth || 204;
-  const h = quickMenu.offsetHeight || 150;
+  const h = quickMenu.offsetHeight || 220;
   let left = r.right + 8;
   if (left + w > innerWidth - 10) left = Math.max(10, r.left - w - 8);
   const top = Math.max(8, Math.min(innerHeight - h - 8, r.top + 2));
   quickMenu.style.left = left + 'px';
   quickMenu.style.top = top + 'px';
+  quickMenu.setAttribute('aria-hidden','false');
+  quickMenu.classList.add('show');
   infoBtn.setAttribute('aria-expanded','true');
+  syncUIPerformanceState();
 }
 function toggleQuickMenu(){
   if (tutorialIsActive() && tutorialStage !== 'pages') return;
@@ -2497,10 +2532,12 @@ function openInfoPanel(){
   }
   infoPanel.classList.add('show');
   syncPanelMiniPlayer();
+  syncUIPerformanceState();
 }
 function closeInfoPanel(){
   infoPanel.classList.remove('show');
   syncPanelMiniPlayer();
+  syncUIPerformanceState();
 }
 function syncPanelMiniPlayer(){
   document.body.classList.toggle('panel-hides-mini',
@@ -2567,6 +2604,7 @@ async function openArtsPanel(){
   artsPanel.classList.add('show');
   artsPanel.setAttribute('aria-hidden','false');
   syncPanelMiniPlayer();
+  syncUIPerformanceState();
   artsCard.scrollTo({top:0,behavior:'auto'});
   artsTopBtn.classList.remove('visible');
   artsGrid.replaceChildren();
@@ -2716,6 +2754,7 @@ function closeArtsPanel(){
   artsPanel.classList.remove('show');
   artsPanel.setAttribute('aria-hidden','true');
   syncPanelMiniPlayer();
+  syncUIPerformanceState();
 }
 
 artViewerPrev.addEventListener('click', () => stepArtViewer(-1));
@@ -2776,17 +2815,23 @@ externalWarning.addEventListener('click', (e) => { if (e.target === externalWarn
 function openSearch(){
   closeQuickMenu();
   searchInput.value = '';
-  renderSuggestions('');
   searchBox.classList.add('show');
   searchOpen = true;
+  renderSuggestions('');
+  syncUIPerformanceState();
   setTimeout(() => { if (searchOpen) searchInput.focus(); }, 80);
 }
 function closeSearch(){
+  if (searchInputTimer) clearTimeout(searchInputTimer);
+  searchInputTimer = 0;
   searchBox.classList.remove('show');
   searchSuggestions.classList.remove('show');
   searchSuggestions.replaceChildren();
+  activeSuggestionResults = [];
+  renderedSuggestionCount = 0;
   searchOpen = false;
   searchInput.blur();
+  syncUIPerformanceState();
 }
 
 searchBtn.addEventListener('click', () => {
@@ -2806,6 +2851,12 @@ function normalizeSearch(str){
     .replace(/\s+/g, ' ')
     .trim();
 }
+function rebuildEpisodeSearchIndex(){
+  normalizedEpisodeSearchIndex = EPISODES.map((episode, index) => {
+    const normalized = normalizeSearch(episode && episode.title || '');
+    return { index, title: episode && episode.title || '', normalized, tokens: normalized.split(' ').filter(Boolean), compact: normalized.replace(/\s/g, '') };
+  });
+}
 function searchTokenScore(queryToken, titleToken){
   if (!queryToken || !titleToken) return 0;
   if (queryToken === titleToken) return 1;
@@ -2821,17 +2872,18 @@ function searchTokenScore(queryToken, titleToken){
   if (distance > tolerance) return 0;
   return 0.72 + 0.2 * (1 - distance / maxLength);
 }
-function scoreSearchMatch(query, title){
-  if (!query || !title) return 0;
+function scoreSearchMatch(query, record){
+  if (!query || !record || !record.normalized) return 0;
+  const title = record.normalized;
   if (query === title) return 1;
   if (title.startsWith(query)) return 0.985;
   if (title.includes(query)) return 0.94 + 0.04 * (query.length / title.length);
 
   const queryTokens = query.split(' ').filter(Boolean);
-  const titleTokens = title.split(' ').filter(Boolean);
+  const titleTokens = record.tokens;
   if (!queryTokens.length || !titleTokens.length) return 0;
 
-  const compactTitle = title.replace(/\s/g, '');
+  const compactTitle = record.compact;
   const tokenMatches = queryTokens.map(token => {
     let best = 0;
     let bestIndex = -1;
@@ -2865,29 +2917,46 @@ function findBestMatch(rawQuery){
   if (!q || q.length < 2) return -1;
   let best = -1;
   let bestScore = 0;
-  EPISODES.forEach((ep, i) => {
-    const score = scoreSearchMatch(q, normalizeSearch(ep.title));
-    if (score > bestScore) { bestScore = score; best = i; }
-  });
+  for (const record of normalizedEpisodeSearchIndex) {
+    const score = scoreSearchMatch(q, record);
+    if (score > bestScore) { bestScore = score; best = record.index; }
+  }
   return bestScore >= 0.57 ? best : -1;
 }
 function getSuggestions(rawQuery){
   const q = normalizeSearch(rawQuery);
-  if (!q) return EPISODES.map((ep, i) => ({ index: i, title: ep.title, score: 0 }));
+  if (!q) return normalizedEpisodeSearchIndex;
   const out = [];
-  EPISODES.forEach((ep, i) => {
-    const score = scoreSearchMatch(q, normalizeSearch(ep.title));
+  for (const record of normalizedEpisodeSearchIndex) {
+    const score = scoreSearchMatch(q, record);
     const threshold = q.includes(' ') ? 0.38 : 0.42;
-    if (score >= threshold) out.push({ index: i, title: ep.title, score });
-  });
+    if (score >= threshold) out.push({ index: record.index, title: record.title, score });
+  }
   out.sort((a, b) => b.score - a.score || a.title.length - b.title.length);
   return out.slice(0, 6);
+}
+function appendSuggestionBatch(){
+  if (!activeSuggestionResults.length || renderedSuggestionCount >= activeSuggestionResults.length) return;
+  const fragment = document.createDocumentFragment();
+  const end = Math.min(activeSuggestionResults.length, renderedSuggestionCount + SUGGESTION_BATCH_SIZE);
+  for (let i = renderedSuggestionCount; i < end; i++) {
+    const result = activeSuggestionResults[i];
+    const item = document.createElement('div');
+    item.className = 'suggestion';
+    item.dataset.index = String(result.index);
+    item.textContent = String(result.title ?? '');
+    fragment.appendChild(item);
+  }
+  searchSuggestions.appendChild(fragment);
+  renderedSuggestionCount = end;
 }
 function renderSuggestions(rawQuery){
   const q = sanitizeSearchQuery(rawQuery).trim();
   searchSuggestions.replaceChildren();
-  const list = getSuggestions(q);
-  if (!list.length) {
+  searchSuggestions.scrollTop = 0;
+  activeSuggestionResults = getSuggestions(q);
+  renderedSuggestionCount = 0;
+  if (!activeSuggestionResults.length) {
     const empty = document.createElement('div');
     empty.className = 'suggestion no-results';
     empty.textContent = q ? 'ничего не найдено' : 'список выпусков пуст';
@@ -2895,14 +2964,8 @@ function renderSuggestions(rawQuery){
     searchSuggestions.classList.add('show');
     return;
   }
-  list.forEach(result => {
-    const item = document.createElement('div');
-    item.className = 'suggestion';
-    item.dataset.index = String(result.index);
-    item.textContent = String(result.title ?? '');
-    searchSuggestions.appendChild(item);
-  });
   searchSuggestions.classList.add('show');
+  appendSuggestionBatch();
 }
 
 function sanitizeSearchQuery(value){
@@ -2915,17 +2978,32 @@ searchInput.addEventListener('input', () => {
   const safeValue = sanitizeSearchQuery(searchInput.value);
   if (safeValue !== searchInput.value) searchInput.value = safeValue;
   if (searchInput.value === 'localStorage_RST') {
+    if (searchInputTimer) clearTimeout(searchInputTimer);
+    searchInputTimer = 0;
+    activeSuggestionResults = [];
+    renderedSuggestionCount = 0;
     searchSuggestions.classList.remove('show');
     searchSuggestions.replaceChildren();
     return;
   }
-  try { renderSuggestions(searchInput.value); }
-  catch (e) { searchSuggestions.replaceChildren(); searchSuggestions.classList.remove('show'); }
+  if (searchInputTimer) clearTimeout(searchInputTimer);
+  const value = searchInput.value;
+  searchInputTimer = setTimeout(() => {
+    searchInputTimer = 0;
+    if (!searchOpen || value !== searchInput.value) return;
+    try { renderSuggestions(value); }
+    catch (e) { searchSuggestions.replaceChildren(); searchSuggestions.classList.remove('show'); }
+  }, 55);
 });
 searchInput.addEventListener('keydown', (e) => {
   if (e.isComposing) return;
   if (e.key === 'Enter') {
     e.preventDefault();
+    if (searchInputTimer) {
+      clearTimeout(searchInputTimer);
+      searchInputTimer = 0;
+      renderSuggestions(searchInput.value);
+    }
     const firstSuggestion = searchSuggestions.querySelector('.suggestion:not(.no-results)');
     const firstIndex = firstSuggestion ? Number(firstSuggestion.dataset.index) : -1;
     if (Number.isInteger(firstIndex) && firstIndex >= 0 && firstIndex < EPISODES.length) {
@@ -2937,6 +3015,9 @@ searchInput.addEventListener('keydown', (e) => {
   else if (e.key === 'Escape') { e.preventDefault(); closeSearch(); }
   else if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','PageUp','PageDown'].includes(e.key)) e.stopPropagation();
 });
+searchSuggestions.addEventListener('scroll', () => {
+  if (searchSuggestions.scrollTop + searchSuggestions.clientHeight >= searchSuggestions.scrollHeight - 80) appendSuggestionBatch();
+}, { passive:true });
 searchSuggestions.addEventListener('click', (e) => {
   const el = e.target.closest('.suggestion');
   if (!el || el.classList.contains('no-results')) return;
@@ -3193,6 +3274,16 @@ function startBgLoop(){
   drawBg(performance.now());
   if (bgFrameInterval > 0) scheduleBgFrame();
 }
+function syncUIPerformanceState(){
+  const busy = quickMenu.classList.contains('show') || pageMapPanel.classList.contains('show') ||
+    searchOpen || infoPanel.classList.contains('show') || artsPanel.classList.contains('show') ||
+    artViewer.classList.contains('show') || overlay.classList.contains('show') ||
+    externalWarning.classList.contains('show') || newReleaseIntro.classList.contains('show') ||
+    sky.classList.contains('sky-moving');
+  document.body.classList.toggle('ui-panel-open', busy);
+  if (busy) stopBgLoop();
+  else if (!document.hidden) startBgLoop();
+}
 if (canvas) {
   canvas.addEventListener('contextlost', (event) => {
     if (event && event.preventDefault) event.preventDefault();
@@ -3202,7 +3293,7 @@ if (canvas) {
   canvas.addEventListener('contextrestored', () => {
     bgContextLost = false;
     resize();
-    startBgLoop();
+    syncUIPerformanceState();
   });
 }
 
@@ -3885,6 +3976,10 @@ function updateEpisodeTitle(index, title){
   const ep = EPISODES[index];
   if (!ep || !title) return;
   ep.title = title;
+  if (normalizedEpisodeSearchIndex[index]) {
+    const normalized = normalizeSearch(title);
+    normalizedEpisodeSearchIndex[index] = { index, title, normalized, tokens: normalized.split(' ').filter(Boolean), compact: normalized.replace(/\s/g, '') };
+  }
   if (index === 0 && pendingNewRelease && pendingNewRelease.key === ep.folderKey) pendingNewRelease.title = title;
   const star = starEls[index];
   if (star) {
@@ -4445,14 +4540,26 @@ function onDragUp(e){
     dropzone.classList.remove('visible', 'hover');
   };
 }
+let pageMapDrawFrame = 0;
+function schedulePageMapDraw(){
+  if (!pageMapPanel.classList.contains('show') || pageMapDrawFrame) return;
+  pageMapDrawFrame = requestAnimationFrame(() => {
+    pageMapDrawFrame = 0;
+    if (pageMapPanel.classList.contains('show')) drawPageMap();
+  });
+}
 function drawPageMap(){
-  if (!pageMapCanvas || !pageMapCtx) return;
+  if (!pageMapCanvas || !pageMapCtx || !pageMapPanel.classList.contains('show')) return;
   const rect = pageMapCanvas.getBoundingClientRect();
   const width = Math.max(1, Math.floor(rect.width));
   const height = Math.max(1, Math.floor(rect.height));
   const ratio = getCanvasScale(isMobile ? 1 : 1.2, isMobile ? 650000 : 1100000);
-  pageMapCanvas.width = Math.floor(width * ratio);
-  pageMapCanvas.height = Math.floor(height * ratio);
+  const pixelWidth = Math.max(1, Math.floor(width * ratio));
+  const pixelHeight = Math.max(1, Math.floor(height * ratio));
+  if (pageMapCanvas.width !== pixelWidth || pageMapCanvas.height !== pixelHeight) {
+    pageMapCanvas.width = pixelWidth;
+    pageMapCanvas.height = pixelHeight;
+  }
   const g = pageMapCtx;
   g.setTransform(ratio, 0, 0, ratio, 0, 0);
   g.clearRect(0, 0, width, height);
@@ -4531,21 +4638,23 @@ function updatePageMap(){
   pageMapSlider.value = String(Math.max(0, Math.min(safeTotal - 1, currentPage)));
   pageMapSlider.disabled = safeTotal <= 1;
   pageMapPageLabel.textContent = 'Страница ' + (currentPage + 1) + ' / ' + safeTotal;
-  drawPageMap();
+  schedulePageMapDraw();
 }
 function openPageMap(){
   closeQuickMenu();
   if (tutorialStage === 'pages') cancelTutorialMotion(true);
-  updatePageMap();
   pageMapPanel.classList.add('show');
   pageMapPanel.setAttribute('aria-hidden', 'false');
   pageNavBtn.setAttribute('aria-expanded', 'true');
+  updatePageMap();
+  syncUIPerformanceState();
 }
 function closePageMap(){
   const wasOpen = pageMapPanel.classList.contains('show');
   pageMapPanel.classList.remove('show');
   pageMapPanel.setAttribute('aria-hidden', 'true');
   pageNavBtn.setAttribute('aria-expanded', 'false');
+  syncUIPerformanceState();
   if (wasOpen && tutorialStage === 'pages') completeTutorial();
 }
 pageNavBtn.addEventListener('click', (e) => {
@@ -4616,7 +4725,7 @@ function finishPageTurn(){
   skyMoveCleanupPending = false;
   sky.classList.remove('sky-moving');
   document.body.classList.remove('sky-page-moving');
-  if (!document.hidden) startBgLoop();
+  syncUIPerformanceState();
 }
 function beginSkyTransition(duration){
   pageTurnDuration = Math.max(120, duration || (isMobile ? 460 : 520));
@@ -4633,9 +4742,13 @@ function settleSkyTransition(){
   if (!skyMoveCleanupPending) return;
   finishPageTurn();
 }
+let activeSkyPageNode = null;
 function setActiveSkyPage(pageIndex){
-  const pages = sky.querySelectorAll('.page');
-  pages.forEach((page, index) => page.classList.toggle('page-active', index === pageIndex));
+  const next = sky.children[pageIndex] || null;
+  if (next === activeSkyPageNode) return;
+  if (activeSkyPageNode) activeSkyPageNode.classList.remove('page-active');
+  if (next) next.classList.add('page-active');
+  activeSkyPageNode = next;
 }
 sky.addEventListener('transitionend', event => {
   if (event.target === sky && event.propertyName === 'transform') finishPageTurn();
@@ -5051,12 +5164,12 @@ document.addEventListener('visibilitychange', () => {
     resize();
     updateSkyPageGeometry();
     refreshStarRingLayout();
-    startBgLoop();
+    syncUIPerformanceState();
     if (pageMapPanel.classList.contains('show')) updatePageMap();
   }
 });
 window.addEventListener('pageshow', (event) => {
-  if (!document.hidden) { startBgLoop(); updateSkyPageGeometry(); refreshStarRingLayout(); }
+  if (!document.hidden) { updateSkyPageGeometry(); refreshStarRingLayout(); syncUIPerformanceState(); }
   if (event.persisted && TUTORIAL_MODE === 0 && !ageGateActive && EPISODES.length) {
     cancelTutorialMotion(true);
     tutorialCompletedThisSession = false;
@@ -5122,7 +5235,7 @@ async function init(){
   loadPlayedState();
   updatePageMap();
   loadPositions();
-  startBgLoop();
+  syncUIPerformanceState();
   preloadNewReleaseSound();
   removeMissingAppServiceWorker();
   loadPodcastInfo();
