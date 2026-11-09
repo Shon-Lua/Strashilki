@@ -4877,9 +4877,12 @@ document.addEventListener('keydown', (e) => {
 });
 
 let wheelAccum = 0;
-let wheelTimer = 0;
-let wheelGestureStartPage = 0;
-let wheelGestureActive = false;
+let wheelResetTimer = 0;
+let wheelLastStepAt = 0;
+let wheelLastDirection = 0;
+const WHEEL_TRACKPAD_THRESHOLD = 72;
+const WHEEL_STEP_COOLDOWN = 145;
+const WHEEL_IDLE_RESET = 190;
 window.addEventListener('wheel', (e) => {
   if (tutorialIsActive() && tutorialStage !== 'swipe') return;
   if (ageGateActive || overlay.classList.contains('show') ||
@@ -4892,23 +4895,37 @@ window.addEventListener('wheel', (e) => {
   if (!Number.isFinite(delta) || delta === 0) return;
   e.preventDefault();
 
-  if (!wheelGestureActive) {
-    wheelGestureActive = true;
-    wheelGestureStartPage = currentPage;
+  const now = performance.now();
+  let direction = 0;
+  if (Math.abs(delta) >= WHEEL_TRACKPAD_THRESHOLD) {
+    direction = Math.sign(delta);
     wheelAccum = 0;
+  } else {
+    if (wheelLastDirection && Math.sign(delta) !== wheelLastDirection &&
+        Math.abs(wheelAccum) >= WHEEL_TRACKPAD_THRESHOLD * 0.5) {
+      wheelAccum = 0;
+    }
+    wheelAccum += delta;
+    if (Math.abs(wheelAccum) >= WHEEL_TRACKPAD_THRESHOLD) {
+      direction = Math.sign(wheelAccum);
+      wheelAccum -= direction * WHEEL_TRACKPAD_THRESHOLD;
+    }
   }
-  wheelAccum += delta;
-  const magnitude = Math.abs(wheelAccum);
-  const steps = magnitude < 28 ? 0 : Math.max(1, Math.floor((magnitude + 55) / 110));
-  const targetPage = wheelGestureStartPage + (steps ? Math.sign(wheelAccum) * steps : 0);
-  if (targetPage !== currentPage) goToPage(targetPage, false, true);
 
-  clearTimeout(wheelTimer);
-  wheelTimer = setTimeout(() => {
-    wheelTimer = 0;
-    wheelGestureActive = false;
+  if (direction && now - wheelLastStepAt >= WHEEL_STEP_COOLDOWN) {
+    wheelLastStepAt = now;
+    wheelLastDirection = direction;
+    goToPage(currentPage + direction, false, true);
+  } else if (direction) {
+    wheelAccum += direction * WHEEL_TRACKPAD_THRESHOLD;
+  }
+
+  clearTimeout(wheelResetTimer);
+  wheelResetTimer = setTimeout(() => {
+    wheelResetTimer = 0;
     wheelAccum = 0;
-  }, 135);
+    wheelLastDirection = 0;
+  }, WHEEL_IDLE_RESET);
 }, { passive: false });
 
 let touchY = 0;
@@ -4936,15 +4953,21 @@ function settleTouchPageGesture(dy){
     touchPageRenderFrame = 0;
     touchPageLastPosition = writeSkyPosition(pendingTouchPagePosition);
   }
+
   const currentVisual = touchPageDragging ? touchPageLastPosition : readSkyPosition();
+  const pageHeight = getSkyPageHeight();
+  const startPage = Math.round(touchPageStartPosition);
+  const distance = Math.abs(dy);
+  const minimumSwipe = Math.max(40, Math.min(68, pageHeight * 0.07));
+  const isQuickFlick = distance >= 26 && Math.abs(touchPageVelocity) >= 0.42;
   let target = Math.round(currentVisual);
-  if (Math.abs(dy) > 55 && target === Math.round(touchPageStartPosition)) {
-    target = Math.round(touchPageStartPosition) + Math.sign(dy);
+
+  if (distance >= minimumSwipe || isQuickFlick) {
+    const draggedPages = Math.abs(currentVisual - touchPageStartPosition);
+    const steps = Math.max(1, Math.round(draggedPages));
+    target = startPage + Math.sign(dy) * steps;
   }
-  if (Math.abs(touchPageVelocity) > 0.002) {
-    const momentum = Math.max(-0.42, Math.min(0.42, touchPageVelocity * 0.075));
-    target = Math.round(currentVisual + momentum);
-  }
+
   target = Math.max(0, Math.min(totalPages - 1, target));
   touchPageDragging = false;
   goToPage(target, false, true);
@@ -5004,7 +5027,7 @@ window.addEventListener('touchend', (e) => {
   if (touchPageDragging) {
     if (Math.abs(dy) > Math.abs(dx) * 1.2) settleTouchPageGesture(dy);
     else settleTouchPageGesture(0);
-  } else if (Math.abs(dy) > 55 && Math.abs(dy) > Math.abs(dx) * 1.2) {
+  } else if (Math.abs(dy) >= 42 && Math.abs(dy) > Math.abs(dx) * 1.2) {
     const base = Math.round(readSkyPosition());
     goToPage(base + (dy > 0 ? 1 : -1), false, true);
   }
