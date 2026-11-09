@@ -40,7 +40,7 @@
   #sky.sky-moving{will-change:transform}
   #sky.sky-moving .star-core,#sky.sky-moving .star-flare,#sky.sky-moving .star.unplayed::before,#sky.sky-moving .star.searched::after{animation-play-state:paused!important}
   body.sky-page-moving .grain{animation-play-state:paused!important}
-  .page{position:absolute;left:0;width:100%;height:100vh;overflow:hidden;background:#000;contain:layout paint style;content-visibility:auto;contain-intrinsic-size:100vh;backface-visibility:hidden}
+  .page{position:absolute;left:0;width:100%;height:100vh;overflow:hidden;background:#000;contain:layout paint style;backface-visibility:hidden}
   .page-sky{position:absolute;inset:0;pointer-events:none}
   .page:not(.page-active) .star-core,.page:not(.page-active) .star-flare{animation-play-state:paused!important}
   .page:not(.page-active) .star.unplayed::before,.page:not(.page-active) .star.searched::after{animation-play-state:paused!important}
@@ -121,8 +121,8 @@
   #topBar button.pageNav:active{box-shadow:none;filter:none}
   .pageNav i{font-style:normal;opacity:.55;color:#fff}
   #pageCurrent{color:#fff;opacity:1}
-  #pageMapPanel{position:fixed;top:68px;right:18px;width:min(430px,calc(100vw - 24px));z-index:76;padding:10px 11px 11px;border:1px solid rgba(255,255,255,.1);border-radius:12px;background:rgba(8,8,10,.9);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 15px 50px rgba(0,0,0,.75), 0 0 0 1px rgba(0,0,0,.4);opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-9px) scale(.985);transform-origin:top right;transition:opacity .24s ease,transform .28s cubic-bezier(.2,.8,.2,1),visibility .24s ease}
-  #pageMapPanel.show{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0) scale(1)}
+  #pageMapPanel{position:fixed;top:68px;right:18px;width:min(430px,calc(100vw - 24px));z-index:76;padding:10px 11px 11px;border:1px solid rgba(255,255,255,.1);border-radius:12px;background:rgba(8,8,10,.9);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 15px 50px rgba(0,0,0,.75), 0 0 0 1px rgba(0,0,0,.4);opacity:0;visibility:hidden;pointer-events:none;transform:translate3d(0,-9px,0) scale(.985);transform-origin:top right;transition:opacity .24s ease,transform .28s cubic-bezier(.2,.8,.2,1),visibility .24s ease}
+  #pageMapPanel.show{opacity:1;visibility:visible;pointer-events:auto;transform:translate3d(0,0,0) scale(1)}
   .pageMapFrame{position:relative;height:224px;overflow:hidden;border:1px solid rgba(255,255,255,.08);border-radius:8px;background:radial-gradient(ellipse at 78% 12%,rgba(104,112,145,.09),transparent 52%),linear-gradient(145deg,#070914,#020309)}
   .pageMapFrame::after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 48%,transparent 48%,rgba(0,0,0,.42) 100%)}
   #pageMapCanvas{display:block;width:100%;height:100%}
@@ -137,8 +137,8 @@
   #infoBtn{position:fixed;top:24px;left:20px;z-index:26;background:none;border:0;padding:6px;width:36px;height:36px;display:grid;place-items:center;color:rgba(255,255,255,.88);cursor:pointer;-webkit-tap-highlight-color:transparent;text-shadow:0 0 10px rgba(0,0,0,.9);transition:color .2s ease}
   #infoBtn:hover{color:#fff}
   #infoBtn svg{width:20px;height:20px;display:block}
-  #quickMenu{position:fixed;top:22px;left:64px;width:204px;z-index:27;padding:6px;background:rgba(8,8,10,.9);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.1);border-radius:12px;box-shadow:0 15px 50px rgba(0,0,0,.75), 0 0 0 1px rgba(0,0,0,.4);opacity:0;visibility:hidden;pointer-events:none;transform:translateX(-7px);transform-origin:left center;transition:opacity .18s ease,transform .22s ease,visibility .18s ease}
-  #quickMenu.show{opacity:1;visibility:visible;pointer-events:auto;transform:translateX(0)}
+  #quickMenu{position:fixed;top:22px;left:64px;width:204px;z-index:27;padding:6px;background:rgba(8,8,10,.9);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.1);border-radius:12px;box-shadow:0 15px 50px rgba(0,0,0,.75), 0 0 0 1px rgba(0,0,0,.4);opacity:0;visibility:hidden;pointer-events:none;transform:translate3d(-7px,0,0);transform-origin:left center;transition:opacity .18s ease,transform .22s ease,visibility .18s ease}
+  #quickMenu.show{opacity:1;visibility:visible;pointer-events:auto;transform:translate3d(0,0,0)}
   .quickMenuItem{display:flex;align-items:center;gap:11px;width:100%;min-height:42px;padding:9px 11px;border:0;border-radius:6px;background:transparent;color:#d0d2df;text-align:left;font-family:'IM Fell English',Georgia,serif;font-size:14px;letter-spacing:.035em;cursor:pointer;transition:background .18s ease,color .18s ease}
   .quickMenuItem:hover,.quickMenuItem:focus-visible{background:rgba(255,255,255,.08);color:#fff;outline:none}
   .quickMenuItem + .quickMenuItem{border-top:1px solid rgba(255,255,255,.045)}
@@ -245,8 +245,8 @@
   .mini-title{font-family:'IM Fell English', Georgia, serif;font-weight:400;font-size:14px;color:#e2ddee;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;position:relative;text-align:center}
   .mini-btn{width:40px;height:40px;border:none;background:transparent;color:#fff;cursor:pointer;display:grid;place-items:center;padding:0}
   .mini-btn svg{width:18px;height:18px;fill:currentColor}
-  #searchBox{position:fixed;top:68px;right:20px;width:min(370px, calc(100% - 40px));z-index:77;opacity:0;transform:translateY(-10px);pointer-events:none;transition:opacity .3s ease, transform .3s ease}
-  #searchBox.show{opacity:1;transform:translateY(0);pointer-events:auto}
+  #searchBox{position:fixed;top:68px;right:20px;width:min(370px, calc(100% - 40px));z-index:77;opacity:0;transform:translate3d(0,-10px,0);pointer-events:none;transition:opacity .3s ease, transform .3s ease}
+  #searchBox.show{opacity:1;transform:translate3d(0,0,0);pointer-events:auto}
   #searchInput{width:100%;padding:12px 18px;background:rgba(8,8,10,.9);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.1);border-radius:12px;color:#e2e5f0;font-family:'IM Fell English', Georgia, serif;font-weight:400;font-size:15px;letter-spacing:.03em;outline:none;transition:border-color .25s ease, box-shadow .25s ease;box-shadow:0 15px 50px rgba(0,0,0,.75), 0 0 0 1px rgba(0,0,0,.4);-webkit-appearance:none}
   #searchInput:focus{border-color:rgba(255,255,255,.28);box-shadow:0 15px 50px rgba(0,0,0,.75),0 0 0 1px rgba(0,0,0,.4),0 0 22px rgba(255,255,255,.06)}
   #searchInput::placeholder{color:rgba(190,199,225,.48);letter-spacing:.04em}
@@ -418,17 +418,22 @@
     .dropzone.visible.hover::before{animation:none!important;opacity:0}
   }
 
-  #quickMenu,#pageMapPanel,#searchInput,#searchSuggestions{
+  #quickMenu,#pageMapPanel,#searchBox{will-change:transform,opacity}
+  #quickMenu,#pageMapPanel,#searchSuggestions{
     -webkit-backdrop-filter:none!important;
     backdrop-filter:none!important;
+    background:rgba(8,8,10,.97)
   }
-  #quickMenu,#pageMapPanel,#searchSuggestions{background:rgba(8,8,10,.97)}
-  #searchInput{background:rgba(8,8,10,.97)}
+  #searchInput{
+    -webkit-backdrop-filter:none!important;
+    backdrop-filter:none!important;
+    background:rgba(8,8,10,.97)
+  }
   body.ui-panel-open .grain{animation-play-state:paused!important}
-  body.ui-panel-open .star-core,
-  body.ui-panel-open .star-flare,
-  body.ui-panel-open .star.unplayed::before,
-  body.ui-panel-open .star.searched::after{animation-play-state:paused!important}
+  .page.ui-paused .star-core,
+  .page.ui-paused .star-flare,
+  .page.ui-paused .star.unplayed::before,
+  .page.ui-paused .star.searched::after{animation-play-state:paused!important}
 </style>
 </head>
 <body>
@@ -601,12 +606,12 @@ function fitRingTitle(text, radius, fontSize, letterSpacing){
 const isMobile = innerWidth < 700;
 const reducedMotionQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
 const lowPowerDevice = isMobile && ((navigator.hardwareConcurrency || 4) <= 4 || !!(navigator.connection && navigator.connection.saveData));
-const bgFrameInterval = reducedMotionQuery.matches ? 0 : (lowPowerDevice ? 1000 / 10 : (isMobile ? 1000 / 12 : 1000 / 20));
+const bgFrameInterval = reducedMotionQuery.matches ? 0 : (lowPowerDevice ? 1000 / 8 : (isMobile ? 1000 / 10 : 1000 / 12));
 function getCanvasScale(maxScale, pixelBudget){
   const area = Math.max(1, innerWidth * innerHeight);
   return Math.min(window.devicePixelRatio || 1, maxScale, Math.sqrt(pixelBudget / area));
 }
-let dpr = getCanvasScale(isMobile ? 1.1 : 1.45, isMobile ? 1100000 : 2100000);
+let dpr = getCanvasScale(isMobile ? 1.0 : 1.25, isMobile ? 650000 : 1250000);
 const canvas = document.getElementById('bg');
 let ctx = null;
 try { ctx = canvas ? canvas.getContext('2d', { alpha: false, desynchronized: true }) : null; } catch (e) { try { ctx = canvas ? canvas.getContext('2d') : null; } catch (err) {} }
@@ -739,7 +744,7 @@ let searchOpen = false;
 let searchInputTimer = 0;
 let activeSuggestionResults = [];
 let renderedSuggestionCount = 0;
-const SUGGESTION_BATCH_SIZE = 28;
+const SUGGESTION_BATCH_SIZE = 12;
 let normalizedEpisodeSearchIndex = [];
 let currentArrow = null;
 let searchArrowTimer = null;
@@ -1276,26 +1281,34 @@ let dragTrailTrackFrame = 0;
 let dragTrailTrackedAnimation = null;
 function resizeDragTrail(){
   if (!dragTrailCanvas || !dragTrailCtx) return;
-  dragTrailDpr = getCanvasScale(isMobile ? .95 : 1.2, isMobile ? 750000 : 1450000);
-  dragTrailCanvas.width = Math.max(1, Math.floor(innerWidth * dragTrailDpr));
-  dragTrailCanvas.height = Math.max(1, Math.floor(innerHeight * dragTrailDpr));
+  const nextDpr = getCanvasScale(isMobile ? .82 : 1.0, isMobile ? 420000 : 850000);
+  const nextWidth = Math.max(1, Math.floor(innerWidth * nextDpr));
+  const nextHeight = Math.max(1, Math.floor(innerHeight * nextDpr));
+  if (dragTrailCanvas.width === nextWidth && dragTrailCanvas.height === nextHeight && dragTrailDpr === nextDpr) return;
+  dragTrailDpr = nextDpr;
+  dragTrailCanvas.width = nextWidth;
+  dragTrailCanvas.height = nextHeight;
   dragTrailCanvas.style.width = innerWidth + 'px';
   dragTrailCanvas.style.height = innerHeight + 'px';
   dragTrailCtx.setTransform(dragTrailDpr, 0, 0, dragTrailDpr, 0, 0);
   dragTrailCtx.clearRect(0, 0, innerWidth, innerHeight);
 }
 function resize(){
-  dpr = getCanvasScale(isMobile ? 1.1 : 1.45, isMobile ? 1100000 : 2100000);
-  W = canvas ? Math.max(1, Math.floor(innerWidth * dpr)) : 0;
-  H = canvas ? Math.max(1, Math.floor(innerHeight * dpr)) : 0;
-  if (canvas) {
+  const nextDpr = getCanvasScale(isMobile ? 1.0 : 1.25, isMobile ? 650000 : 1250000);
+  const nextW = canvas ? Math.max(1, Math.floor(innerWidth * nextDpr)) : 0;
+  const nextH = canvas ? Math.max(1, Math.floor(innerHeight * nextDpr)) : 0;
+  const changed = nextW !== W || nextH !== H || nextDpr !== dpr;
+  dpr = nextDpr;
+  W = nextW;
+  H = nextH;
+  if (canvas && changed) {
     canvas.width = W;
     canvas.height = H;
     canvas.style.width = innerWidth + 'px';
     canvas.style.height = innerHeight + 'px';
   }
   resizeDragTrail();
-  if (ctx && !bgContextLost) drawBg(performance.now());
+  if (changed && ctx && !bgContextLost) drawBg(performance.now());
 }
 function addDragTrailPoint(x, y){
   const now = performance.now();
@@ -2409,12 +2422,12 @@ async function loadPodcastInfo(){
   renderInfoPanel();
 }
 
-function closeQuickMenu(){
+function closeQuickMenu(skipPerformanceSync){
   const wasOpen = quickMenu.classList.contains('show');
   quickMenu.classList.remove('show');
   quickMenu.setAttribute('aria-hidden','true');
   infoBtn.setAttribute('aria-expanded','false');
-  if (wasOpen) syncUIPerformanceState();
+  if (wasOpen && !skipPerformanceSync) syncUIPerformanceState();
 }
 const SITE_FULLSCREEN_PREF_KEY = 'siteFullscreenEnabled_v1';
 function getSavedFullscreenPreference(){
@@ -2501,14 +2514,6 @@ document.addEventListener('fullscreenchange', updateFullscreenMenuLabel);
 document.addEventListener('webkitfullscreenchange', updateFullscreenMenuLabel);
 document.addEventListener('MSFullscreenChange', updateFullscreenMenuLabel);
 function openQuickMenu(){
-  const r = infoBtn.getBoundingClientRect();
-  const w = quickMenu.offsetWidth || 204;
-  const h = quickMenu.offsetHeight || 220;
-  let left = r.right + 8;
-  if (left + w > innerWidth - 10) left = Math.max(10, r.left - w - 8);
-  const top = Math.max(8, Math.min(innerHeight - h - 8, r.top + 2));
-  quickMenu.style.left = left + 'px';
-  quickMenu.style.top = top + 'px';
   quickMenu.setAttribute('aria-hidden','false');
   quickMenu.classList.add('show');
   infoBtn.setAttribute('aria-expanded','true');
@@ -2520,8 +2525,8 @@ function toggleQuickMenu(){
   else openQuickMenu();
 }
 function openInfoPanel(){
-  closeQuickMenu();
-  closeSearch();
+  closeQuickMenu(true);
+  closeSearch(true);
   if (!podcastInfoLoaded) {
     infoContent.replaceChildren();
     const loading = document.createElement('div');
@@ -2598,8 +2603,8 @@ async function getRootArtsImages(){
 }
 
 async function openArtsPanel(){
-  closeQuickMenu();
-  closeSearch();
+  closeQuickMenu(true);
+  closeSearch(true);
   closeArtViewer();
   artsPanel.classList.add('show');
   artsPanel.setAttribute('aria-hidden','false');
@@ -2813,15 +2818,18 @@ document.getElementById('extCancelBtn').addEventListener('click', closeExternalW
 externalWarning.addEventListener('click', (e) => { if (e.target === externalWarning) closeExternalWarning(); });
 
 function openSearch(){
-  closeQuickMenu();
+  closeQuickMenu(true);
   searchInput.value = '';
-  searchBox.classList.add('show');
   searchOpen = true;
-  renderSuggestions('');
+  searchBox.classList.add('show');
   syncUIPerformanceState();
-  setTimeout(() => { if (searchOpen) searchInput.focus(); }, 80);
+  requestAnimationFrame(() => {
+    if (searchOpen) renderSuggestions('');
+  });
+  setTimeout(() => { if (searchOpen) searchInput.focus({preventScroll:true}); }, 90);
 }
-function closeSearch(){
+function closeSearch(skipPerformanceSync){
+  const wasOpen = searchOpen || searchBox.classList.contains('show');
   if (searchInputTimer) clearTimeout(searchInputTimer);
   searchInputTimer = 0;
   searchBox.classList.remove('show');
@@ -2831,7 +2839,7 @@ function closeSearch(){
   renderedSuggestionCount = 0;
   searchOpen = false;
   searchInput.blur();
-  syncUIPerformanceState();
+  if (wasOpen && !skipPerformanceSync) syncUIPerformanceState();
 }
 
 searchBtn.addEventListener('click', () => {
@@ -3197,7 +3205,7 @@ const ambientStars = Array.from({length:isMobile ? 16 : 30}, () => ({
   speed: 0.0007 + Math.random() * 0.0015
 }));
 const spheres = [];
-const sphereCount = isMobile ? 3 : 7;
+const sphereCount = isMobile ? 2 : 4;
 for (let i = 0; i < sphereCount; i++) {
   const deep = i < 2;
   spheres.push({
@@ -3269,9 +3277,8 @@ function scheduleBgFrame(){
   }, bgFrameInterval);
 }
 function startBgLoop(){
-  if (!ctx || bgContextLost || document.hidden) return;
+  if (!ctx || bgContextLost || document.hidden || bgActive) return;
   bgActive = true;
-  drawBg(performance.now());
   if (bgFrameInterval > 0) scheduleBgFrame();
 }
 function syncUIPerformanceState(){
@@ -3281,6 +3288,8 @@ function syncUIPerformanceState(){
     externalWarning.classList.contains('show') || newReleaseIntro.classList.contains('show') ||
     sky.classList.contains('sky-moving');
   document.body.classList.toggle('ui-panel-open', busy);
+  const activePage = activeSkyPageNode || sky.querySelector('.page-active');
+  if (activePage) activePage.classList.toggle('ui-paused', busy);
   if (busy) stopBgLoop();
   else if (!document.hidden) startBgLoop();
 }
@@ -4093,9 +4102,10 @@ function updateMiniUI(){
   updateIcons();
 }
 function openOverlay(){
-  closeSearch();
+  closeSearch(true);
   overlay.classList.add('show');
   miniPlayer.classList.remove('show');
+  syncUIPerformanceState();
   updateFullUI();
   if (tutorialStage === 'drag') setTutorialStage('close');
   else if (tutorialStage === 'tap') setTutorialStage('closeAgain');
@@ -4103,6 +4113,7 @@ function openOverlay(){
 function closeOverlay(){
   if (!overlay.classList.contains('show')) return;
   overlay.classList.remove('show');
+  syncUIPerformanceState();
   if (tutorialStage === 'close') setTutorialStage('tap');
   else if (tutorialStage === 'closeAgain') setTutorialStage('pages');
   if (current >= 0) {
@@ -4541,8 +4552,16 @@ function onDragUp(e){
   };
 }
 let pageMapDrawFrame = 0;
-function schedulePageMapDraw(){
-  if (!pageMapPanel.classList.contains('show') || pageMapDrawFrame) return;
+let pageMapDrawTimer = 0;
+function schedulePageMapDraw(delay){
+  if (!pageMapPanel.classList.contains('show') || pageMapDrawFrame || pageMapDrawTimer) return;
+  if (delay > 0) {
+    pageMapDrawTimer = setTimeout(() => {
+      pageMapDrawTimer = 0;
+      schedulePageMapDraw(0);
+    }, delay);
+    return;
+  }
   pageMapDrawFrame = requestAnimationFrame(() => {
     pageMapDrawFrame = 0;
     if (pageMapPanel.classList.contains('show')) drawPageMap();
@@ -4632,25 +4651,29 @@ function drawPageMap(){
     }
   }
 }
-function updatePageMap(){
+function updatePageMap(deferCanvasDraw){
   const safeTotal = Math.max(1, totalPages);
   pageMapSlider.max = String(safeTotal - 1);
   pageMapSlider.value = String(Math.max(0, Math.min(safeTotal - 1, currentPage)));
   pageMapSlider.disabled = safeTotal <= 1;
   pageMapPageLabel.textContent = 'Страница ' + (currentPage + 1) + ' / ' + safeTotal;
-  schedulePageMapDraw();
+  schedulePageMapDraw(deferCanvasDraw ? 110 : 0);
 }
 function openPageMap(){
-  closeQuickMenu();
+  closeQuickMenu(true);
   if (tutorialStage === 'pages') cancelTutorialMotion(true);
   pageMapPanel.classList.add('show');
   pageMapPanel.setAttribute('aria-hidden', 'false');
   pageNavBtn.setAttribute('aria-expanded', 'true');
-  updatePageMap();
+  updatePageMap(true);
   syncUIPerformanceState();
 }
 function closePageMap(){
   const wasOpen = pageMapPanel.classList.contains('show');
+  if (pageMapDrawTimer) clearTimeout(pageMapDrawTimer);
+  pageMapDrawTimer = 0;
+  if (pageMapDrawFrame) cancelAnimationFrame(pageMapDrawFrame);
+  pageMapDrawFrame = 0;
   pageMapPanel.classList.remove('show');
   pageMapPanel.setAttribute('aria-hidden', 'true');
   pageNavBtn.setAttribute('aria-expanded', 'false');
@@ -4746,8 +4769,11 @@ let activeSkyPageNode = null;
 function setActiveSkyPage(pageIndex){
   const next = sky.children[pageIndex] || null;
   if (next === activeSkyPageNode) return;
-  if (activeSkyPageNode) activeSkyPageNode.classList.remove('page-active');
-  if (next) next.classList.add('page-active');
+  if (activeSkyPageNode) activeSkyPageNode.classList.remove('page-active', 'ui-paused');
+  if (next) {
+    next.classList.add('page-active');
+    if (document.body.classList.contains('ui-panel-open')) next.classList.add('ui-paused');
+  }
   activeSkyPageNode = next;
 }
 sky.addEventListener('transitionend', event => {
@@ -5179,7 +5205,14 @@ window.addEventListener('pageshow', (event) => {
   }
 });
 
-window.addEventListener('resize', () => {
+let viewportRefreshTimer = 0;
+let viewportRefreshFrame = 0;
+let lastViewportLayoutWidth = innerWidth;
+function runViewportLayoutRefresh(){
+  viewportRefreshFrame = 0;
+  const widthChanged = Math.abs(innerWidth - lastViewportLayoutWidth) > 2;
+  if (searchOpen && document.activeElement === searchInput && !widthChanged) return;
+  lastViewportLayoutWidth = innerWidth;
   resize();
   updateSkyPageGeometry();
   refreshStarRingLayout();
@@ -5190,22 +5223,22 @@ window.addEventListener('resize', () => {
         applyMarquee(pTitle, EPISODES[current].title);
         if (miniPlayer.classList.contains('show')) applyMarquee(miniTitle, EPISODES[current].title);
       }
-    }, 50);
+    }, 80);
   }
-});
-
+}
+function scheduleViewportLayoutRefresh(delay){
+  const widthChanged = Math.abs(innerWidth - lastViewportLayoutWidth) > 2;
+  if (searchOpen && document.activeElement === searchInput && !widthChanged) return;
+  if (viewportRefreshTimer) clearTimeout(viewportRefreshTimer);
+  viewportRefreshTimer = setTimeout(() => {
+    viewportRefreshTimer = 0;
+    if (viewportRefreshFrame) return;
+    viewportRefreshFrame = requestAnimationFrame(runViewportLayoutRefresh);
+  }, delay);
+}
+window.addEventListener('resize', () => scheduleViewportLayoutRefresh(90), { passive:true });
 if (window.visualViewport) {
-  let viewportResizeFrame = 0;
-  const syncVisualViewport = () => {
-    if (viewportResizeFrame) cancelAnimationFrame(viewportResizeFrame);
-    viewportResizeFrame = requestAnimationFrame(() => {
-      viewportResizeFrame = 0;
-      updateSkyPageGeometry();
-      refreshStarRingLayout();
-      if (pageMapPanel.classList.contains('show')) updatePageMap();
-    });
-  };
-  window.visualViewport.addEventListener('resize', syncVisualViewport, { passive:true });
+  window.visualViewport.addEventListener('resize', () => scheduleViewportLayoutRefresh(140), { passive:true });
 }
 
 function removeMissingAppServiceWorker(){
