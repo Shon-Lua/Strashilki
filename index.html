@@ -36,8 +36,11 @@
   @keyframes grainMove{0%{transform:translate3d(0,0,0)}33%{transform:translate3d(-3%,2%,0)}66%{transform:translate3d(2%,-3%,0)}100%{transform:translate3d(0,0,0)}}
   .vignette{position:fixed;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 36%, rgba(0,0,0,.62) 78%, rgba(0,0,0,.97) 100%)}
   #skyWrap{position:fixed;inset:0;z-index:4;overflow:hidden;background:#000;isolation:isolate}
-  #sky{position:absolute;top:0;left:0;width:100%;height:100%;transition:transform .84s cubic-bezier(.22,.72,.2,1);transform:translate3d(0,0,0);will-change:transform;backface-visibility:hidden;background:#000}
-  .page{position:absolute;left:0;width:100%;height:100vh;overflow:hidden;background:#000}
+  #sky{position:absolute;top:0;left:0;width:100%;height:100%;transform:translate3d(0,0,0);transform-origin:0 0;backface-visibility:hidden;background:#000;transition:transform .52s cubic-bezier(.18,.78,.22,1)}
+  #sky.sky-moving{will-change:transform}
+  #sky.sky-moving .star-core,#sky.sky-moving .star-flare,#sky.sky-moving .star.unplayed::before,#sky.sky-moving .star.searched::after{animation-play-state:paused!important}
+  body.sky-page-moving .grain{animation-play-state:paused!important}
+  .page{position:absolute;left:0;width:100%;height:100vh;overflow:hidden;background:#000;contain:layout paint style;backface-visibility:hidden}
   .page-sky{position:absolute;inset:0;pointer-events:none}
   .page:not(.page-active) .star-core,.page:not(.page-active) .star-flare{animation-play-state:paused!important}
   .page:not(.page-active) .star.unplayed::before,.page:not(.page-active) .star.searched::after{animation-play-state:paused!important}
@@ -407,7 +410,7 @@
 
   @media (max-width:768px){
     #skyWrap::after{filter:none;background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(42,30,48,.08) 47%,rgba(215,201,222,.12) 50%,rgba(0,0,0,.34) 51%,rgba(0,0,0,0) 100%)}
-    #sky{transition-duration:.76s}
+    #sky{transition-duration:.46s;transition-timing-function:cubic-bezier(.2,.76,.24,1)}
     .star.launching .star-core{animation:starLaunchPulse 280ms ease-out both!important}
     .star.launching .star-ring{animation:starLaunchOrbit 280ms ease-out both!important}
     .star.launching .star-flare{animation:none!important;opacity:.85}
@@ -1654,13 +1657,11 @@ function updateSkyPageGeometry(){
     page.style.top = (index * pageHeight) + 'px';
   });
   sky.style.height = (Math.max(1, pageNodes.length) * pageHeight) + 'px';
-  const visualPage = skyMotionActive ? skyMotionPosition : currentPage;
+  const visualPage = Math.max(0, Math.min(Math.max(0, totalPages - 1), currentPage));
   sky.style.transform = 'translate3d(0,' + (-visualPage * pageHeight) + 'px,0)';
-  if (skyMotionActive) {
-    sky.style.transition = 'none';
-  } else {
-    requestAnimationFrame(() => { sky.style.transition = previousTransition; });
-  }
+  requestAnimationFrame(() => {
+    if (!touchPageDragging) sky.style.transition = previousTransition;
+  });
 }
 
 let lastStarRingLayout = '';
@@ -4570,12 +4571,8 @@ document.addEventListener('pointerdown', (e) => {
   closePageMap();
 });
 let pageTurnLocked = false;
-let skyMotionFrame = 0;
-let skyMotionActive = false;
-let skyMotionPosition = 0;
-let skyMotionVelocity = 0;
-let skyMotionTarget = 0;
-let skyMotionLastTime = 0;
+let pageTurnDuration = 520;
+let skyMoveCleanupPending = false;
 
 function readSkyPosition(){
   const pageHeight = getSkyPageHeight();
@@ -4602,72 +4599,39 @@ function writeSkyPosition(position){
   return safe;
 }
 function stopSkyMotion(){
-  const position = skyMotionActive ? skyMotionPosition : readSkyPosition();
-  if (skyMotionFrame) cancelAnimationFrame(skyMotionFrame);
-  skyMotionFrame = 0;
-  skyMotionActive = false;
-  skyMotionVelocity = 0;
-  skyMotionLastTime = 0;
-  skyMotionPosition = position;
+  const position = readSkyPosition();
   if (pageTurnCleanupTimer) clearTimeout(pageTurnCleanupTimer);
   pageTurnCleanupTimer = 0;
-  pageTurnLocked = false;
   sky.style.transition = 'none';
+  sky.classList.remove('sky-moving');
   writeSkyPosition(position);
   void sky.offsetHeight;
+  pageTurnLocked = false;
   return position;
 }
 function finishPageTurn(){
   if (pageTurnCleanupTimer) clearTimeout(pageTurnCleanupTimer);
   pageTurnCleanupTimer = 0;
   pageTurnLocked = false;
+  skyMoveCleanupPending = false;
+  sky.classList.remove('sky-moving');
+  document.body.classList.remove('sky-page-moving');
+  if (!document.hidden) startBgLoop();
 }
-function runSkyMotionFrame(time){
-  skyMotionFrame = 0;
-  if (!skyMotionActive) return;
-  if (document.hidden) { skyMotionLastTime = 0; return; }
-  const dt = skyMotionLastTime ? Math.max(0.001, Math.min(0.035, (time - skyMotionLastTime) / 1000)) : 1 / 60;
-  skyMotionLastTime = time;
-  const difference = skyMotionTarget - skyMotionPosition;
-  const stiffness = isMobile ? 82 : 90;
-  const damping = isMobile ? 18 : 19;
-  skyMotionVelocity += (difference * stiffness - skyMotionVelocity * damping) * dt;
-  skyMotionPosition += skyMotionVelocity * dt;
-  const maxPage = Math.max(0, totalPages - 1);
-  if (skyMotionPosition < 0) { skyMotionPosition = 0; skyMotionVelocity = Math.max(0, skyMotionVelocity); }
-  if (skyMotionPosition > maxPage) { skyMotionPosition = maxPage; skyMotionVelocity = Math.min(0, skyMotionVelocity); }
-  writeSkyPosition(skyMotionPosition);
-
-  if (Math.abs(skyMotionTarget - skyMotionPosition) < 0.0015 && Math.abs(skyMotionVelocity) < 0.018) {
-    skyMotionPosition = skyMotionTarget;
-    skyMotionVelocity = 0;
-    writeSkyPosition(skyMotionPosition);
-    skyMotionActive = false;
-    skyMotionLastTime = 0;
-    pageTurnLocked = false;
-    sky.style.transition = '';
-    sky.style.willChange = '';
-    return;
-  }
-  skyMotionFrame = requestAnimationFrame(runSkyMotionFrame);
-}
-function animateSkyToPage(targetPage){
-  const target = Math.max(0, Math.min(Math.max(0, totalPages - 1), targetPage));
+function beginSkyTransition(duration){
+  pageTurnDuration = Math.max(120, duration || (isMobile ? 460 : 520));
+  sky.style.transition = 'transform ' + pageTurnDuration + 'ms cubic-bezier(' + (isMobile ? '.2,.76,.24,1' : '.18,.78,.22,1') + ')';
+  sky.classList.add('sky-moving');
+  document.body.classList.add('sky-page-moving');
+  skyMoveCleanupPending = true;
+  stopBgLoop();
   if (pageTurnCleanupTimer) clearTimeout(pageTurnCleanupTimer);
-  pageTurnCleanupTimer = 0;
-  if (!skyMotionActive) {
-    skyMotionPosition = readSkyPosition();
-    skyMotionVelocity = 0;
-    skyMotionLastTime = 0;
-    sky.style.transition = 'none';
-    writeSkyPosition(skyMotionPosition);
-    void sky.offsetHeight;
-    skyMotionActive = true;
-    sky.style.willChange = 'transform';
-  }
-  skyMotionTarget = target;
+  pageTurnCleanupTimer = setTimeout(finishPageTurn, pageTurnDuration + 100);
   pageTurnLocked = true;
-  if (!skyMotionFrame) skyMotionFrame = requestAnimationFrame(runSkyMotionFrame);
+}
+function settleSkyTransition(){
+  if (!skyMoveCleanupPending) return;
+  finishPageTurn();
 }
 function setActiveSkyPage(pageIndex){
   const pages = sky.querySelectorAll('.page');
@@ -4678,10 +4642,9 @@ sky.addEventListener('transitionend', event => {
 });
 function goToPage(n, fromSlider, force){
   removeMapArrow();
-  const nn = Math.max(0, Math.min(totalPages - 1, n));
-  const currentVisual = skyMotionActive ? skyMotionPosition : readSkyPosition();
-  if (nn === currentPage && (!fromSlider) && (!force || (skyMotionActive && skyMotionTarget === nn) || (!skyMotionActive && Math.abs(currentVisual - nn) < 0.0015))) {
-    sky.style.transition = '';
+  const nn = Math.max(0, Math.min(totalPages - 1, Math.round(Number(n) || 0)));
+  const currentVisual = readSkyPosition();
+  if (nn === currentPage && !fromSlider && Math.abs(currentVisual - nn) < 0.0015) {
     updatePageMap();
     return false;
   }
@@ -4690,19 +4653,19 @@ function goToPage(n, fromSlider, force){
   currentPage = nn;
   setActiveSkyPage(nn);
   if (pageChanged && tutorialStage === 'swipe') tutorialSwipePerformed();
-  const pageHeight = getSkyPageHeight();
   clearTimeout(pageSliderTransitionTimer);
 
   if (fromSlider) {
-    stopSkyMotion();
-    sky.style.transition = 'transform 220ms cubic-bezier(.22,.72,.2,1)';
-    pageTurnLocked = true;
-    pageTurnCleanupTimer = setTimeout(finishPageTurn, 360);
-    sky.style.transform = 'translate3d(0,' + (-nn * pageHeight) + 'px,0)';
-  } else {
     if (pageTurnCleanupTimer) clearTimeout(pageTurnCleanupTimer);
     pageTurnCleanupTimer = 0;
-    animateSkyToPage(nn);
+    sky.classList.remove('sky-moving');
+    sky.style.transition = 'transform 150ms cubic-bezier(.2,.72,.24,1)';
+    pageTurnLocked = true;
+    pageTurnCleanupTimer = setTimeout(finishPageTurn, 220);
+    writeSkyPosition(nn);
+  } else {
+    beginSkyTransition(isMobile ? 460 : 520);
+    writeSkyPosition(nn);
   }
 
   pageCurrentEl.textContent = nn + 1;
@@ -4954,15 +4917,37 @@ let touchActive = false;
 let touchPageDragging = false;
 let touchPageStartPosition = 0;
 let touchPageLastPosition = 0;
+let pendingTouchPagePosition = 0;
+let touchPageRenderFrame = 0;
+let touchPageLastEventTime = 0;
+let touchPageVelocity = 0;
+function renderPendingTouchPagePosition(){
+  touchPageRenderFrame = 0;
+  if (!touchPageDragging) return;
+  touchPageLastPosition = writeSkyPosition(pendingTouchPagePosition);
+}
+function queueTouchPagePosition(position){
+  pendingTouchPagePosition = Math.max(0, Math.min(totalPages - 1, position));
+  if (!touchPageRenderFrame) touchPageRenderFrame = requestAnimationFrame(renderPendingTouchPagePosition);
+}
 function settleTouchPageGesture(dy){
+  if (touchPageRenderFrame) {
+    cancelAnimationFrame(touchPageRenderFrame);
+    touchPageRenderFrame = 0;
+    touchPageLastPosition = writeSkyPosition(pendingTouchPagePosition);
+  }
   const currentVisual = touchPageDragging ? touchPageLastPosition : readSkyPosition();
   let target = Math.round(currentVisual);
   if (Math.abs(dy) > 55 && target === Math.round(touchPageStartPosition)) {
     target = Math.round(touchPageStartPosition) + Math.sign(dy);
   }
+  if (Math.abs(touchPageVelocity) > 0.002) {
+    const momentum = Math.max(-0.42, Math.min(0.42, touchPageVelocity * 0.075));
+    target = Math.round(currentVisual + momentum);
+  }
   target = Math.max(0, Math.min(totalPages - 1, target));
-  goToPage(target, false, true);
   touchPageDragging = false;
+  goToPage(target, false, true);
 }
 window.addEventListener('touchstart', (e) => {
   if (tutorialIsActive()) {
@@ -4981,6 +4966,9 @@ window.addEventListener('touchstart', (e) => {
   touchPageDragging = false;
   touchPageStartPosition = 0;
   touchPageLastPosition = 0;
+  pendingTouchPagePosition = 0;
+  touchPageLastEventTime = performance.now();
+  touchPageVelocity = 0;
 }, { passive: true });
 window.addEventListener('touchmove', (e) => {
   if (!touchActive || !e.touches || e.touches.length !== 1 || dragState) return;
@@ -4990,11 +4978,22 @@ window.addEventListener('touchmove', (e) => {
   if (!touchPageDragging) {
     if (Math.abs(dy) < 9 || Math.abs(dy) <= Math.abs(dx) * 1.15) return;
     touchPageStartPosition = stopSkyMotion();
+    touchPageLastPosition = touchPageStartPosition;
+    pendingTouchPagePosition = touchPageStartPosition;
     touchPageDragging = true;
+    sky.classList.add('sky-moving');
+    document.body.classList.add('sky-page-moving');
+    stopBgLoop();
   }
   e.preventDefault();
-  const nextPosition = Math.max(0, Math.min(totalPages - 1, touchPageStartPosition + dy / getSkyPageHeight()));
-  touchPageLastPosition = writeSkyPosition(nextPosition);
+  const now = performance.now();
+  const dt = Math.max(8, now - touchPageLastEventTime) / 1000;
+  const previousPosition = pendingTouchPagePosition;
+  const delta = (touchY - touch.clientY) / getSkyPageHeight();
+  const nextPosition = Math.max(0, Math.min(totalPages - 1, touchPageStartPosition + delta));
+  touchPageVelocity = (nextPosition - previousPosition) / dt;
+  touchPageLastEventTime = now;
+  queueTouchPagePosition(nextPosition);
 }, { passive: false });
 window.addEventListener('touchend', (e) => {
   if (!touchActive || dragState) return;
@@ -5003,7 +5002,8 @@ window.addEventListener('touchend', (e) => {
   const dy = changed ? touchY - changed.clientY : 0;
   const dx = changed ? touchX - changed.clientX : 0;
   if (touchPageDragging) {
-    settleTouchPageGesture(dy);
+    if (Math.abs(dy) > Math.abs(dx) * 1.2) settleTouchPageGesture(dy);
+    else settleTouchPageGesture(0);
   } else if (Math.abs(dy) > 55 && Math.abs(dy) > Math.abs(dx) * 1.2) {
     const base = Math.round(readSkyPosition());
     goToPage(base + (dy > 0 ? 1 : -1), false, true);
@@ -5029,7 +5029,6 @@ document.addEventListener('visibilitychange', () => {
     updateSkyPageGeometry();
     refreshStarRingLayout();
     startBgLoop();
-    if (skyMotionActive && !skyMotionFrame) skyMotionFrame = requestAnimationFrame(runSkyMotionFrame);
     if (pageMapPanel.classList.contains('show')) updatePageMap();
   }
 });
