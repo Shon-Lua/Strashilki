@@ -1700,13 +1700,7 @@ function updateSkyPageGeometry(){
   });
   sky.style.height = expectedSkyHeight;
   sky.style.transform = 'translate3d(0,' + (-visualPage * pageHeight) + 'px,0)';
-  if (touchPageDragging) {
-    touchPageLastPosition = visualPage;
-    pendingTouchPagePosition = visualPage;
-  }
-  requestAnimationFrame(() => {
-    if (!touchPageDragging) sky.style.transition = previousTransition;
-  });
+  requestAnimationFrame(() => { sky.style.transition = previousTransition; });
 }
 
 let lastStarRingLayout = '';
@@ -4730,17 +4724,6 @@ function writeSkyPosition(position){
   sky.style.transform = 'translate3d(0,' + (-safe * pageHeight) + 'px,0)';
   return safe;
 }
-function stopSkyMotion(){
-  const position = readSkyPosition();
-  if (pageTurnCleanupTimer) clearTimeout(pageTurnCleanupTimer);
-  pageTurnCleanupTimer = 0;
-  sky.style.transition = 'none';
-  sky.classList.remove('sky-moving');
-  writeSkyPosition(position);
-  void sky.offsetHeight;
-  pageTurnLocked = false;
-  return position;
-}
 function finishPageTurn(){
   if (pageTurnCleanupTimer) clearTimeout(pageTurnCleanupTimer);
   pageTurnCleanupTimer = 0;
@@ -4760,10 +4743,6 @@ function beginSkyTransition(duration){
   if (pageTurnCleanupTimer) clearTimeout(pageTurnCleanupTimer);
   pageTurnCleanupTimer = setTimeout(finishPageTurn, pageTurnDuration + 100);
   pageTurnLocked = true;
-}
-function settleSkyTransition(){
-  if (!skyMoveCleanupPending) return;
-  finishPageTurn();
 }
 let activeSkyPageNode = null;
 function setActiveSkyPage(pageIndex){
@@ -5067,50 +5046,10 @@ window.addEventListener('wheel', (e) => {
   }, WHEEL_IDLE_RESET);
 }, { passive: false });
 
-let touchY = 0;
-let touchX = 0;
-let touchActive = false;
-let touchPageDragging = false;
-let touchPageStartPosition = 0;
-let touchPageLastPosition = 0;
-let pendingTouchPagePosition = 0;
-let touchPageRenderFrame = 0;
-let touchPageLastEventTime = 0;
-let touchPageVelocity = 0;
-function renderPendingTouchPagePosition(){
-  touchPageRenderFrame = 0;
-  if (!touchPageDragging) return;
-  touchPageLastPosition = writeSkyPosition(pendingTouchPagePosition);
-}
-function queueTouchPagePosition(position){
-  pendingTouchPagePosition = Math.max(0, Math.min(totalPages - 1, position));
-  if (!touchPageRenderFrame) touchPageRenderFrame = requestAnimationFrame(renderPendingTouchPagePosition);
-}
-function settleTouchPageGesture(dy){
-  if (touchPageRenderFrame) {
-    cancelAnimationFrame(touchPageRenderFrame);
-    touchPageRenderFrame = 0;
-    touchPageLastPosition = writeSkyPosition(pendingTouchPagePosition);
-  }
+let pageTouchGesture = null;
+const PAGE_SWIPE_FLICK_DISTANCE = 22;
+const PAGE_SWIPE_FLICK_SPEED = 0.48;
 
-  const currentVisual = touchPageDragging ? touchPageLastPosition : readSkyPosition();
-  const pageHeight = getSkyPageHeight();
-  const startPage = Math.round(touchPageStartPosition);
-  const distance = Math.abs(dy);
-  const minimumSwipe = Math.max(40, Math.min(68, pageHeight * 0.07));
-  const isQuickFlick = distance >= 26 && Math.abs(touchPageVelocity) >= 0.42;
-  let target = Math.round(currentVisual);
-
-  if (distance >= minimumSwipe || isQuickFlick) {
-    const draggedPages = Math.abs(currentVisual - touchPageStartPosition);
-    const steps = Math.max(1, Math.round(draggedPages));
-    target = startPage + Math.sign(dy) * steps;
-  }
-
-  target = Math.max(0, Math.min(totalPages - 1, target));
-  touchPageDragging = false;
-  goToPage(target, false, true);
-}
 window.addEventListener('touchstart', (e) => {
   if (tutorialIsActive()) {
     if (tutorialStage !== 'swipe' || !skyWrap.contains(e.target) || (e.target.closest && e.target.closest('.star'))) return;
@@ -5120,61 +5059,105 @@ window.addEventListener('touchstart', (e) => {
       infoPanel.classList.contains('show') || artsPanel.classList.contains('show') || externalWarning.classList.contains('show') ||
       searchOpen || dragState) return;
   if (miniPlayer.contains(e.target) || pageMapPanel.contains(e.target) || pageNavBtn.contains(e.target) ||
-      document.getElementById('topBar').contains(e.target) || (e.target.closest && e.target.closest('.star,button,input'))) return;
-  if (!e.touches || e.touches.length !== 1) return;
-  touchY = e.touches[0].clientY;
-  touchX = e.touches[0].clientX;
-  touchActive = true;
-  touchPageDragging = false;
-  touchPageStartPosition = 0;
-  touchPageLastPosition = 0;
-  pendingTouchPagePosition = 0;
-  touchPageLastEventTime = performance.now();
-  touchPageVelocity = 0;
-}, { passive: true });
-window.addEventListener('touchmove', (e) => {
-  if (!touchActive || !e.touches || e.touches.length !== 1 || dragState) return;
+      document.getElementById('topBar').contains(e.target) ||
+      (e.target.closest && e.target.closest('.star,button,input,textarea,select,[role="button"]'))) return;
+  if (!e.touches || e.touches.length !== 1) {
+    pageTouchGesture = null;
+    return;
+  }
+
   const touch = e.touches[0];
-  const dy = touchY - touch.clientY;
-  const dx = touchX - touch.clientX;
-  if (!touchPageDragging) {
-    if (Math.abs(dy) < 9 || Math.abs(dy) <= Math.abs(dx) * 1.15) return;
-    touchPageStartPosition = stopSkyMotion();
-    touchPageLastPosition = touchPageStartPosition;
-    pendingTouchPagePosition = touchPageStartPosition;
-    touchPageDragging = true;
-    sky.classList.add('sky-moving');
-    document.body.classList.add('sky-page-moving');
-    stopBgLoop();
-  }
-  e.preventDefault();
   const now = performance.now();
-  const dt = Math.max(8, now - touchPageLastEventTime) / 1000;
-  const previousPosition = pendingTouchPagePosition;
-  const delta = (touchY - touch.clientY) / getSkyPageHeight();
-  const nextPosition = Math.max(0, Math.min(totalPages - 1, touchPageStartPosition + delta));
-  touchPageVelocity = (nextPosition - previousPosition) / dt;
-  touchPageLastEventTime = now;
-  queueTouchPagePosition(nextPosition);
-}, { passive: false });
-window.addEventListener('touchend', (e) => {
-  if (!touchActive || dragState) return;
-  touchActive = false;
-  const changed = e.changedTouches && e.changedTouches[0];
-  const dy = changed ? touchY - changed.clientY : 0;
-  const dx = changed ? touchX - changed.clientX : 0;
-  if (touchPageDragging) {
-    if (Math.abs(dy) > Math.abs(dx) * 1.2) settleTouchPageGesture(dy);
-    else settleTouchPageGesture(0);
-  } else if (Math.abs(dy) >= 42 && Math.abs(dy) > Math.abs(dx) * 1.2) {
-    const base = Math.round(readSkyPosition());
-    goToPage(base + (dy > 0 ? 1 : -1), false, true);
-  }
+  pageTouchGesture = {
+    identifier: touch.identifier,
+    startX: touch.clientX,
+    startY: touch.clientY,
+    lastX: touch.clientX,
+    lastY: touch.clientY,
+    startTime: now,
+    lastTime: now,
+    lastVelocity: 0,
+    maxVelocity: 0,
+    axis: null,
+    claimed: false
+  };
 }, { passive: true });
+
+window.addEventListener('touchmove', (e) => {
+  const gesture = pageTouchGesture;
+  if (!gesture || dragState) return;
+  if (!e.touches || e.touches.length !== 1) {
+    pageTouchGesture = null;
+    return;
+  }
+
+  let touch = null;
+  for (let i = 0; i < e.touches.length; i++) {
+    if (e.touches[i].identifier === gesture.identifier) {
+      touch = e.touches[i];
+      break;
+    }
+  }
+  if (!touch) return;
+
+  const totalX = touch.clientX - gesture.startX;
+  const totalY = gesture.startY - touch.clientY;
+  if (!gesture.axis) {
+    if (Math.max(Math.abs(totalX), Math.abs(totalY)) < 8) return;
+    gesture.axis = Math.abs(totalY) > Math.abs(totalX) * 1.2 ? 'y' : 'x';
+  }
+  if (gesture.axis !== 'y') return;
+
+  gesture.claimed = true;
+  if (e.cancelable) e.preventDefault();
+
+  const now = performance.now();
+  const dt = Math.max(8, now - gesture.lastTime);
+  const velocity = (gesture.lastY - touch.clientY) / dt;
+  gesture.lastVelocity = velocity;
+  gesture.maxVelocity = Math.abs(velocity) > Math.abs(gesture.maxVelocity) ? velocity : gesture.maxVelocity;
+  gesture.lastX = touch.clientX;
+  gesture.lastY = touch.clientY;
+  gesture.lastTime = now;
+}, { passive: false });
+
+window.addEventListener('touchend', (e) => {
+  const gesture = pageTouchGesture;
+  if (!gesture) return;
+  pageTouchGesture = null;
+  if (dragState || !e.changedTouches || !e.changedTouches.length) return;
+
+  let touch = null;
+  for (let i = 0; i < e.changedTouches.length; i++) {
+    if (e.changedTouches[i].identifier === gesture.identifier) {
+      touch = e.changedTouches[i];
+      break;
+    }
+  }
+  if (!touch) return;
+
+  const dx = touch.clientX - gesture.startX;
+  const dy = gesture.startY - touch.clientY;
+  if (Math.abs(dy) <= Math.abs(dx) * 1.2) return;
+
+  const distance = Math.abs(dy);
+  const duration = Math.max(1, performance.now() - gesture.startTime);
+  const averageSpeed = distance / duration;
+  const quickFlick = distance >= PAGE_SWIPE_FLICK_DISTANCE &&
+    (Math.abs(gesture.maxVelocity) >= PAGE_SWIPE_FLICK_SPEED || averageSpeed >= PAGE_SWIPE_FLICK_SPEED);
+
+  const minimumDistance = Math.max(34, Math.min(58, innerHeight * 0.045));
+  if (distance < minimumDistance && !quickFlick) return;
+
+  // One completed gesture always advances exactly one page. The page itself
+  // remains stationary while the finger is down; CSS animates after release.
+  const direction = dy > 0 ? 1 : -1;
+  const targetPage = Math.max(0, Math.min(totalPages - 1, currentPage + direction));
+  if (targetPage !== currentPage) goToPage(targetPage, false, true);
+}, { passive: true });
+
 window.addEventListener('touchcancel', () => {
-  if (!touchActive) return;
-  touchActive = false;
-  if (touchPageDragging) settleTouchPageGesture(0);
+  pageTouchGesture = null;
 }, { passive: true });
 
 window.addEventListener('pagehide', () => { savePositionForCurrent(); clearDragTrail(); stopBgLoop(); });
