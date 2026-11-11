@@ -9,11 +9,12 @@
 <meta property="og:site_name" content="Страшилки">
 <meta property="og:title" content="Страшилки">
 <meta property="og:description" content="Эти истории вас немного напугают или заинтригуют.">
-<meta property="og:image" id="ogImage" content="">
+<meta property="og:image" content="./Logo.png">
 <title>Страшилки</title>
-<link rel="icon" id="siteFavicon" href="data:,">
-<link rel="shortcut icon" id="siteShortcutIcon" href="data:,">
-<link rel="apple-touch-icon" id="siteAppleIcon" href="data:,">
+<link rel="icon" type="image/png" href="./Logo.png">
+<link rel="shortcut icon" type="image/png" href="./Logo.png">
+<link rel="apple-touch-icon" href="./Logo.png">
+<link rel="preload" as="image" href="./Logo.png">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Special+Elite&display=swap');
   *{margin:0;padding:0;box-sizing:border-box}
@@ -29,11 +30,9 @@
   canvas#bg{position:fixed;inset:0;z-index:0;display:block;background:radial-gradient(ellipse at 24% 72%,rgba(55,7,20,.16),transparent 56%),radial-gradient(ellipse at 78% 24%,rgba(90,90,110,.08),transparent 58%),#000;pointer-events:none}
   #dragTrail{position:fixed;inset:0;z-index:201;display:block;width:100%;height:100%;pointer-events:none}
   .grain{
-    position:fixed;inset:-60%;z-index:2;pointer-events:none;opacity:.026;
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>");
-    animation:grainMove .9s steps(3) infinite;will-change:transform;transform:translateZ(0);
+    position:fixed;inset:0;z-index:2;pointer-events:none;opacity:.014;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>");
   }
-  @keyframes grainMove{0%{transform:translate3d(0,0,0)}33%{transform:translate3d(-3%,2%,0)}66%{transform:translate3d(2%,-3%,0)}100%{transform:translate3d(0,0,0)}}
   .vignette{position:fixed;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 36%, rgba(0,0,0,.62) 78%, rgba(0,0,0,.97) 100%)}
   #skyWrap{position:fixed;inset:0;z-index:4;overflow:hidden;background:#000;isolation:isolate}
   #sky{position:absolute;top:0;left:0;width:100%;height:100%;transform:translate3d(0,0,0);transform-origin:0 0;backface-visibility:hidden;background:#000;transition:transform .52s cubic-bezier(.18,.78,.22,1)}
@@ -529,7 +528,7 @@ function fitRingTitle(text, radius, fontSize, letterSpacing){
 const isMobile = innerWidth < 700;
 const reducedMotionQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
 const lowPowerDevice = isMobile && ((navigator.hardwareConcurrency || 4) <= 4 || !!(navigator.connection && navigator.connection.saveData));
-const bgFrameInterval = reducedMotionQuery.matches ? 0 : (lowPowerDevice ? 1000 / 8 : (isMobile ? 1000 / 10 : 1000 / 12));
+const bgFrameInterval = 0;
 function getCanvasScale(maxScale, pixelBudget){
   const area = Math.max(1, innerWidth * innerHeight);
   return Math.min(window.devicePixelRatio || 1, maxScale, Math.sqrt(pixelBudget / area));
@@ -1071,6 +1070,7 @@ async function maybeStartNewReleaseIntro(){
   if (tutorialIsActive() && tutorialStage !== 'done') return;
   const episodeIndex = EPISODES.findIndex(ep => ep.folderKey === pendingNewRelease.key);
   if (episodeIndex < 0) return;
+  renderEpisodePage(getPageForIndex(episodeIndex));
   const star = starEls[episodeIndex];
   if (!star || !star.isConnected) return;
 
@@ -1403,7 +1403,7 @@ function parsePodcastFeed(xmlText, baseUrl){
       coverUrl,
       dur: duration,
       published: pubDate,
-      description: plainFeedText(xmlDirectText(item, ['description', 'summary'])),
+      description: '',
       feedOrder: index,
       resolved: true
     });
@@ -1453,17 +1453,6 @@ function applyPodcastFeedMetadata(feed){
   document.title = podcastFeedMeta.title;
   const brand = document.querySelector('.ageBrand');
   if (brand) brand.textContent = podcastFeedMeta.title;
-  const image = podcastFeedMeta.coverUrl;
-  if (image) {
-    const ogImage = document.getElementById('ogImage');
-    const favicon = document.getElementById('siteFavicon');
-    const shortcut = document.getElementById('siteShortcutIcon');
-    const appleIcon = document.getElementById('siteAppleIcon');
-    if (ogImage) ogImage.setAttribute('content', image);
-    if (favicon) favicon.href = image;
-    if (shortcut) shortcut.href = image;
-    if (appleIcon) appleIcon.href = image;
-  }
   const infoParts = [podcastFeedMeta.title, podcastFeedMeta.description].filter(Boolean);
   podcastFeedInfoText = infoParts.join('\n\n');
   if (!podcastInfoText || podcastInfoText === podcastFeedInfoText) podcastInfoText = podcastFeedInfoText;
@@ -1643,7 +1632,6 @@ function inZone(x, y, z){ return x >= z.x1 && x <= z.x2 && y >= z.y1 && y <= z.y
 
 function generateChaoticPositions(count){
   if (!count) return [];
-
   const vw = Math.max(1, innerWidth);
   const vh = Math.max(1, getSkyPageHeight());
   const ringSize = vw <= 640 ? 108 : 132;
@@ -1655,65 +1643,37 @@ function generateChaoticPositions(count){
   const maxY = 1 - edgeY;
   const zones = getExclusionZones();
   const positions = [];
-  const candidates = [];
-  const candidateCount = Math.max(1600, count * 420);
+  const samplesPerStar = 44;
+  const allowed = (x, y) => !zones.some(zone => inZone(x, y, zone));
 
-  for (let i = 0; i < candidateCount; i++) {
-    const x = minX + Math.random() * Math.max(0, maxX - minX);
-    const y = minY + Math.random() * Math.max(0, maxY - minY);
-    if (zones.some(zone => inZone(x, y, zone))) continue;
-    candidates.push([x, y]);
-  }
-  if (candidates.length < count) {
-    for (let i = 0; i < count * 180; i++) {
+  for (let pointIndex = 0; pointIndex < count; pointIndex++) {
+    let best = null;
+    let bestDistance = -1;
+    for (let sample = 0; sample < samplesPerStar; sample++) {
       const x = minX + Math.random() * Math.max(0, maxX - minX);
       const y = minY + Math.random() * Math.max(0, maxY - minY);
-      candidates.push([x, y]);
-    }
-  }
-
-  while (positions.length < count && candidates.length) {
-    let bestIndex = 0;
-    let bestDistance = -1;
-
-    if (!positions.length) {
-      bestIndex = Math.floor(Math.random() * candidates.length);
-    } else {
-      for (let i = 0; i < candidates.length; i++) {
-        const candidate = candidates[i];
-        const px = candidate[0] * vw;
-        const py = candidate[1] * vh;
-        let nearest = Infinity;
-        for (const point of positions) {
-          const dx = (candidate[0] - point[0]) * vw;
-          const dy = (candidate[1] - point[1]) * vh;
-          const distance = dx * dx + dy * dy;
-          if (distance < nearest) nearest = distance;
-        }
-        if (nearest > bestDistance) {
-          bestDistance = nearest;
-          bestIndex = i;
-        }
+      if (!allowed(x, y)) continue;
+      let nearest = Infinity;
+      for (const point of positions) {
+        const dx = (x - point[0]) * vw;
+        const dy = (y - point[1]) * vh;
+        const distance = dx * dx + dy * dy;
+        if (distance < nearest) nearest = distance;
+      }
+      if (nearest > bestDistance) {
+        bestDistance = nearest;
+        best = [x, y];
       }
     }
-
-    const chosen = candidates.splice(bestIndex, 1)[0];
-    positions.push(chosen);
-  }
-
-  if (positions.length < count) {
-    const cols = Math.max(1, Math.ceil(Math.sqrt(count * (vw / vh))));
-    const rows = Math.max(1, Math.ceil(count / cols));
-    for (let i = positions.length; i < count; i++) {
-      const cell = i - positions.length;
-      const col = cell % cols;
-      const row = Math.floor(cell / cols);
-      const x = minX + ((col + 0.5) / cols) * (maxX - minX);
-      const y = minY + ((row + 0.5) / rows) * (maxY - minY);
-      positions.push([x, y]);
+    if (!best) {
+      const cols = Math.max(1, Math.ceil(Math.sqrt(count * (vw / vh))));
+      const rows = Math.max(1, Math.ceil(count / cols));
+      const col = pointIndex % cols;
+      const row = Math.floor(pointIndex / cols);
+      best = [minX + ((col + 0.5) / cols) * (maxX - minX), minY + ((row + 0.5) / rows) * (maxY - minY)];
     }
+    positions.push(best);
   }
-
   return positions;
 }
 
@@ -1782,97 +1742,227 @@ function createStarEl(ep, idx, pos){
   return star;
 }
 
-async function buildSky(){
-  const initialStarCount = isMobile ? 220 : 460;
-  sky.innerHTML = '<div class="page" style="top:0;height:' + Math.max(1, innerHeight) + 'px"><div class="page-sky">' + makeSkySVG(initialStarCount) + '</div></div>';
+const PODCAST_FEED_CACHE_KEY = 'podsterFeedCache_v1';
+let renderedEpisodePages = new Set();
+let episodeStarPositions = [];
+let podcastFeedSignature = '';
 
-  let feed;
+function getPodcastFeedSignature(feed){
+  const episodes = Array.isArray(feed && feed.episodes) ? feed.episodes : [];
+  return String(feed && feed.title || '') + '|' + episodes.map(ep => [ep && ep.folderKey, ep && ep.audioUrl, ep && ep.title, ep && ep.coverUrl].map(value => String(value || '')).join(':')).join('|');
+}
+function readPodcastFeedCache(){
   try {
-    feed = await fetchPodcastFeed();
-  } catch (error) {
-    podcastFeedError = 'Не удалось загрузить выпуски подкаста';
-    return;
+    const raw = localStorage.getItem(PODCAST_FEED_CACHE_KEY);
+    if (!raw) return null;
+    const cached = JSON.parse(raw);
+    const feed = cached && cached.feed;
+    if (!cached || cached.version !== 1 || !feed || !Array.isArray(feed.episodes)) return null;
+    const episodes = feed.episodes.filter(ep => ep && ep.folderKey && ep.title && ep.audioUrl);
+    if (!episodes.length) return null;
+    return {
+      title: String(feed.title || 'Страшилки'),
+      description: String(feed.description || ''),
+      coverUrl: String(feed.coverUrl || ''),
+      episodes
+    };
+  } catch (e) {
+    return null;
   }
-
-  applyPodcastFeedMetadata(feed);
-  EPISODES = Array.isArray(feed.episodes) ? feed.episodes : [];
-  if (!EPISODES.length) {
-    podcastFeedError = 'В RSS-ленте пока нет доступных выпусков';
-    return;
-  }
-  const defaultCover = podcastFeedMeta.coverUrl || EPISODES[0].coverUrl || '';
-  EPISODES.forEach(episode => {
-    if (!episode.coverUrl) episode.coverUrl = defaultCover;
-    delete episode.feedOrder;
-  });
-
-  rebuildEpisodeSearchIndex();
-  starEls = [];
-  detectNewEpisodeRelease();
-
-  computePageSizes(EPISODES.length);
-  totalPages = pageSizes.length;
-  pageTotalEl.textContent = totalPages;
-  pageCurrentEl.textContent = 1;
-  currentPage = 0;
-
-  const pages = [];
-  const positionsPerPage = [];
+}
+function writePodcastFeedCache(feed){
+  if (!feed || !Array.isArray(feed.episodes) || !feed.episodes.length) return;
+  try {
+    const safeFeed = {
+      title: String(feed.title || 'Страшилки'),
+      description: String(feed.description || ''),
+      coverUrl: String(feed.coverUrl || ''),
+      episodes: feed.episodes.slice(0, 1500).map(ep => ({
+        folderKey: String(ep.folderKey || ''),
+        folderName: String(ep.folderName || ep.title || ''),
+        title: String(ep.title || ep.folderName || ''),
+        audioUrl: String(ep.audioUrl || ''),
+        coverUrl: String(ep.coverUrl || ''),
+        dur: Number(ep.dur) || 0,
+        published: String(ep.published || ''),
+        description: '',
+        resolved: true
+      }))
+    };
+    localStorage.setItem(PODCAST_FEED_CACHE_KEY, JSON.stringify({ version:1, savedAt:Date.now(), feed:safeFeed }));
+  } catch (e) {}
+}
+function schedulePodcastFeedCache(feed){
+  const run = () => writePodcastFeedCache(feed);
+  if (typeof requestIdleCallback === 'function') requestIdleCallback(run, { timeout: 2500 });
+  else setTimeout(run, 900);
+}
+function createEpisodePageShells(){
+  const pageHeight = getSkyPageHeight();
   const fragment = document.createDocumentFragment();
   for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
     const page = document.createElement('div');
-    page.className = pageIndex === 0 ? 'page page-active' : 'page';
-    const pageHeight = getSkyPageHeight();
+    page.className = pageIndex === currentPage ? 'page page-active' : 'page';
     page.style.top = (pageIndex * pageHeight) + 'px';
     page.style.height = pageHeight + 'px';
-    const skyLayer = document.createElement('div');
-    skyLayer.className = 'page-sky';
-    const perPageStars = isMobile ? 140 + Math.floor(Math.random() * 90) : 260 + Math.floor(Math.random() * 160);
-    skyLayer.innerHTML = makeSkySVG(perPageStars);
-    page.appendChild(skyLayer);
     fragment.appendChild(page);
-    pages.push(page);
-    positionsPerPage.push(generateChaoticPositions(pageSizes[pageIndex]));
   }
-  while (sky.firstChild) sky.removeChild(sky.firstChild);
-  sky.appendChild(fragment);
-  activeSkyPageNode = pages[0] || null;
-  updateSkyPageGeometry();
-  refreshStarRingLayout();
-
-  for (let index = 0; index < EPISODES.length; index++) {
+  sky.replaceChildren(fragment);
+  sky.style.height = (Math.max(1, totalPages) * pageHeight) + 'px';
+  cachedSkyPageHeight = pageHeight;
+  sky.style.transition = 'none';
+  sky.style.transform = 'translate3d(0,' + (-currentPage * pageHeight) + 'px,0)';
+  requestAnimationFrame(() => { sky.style.transition = ''; });
+  activeSkyPageNode = sky.children[currentPage] || null;
+}
+function renderEpisodePage(pageIndex){
+  if (pageIndex < 0 || pageIndex >= totalPages || renderedEpisodePages.has(pageIndex)) return false;
+  const page = sky.children[pageIndex];
+  if (!page) return false;
+  const start = pageStarts[pageIndex] || 0;
+  const end = Math.min(EPISODES.length, start + (pageSizes[pageIndex] || 0));
+  const pageLayer = document.createElement('div');
+  pageLayer.className = 'page-sky';
+  const backgroundCount = isMobile ? 76 + Math.floor(Math.random() * 35) : 118 + Math.floor(Math.random() * 45);
+  pageLayer.innerHTML = makeSkySVG(backgroundCount);
+  page.appendChild(pageLayer);
+  let missingCount = 0;
+  for (let index = start; index < end; index++) {
+    if (!episodeStarPositions[index]) missingCount++;
+  }
+  const generatedPositions = generateChaoticPositions(missingCount);
+  let generatedPositionIndex = 0;
+  const fragment = document.createDocumentFragment();
+  const pageStars = [];
+  for (let index = start; index < end; index++) {
     const ep = EPISODES[index];
-    const pageIndex = getPageForIndex(index);
-    const localIndex = index - pageStarts[pageIndex];
-    const position = positionsPerPage[pageIndex][localIndex] || [0.1 + Math.random() * 0.8, 0.15 + Math.random() * 0.7];
+    if (!ep) continue;
+    let position = episodeStarPositions[index];
+    if (!position) {
+      position = generatedPositions[generatedPositionIndex++] || [0.1 + Math.random() * 0.8, 0.15 + Math.random() * 0.7];
+      episodeStarPositions[index] = position;
+    }
     const star = createStarEl(ep, index, position);
     star.classList.add('revealing');
     star.style.opacity = '0';
-    star.style.transform = 'translate(-50%,-50%) scale(0.15)';
-    const revealDuration = isMobile ? 0.45 : 0.8;
-    star.style.transition = 'opacity ' + revealDuration + 's ease, transform ' + revealDuration + 's cubic-bezier(.2,.9,.3,1.4)';
-    pages[pageIndex].appendChild(star);
+    star.style.transform = 'translate(-50%,-50%) scale(0.82)';
+    star.style.transition = 'opacity .24s ease, transform .24s ease';
+    fragment.appendChild(star);
     starEls[index] = star;
-    const delay = isMobile ? (20 + (index % 5) * 22) : (40 + (index % 8) * 40);
-    setTimeout(() => {
-      if (!star.isConnected) return;
+    pageStars.push(star);
+  }
+  page.appendChild(fragment);
+  renderedEpisodePages.add(pageIndex);
+  requestAnimationFrame(() => {
+    for (const star of pageStars) {
+      if (!star.isConnected) continue;
       star.style.opacity = '1';
       star.style.transform = 'translate(-50%,-50%) scale(1)';
-      setTimeout(() => {
-        star.classList.remove('revealing');
-        star.style.transition = '';
-      }, revealDuration * 1000 + 50);
-    }, delay);
-  }
-
+    }
+  });
+  setTimeout(() => {
+    for (const star of pageStars) {
+      if (!star.isConnected) continue;
+      star.classList.remove('revealing');
+      star.style.transition = '';
+      star.style.opacity = '';
+      star.style.transform = '';
+    }
+  }, 280);
   updateActiveStars();
-  preloadPageCovers(0);
-  restoreLastPlayed();
-  updatePageMap();
-  maybeStartTutorial();
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => refreshStarRingLayout()).catch(() => {});
+  refreshStarRingLayout();
+  if (pageIndex === currentPage) updatePageMap(true);
+  return true;
+}
+function pruneDistantEpisodePages(centerPage){
+  const keepDistance = 3;
+  for (const pageIndex of Array.from(renderedEpisodePages)) {
+    if (Math.abs(pageIndex - centerPage) <= keepDistance) continue;
+    const page = sky.children[pageIndex];
+    if (page) page.replaceChildren();
+    const start = pageStarts[pageIndex] || 0;
+    const end = Math.min(EPISODES.length, start + (pageSizes[pageIndex] || 0));
+    for (let index = start; index < end; index++) starEls[index] = null;
+    renderedEpisodePages.delete(pageIndex);
+  }
 }
 
+function installPodcastFeed(feed, options){
+  const settings = options || {};
+  const preserveCurrent = !!settings.preserveCurrent;
+  const previousEpisode = preserveCurrent && current >= 0 ? EPISODES[current] : null;
+  const previousKey = previousEpisode && previousEpisode.folderKey || '';
+  const previousPage = currentPage;
+  applyPodcastFeedMetadata(feed);
+  const nextEpisodes = Array.isArray(feed.episodes) ? feed.episodes.map(episode => ({...episode})) : [];
+  if (!nextEpisodes.length) return false;
+  const defaultCover = podcastFeedMeta.coverUrl || nextEpisodes[0].coverUrl || '';
+  nextEpisodes.forEach(episode => {
+    if (!episode.coverUrl) episode.coverUrl = defaultCover;
+    delete episode.feedOrder;
+  });
+  if (previousEpisode && previousKey && !nextEpisodes.some(ep => ep.folderKey === previousKey)) nextEpisodes.push(previousEpisode);
+  EPISODES = nextEpisodes;
+  rebuildEpisodeSearchIndex();
+  starEls = new Array(EPISODES.length);
+  episodeStarPositions = new Array(EPISODES.length);
+  renderedEpisodePages = new Set();
+  computePageSizes(EPISODES.length);
+  totalPages = pageSizes.length;
+  currentPage = preserveCurrent ? Math.max(0, Math.min(totalPages - 1, previousPage)) : 0;
+  pageTotalEl.textContent = totalPages;
+  pageCurrentEl.textContent = currentPage + 1;
+  createEpisodePageShells();
+  renderEpisodePage(currentPage);
+  if (preserveCurrent && previousKey) {
+    const nextCurrent = EPISODES.findIndex(ep => ep.folderKey === previousKey);
+    if (nextCurrent >= 0) current = nextCurrent;
+    if (shuffleOn && current >= 0) buildShuffleOrder(current);
+    updateFullUI();
+    updateMiniUI();
+  } else if (settings.restorePlayback) {
+    restoreLastPlayed();
+  }
+  if (current >= 0) renderEpisodePage(getPageForIndex(current));
+  detectNewEpisodeRelease();
+  updateActiveStars();
+  preloadPageCovers(currentPage);
+  updatePageMap();
+  if (settings.startTutorial) maybeStartTutorial();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => refreshStarRingLayout()).catch(() => {});
+  return true;
+}
+async function buildSky(){
+  const initialStarCount = isMobile ? 115 : 190;
+  sky.innerHTML = '<div class="page page-active" style="top:0;height:' + Math.max(1, innerHeight) + 'px"><div class="page-sky">' + makeSkySVG(initialStarCount) + '</div></div>';
+  const cachedFeed = readPodcastFeedCache();
+  if (cachedFeed) {
+    installPodcastFeed(cachedFeed, { restorePlayback:true, startTutorial:true });
+    podcastFeedSignature = getPodcastFeedSignature(cachedFeed);
+    fetchPodcastFeed().then(feed => {
+      if (!feed || !Array.isArray(feed.episodes) || !feed.episodes.length) return;
+      const nextSignature = getPodcastFeedSignature(feed);
+      schedulePodcastFeedCache(feed);
+      if (nextSignature === podcastFeedSignature) {
+        applyPodcastFeedMetadata(feed);
+        return;
+      }
+      podcastFeedSignature = nextSignature;
+      installPodcastFeed(feed, { preserveCurrent:true });
+      maybeStartNewReleaseIntro();
+    }).catch(() => {});
+    return;
+  }
+  try {
+    const feed = await fetchPodcastFeed();
+    if (!feed || !Array.isArray(feed.episodes) || !feed.episodes.length) throw new Error('RSS feed has no episodes');
+    podcastFeedSignature = getPodcastFeedSignature(feed);
+    installPodcastFeed(feed, { restorePlayback:true, startTutorial:true });
+    schedulePodcastFeedCache(feed);
+  } catch (error) {
+    podcastFeedError = 'Не удалось загрузить выпуски подкаста';
+  }
+}
 function restoreLastPlayed(){
   const key = getLastPlayed();
   if (!key) return;
@@ -1880,6 +1970,7 @@ function restoreLastPlayed(){
   if (idx < 0) return;
   current = idx;
   elapsed = savedPositions[key] || 0;
+  renderEpisodePage(getPageForIndex(idx));
   if (shuffleOn) buildShuffleOrder(idx);
   updateFullUI();
   updateMiniUI();
@@ -4081,6 +4172,7 @@ sky.addEventListener('transitionend', event => {
 function goToPage(n, fromSlider, force){
   removeMapArrow();
   const nn = Math.max(0, Math.min(totalPages - 1, Math.round(Number(n) || 0)));
+  renderEpisodePage(nn);
   const currentVisual = readSkyPosition();
   if (nn === currentPage && !fromSlider && Math.abs(currentVisual - nn) < 0.0015) {
     updatePageMap();
@@ -4090,6 +4182,7 @@ function goToPage(n, fromSlider, force){
   const pageChanged = nn !== currentPage;
   currentPage = nn;
   setActiveSkyPage(nn);
+  pruneDistantEpisodePages(nn);
   if (pageChanged && tutorialStage === 'swipe') tutorialSwipePerformed();
   clearTimeout(pageSliderTransitionTimer);
 
@@ -4563,7 +4656,6 @@ async function init(){
   loadPositions();
   syncUIPerformanceState();
   removeMissingAppServiceWorker();
-  loadPodcastInfo();
   buildSky();
 }
 
