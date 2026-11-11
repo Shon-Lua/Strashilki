@@ -9,11 +9,11 @@
 <meta property="og:site_name" content="Страшилки">
 <meta property="og:title" content="Страшилки">
 <meta property="og:description" content="Эти истории вас немного напугают или заинтригуют.">
-<meta property="og:image" content="./DATA/Logo.png">
+<meta property="og:image" id="ogImage" content="">
 <title>Страшилки</title>
-<link rel="icon" type="image/jpeg" href="./DATA/Logo.png">
-<link rel="shortcut icon" type="image/jpeg" href="./DATA/Logo.png">
-<link rel="apple-touch-icon" href="./DATA/Logo.png">
+<link rel="icon" id="siteFavicon" href="data:,">
+<link rel="shortcut icon" id="siteShortcutIcon" href="data:,">
+<link rel="apple-touch-icon" id="siteAppleIcon" href="data:,">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Special+Elite&display=swap');
   *{margin:0;padding:0;box-sizing:border-box}
@@ -143,7 +143,6 @@
   .quickMenuItem:hover,.quickMenuItem:focus-visible{background:rgba(255,255,255,.08);color:#fff;outline:none}
   .quickMenuItem + .quickMenuItem{border-top:1px solid rgba(255,255,255,.045)}
   .quickMenuIcon{width:17px;min-width:17px;height:18px;display:grid;place-items:center;color:rgba(190,199,225,.72);font-family:Georgia,serif;font-size:17px}
-  #muteBtn.muted .quickMenuIcon{opacity:.45}
   @media (min-width:1200px){
   }
   @media (min-width:1600px){
@@ -413,7 +412,6 @@
   <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.65" fill="currentColor"/><circle cx="12" cy="12" r="1.65" fill="currentColor"/><circle cx="12" cy="19" r="1.65" fill="currentColor"/></svg>
 </button>
 <div id="quickMenu" aria-hidden="true">
-  <button class="quickMenuItem" id="muteBtn" type="button" aria-label="Отключить фоновый звук"><span class="quickMenuIcon" aria-hidden="true">♫</span><span id="muteMenuLabel">Отключить звук фона</span></button>
   <button class="quickMenuItem" id="menuInfoBtn" type="button"><span class="quickMenuIcon" aria-hidden="true">i</span><span>Информация</span></button>
   <button class="quickMenuItem" id="markAllPlayedBtn" type="button"><span class="quickMenuIcon" aria-hidden="true">✓</span><span>Отметить все прослушанным</span></button>
   <button class="quickMenuItem" id="fullscreenBtn" type="button" aria-label="На весь экран"><span class="quickMenuIcon" aria-hidden="true">⛶</span><span id="fullscreenMenuLabel">На весь экран</span></button>
@@ -579,7 +577,6 @@ const miniPlayIcon = document.getElementById('miniPlayIcon');
 const infoPanel = document.getElementById('infoPanel');
 const infoContent = document.getElementById('infoContent');
 const quickMenu = document.getElementById('quickMenu');
-const muteMenuLabel = document.getElementById('muteMenuLabel');
 const fullscreenBtn = document.getElementById('fullscreenBtn');
 const fullscreenMenuLabel = document.getElementById('fullscreenMenuLabel');
 const externalWarning = document.getElementById('externalWarning');
@@ -589,7 +586,6 @@ const searchInput = document.getElementById('searchInput');
 const searchBtn = document.getElementById('searchBtn');
 const infoBtn = document.getElementById('infoBtn');
 const searchSuggestions = document.getElementById('searchSuggestions');
-const muteBtn = document.getElementById('muteBtn');
 const tutorialHand = document.getElementById('tutorialHand');
 const newReleaseIntro = document.getElementById('newReleaseIntro');
 const newReleaseStar = document.getElementById('newReleaseStar');
@@ -645,8 +641,6 @@ document.addEventListener('keydown', (event) => {
 const ICON_PLAY = '<path d="M8 5v14l11-7z"/>';
 const ICON_PAUSE = '<path d="M6 5h4v14H6zm8 0h4v14h-4z"/>';
 const ICON_LOADING = '<circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="13 41" stroke-linecap="round" class="spinner-circle"/>';
-const ICON_MUTE_ON = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3z"/><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/><path d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>';
-const ICON_MUTE_OFF = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3z"/><line x1="4" y1="4" x2="20" y2="20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
 
 let ageGateActive = true;
 let searchOpen = false;
@@ -1100,7 +1094,6 @@ async function maybeStartNewReleaseIntro(){
   newReleaseIntro.classList.add('show');
   newReleaseIntro.setAttribute('aria-hidden', 'false');
   newReleaseStar.style.opacity = '1';
-  playNewReleaseSound();
 
   const firstAnimation = newReleaseStar.animate([
     { transform:'translate(-50%,-50%) perspective(900px) rotateY(78deg) rotateZ(-28deg) scale(.025)', opacity:0, filter:'brightness(2.2) blur(12px)' },
@@ -1301,83 +1294,182 @@ function clearDragTrail(){
   if (dragTrailCtx) dragTrailCtx.clearRect(0, 0, innerWidth, innerHeight);
 }
 
-function encodePathSegment(s){
-  return encodeURIComponent(s).replace(/[!'()*]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase());
-}
-function buildUrl(segments){
-  return segments.filter(s => s !== null && s !== undefined && s !== '').map(encodePathSegment).join('/');
-}
+const PODCAST_FEED_URL = 'https://podster.fm/rss.xml?pid=100576';
+const PODCAST_FEED_PROXY = 'https://proxy.cors.dev/';
+let podcastFeedMeta = { title: 'Страшилки', description: '', coverUrl: '' };
+let podcastFeedError = '';
 
-function detectGitHubRepo(){
-  try {
-    const host = location.hostname;
-    if (!host.endsWith('.github.io')) return null;
-    const user = host.split('.')[0];
-    const parts = location.pathname.split('/').filter(Boolean);
-    if (!parts.length) return null;
-    const repo = parts[0];
-    if (!user || !repo) return null;
-    return { user, repo };
-  } catch (e) { return null; }
+function xmlLocalName(node){
+  return String(node && (node.localName || node.nodeName) || '').split(':').pop().toLowerCase();
 }
-
-const GH_TREE_KEY = 'ghTreeCache_v15';
-const GH_TREE_TTL = 60 * 60 * 1000;
-
-let ghTreeCache = null;
-let ghTreeDisabled = false;
-
-function loadTreeFromLS(){
-  try {
-    const raw = localStorage.getItem(GH_TREE_KEY);
-    if (!raw) return null;
-    const obj = JSON.parse(raw);
-    if (!obj || !obj.tree || (Date.now() - obj.t) > GH_TREE_TTL) return null;
-    return obj.tree;
-  } catch (e) { return null; }
+function xmlDirectChild(node, names){
+  if (!node) return null;
+  const wanted = new Set(Array.isArray(names) ? names.map(value => String(value).toLowerCase()) : [String(names).toLowerCase()]);
+  return Array.from(node.children || []).find(child => wanted.has(xmlLocalName(child))) || null;
 }
-function saveTreeToLS(tree){
-  if (storageResetPending) return;
-  try { localStorage.setItem(GH_TREE_KEY, JSON.stringify({ t: Date.now(), tree })); } catch (e) {}
+function xmlDirectText(node, names){
+  const child = xmlDirectChild(node, names);
+  return child ? String(child.textContent || '').trim() : '';
 }
-
-async function getFullTree(){
-  if (ghTreeCache) return ghTreeCache;
-  const cached = loadTreeFromLS();
-  if (cached) { ghTreeCache = cached; return cached; }
-  if (ghTreeDisabled) return null;
-  const gh = detectGitHubRepo();
-  if (!gh) return null;
-  const branches = ['main', 'master', 'gh-pages'];
-  for (const branch of branches) {
-    try {
-      const url = 'https://api.github.com/repos/' + gh.user + '/' + gh.repo + '/git/trees/' + encodeURIComponent(branch) + '?recursive=1';
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 9000);
-      let res;
-      try {
-        res = await fetch(url, { cache: 'no-store', signal: controller.signal });
-      } finally {
-        clearTimeout(timer);
-      }
-      if (res.status === 403 || res.status === 429) { ghTreeDisabled = true; return null; }
-      if (!res.ok) continue;
-      const data = await res.json();
-      if (data && Array.isArray(data.tree)) {
-        ghTreeCache = data.tree;
-        saveTreeToLS(data.tree);
-        return data.tree;
-      }
-    } catch (e) {}
+function xmlDirectImageUrl(node){
+  if (!node) return '';
+  const children = Array.from(node.children || []);
+  for (const child of children) {
+    const name = xmlLocalName(child);
+    if (name === 'image') {
+      const href = child.getAttribute('href') || child.getAttribute('url') || child.getAttribute('src');
+      if (href) return href.trim();
+      const url = xmlDirectText(child, 'url');
+      if (url) return url;
+    }
+    if (name === 'thumbnail') {
+      const url = child.getAttribute('url') || child.getAttribute('href');
+      if (url) return url.trim();
+    }
   }
-  return null;
+  return '';
+}
+function xmlEpisodeAudioUrl(item, baseUrl){
+  const enclosure = xmlDirectChild(item, 'enclosure');
+  let url = enclosure && enclosure.getAttribute('url');
+  if (!url) {
+    const content = xmlDirectChild(item, 'content');
+    url = content && (content.getAttribute('url') || content.getAttribute('href'));
+  }
+  if (!url) {
+    const links = Array.from(item.children || []).filter(child => xmlLocalName(child) === 'link');
+    const link = links.find(child => (child.getAttribute('rel') || '').toLowerCase() === 'enclosure');
+    url = link && (link.getAttribute('href') || link.textContent);
+  }
+  if (!url) return '';
+  try {
+    const parsed = new URL(url.trim(), baseUrl || PODCAST_FEED_URL);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? parsed.href : '';
+  } catch (e) { return ''; }
+}
+function xmlImageAbsoluteUrl(url, baseUrl){
+  if (!url) return '';
+  try {
+    const parsed = new URL(String(url).trim(), baseUrl || PODCAST_FEED_URL);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? parsed.href : '';
+  } catch (e) { return ''; }
+}
+function parseFeedDuration(value){
+  const text = String(value || '').trim();
+  if (!text) return 0;
+  if (/^\d+(?:\.\d+)?$/.test(text)) return Math.max(0, Number(text));
+  const parts = text.split(':').map(part => Number(part));
+  if (!parts.length || parts.some(part => !Number.isFinite(part) || part < 0)) return 0;
+  return parts.reduce((total, part) => total * 60 + part, 0);
+}
+function plainFeedText(value){
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  try {
+    const parsed = new DOMParser().parseFromString(raw, 'text/html');
+    return String(parsed.body.textContent || '').replace(/\s+/g, ' ').trim();
+  } catch (e) {
+    return raw.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+}
+function parsePodcastFeed(xmlText, baseUrl){
+  const documentXml = new DOMParser().parseFromString(xmlText, 'application/xml');
+  if (documentXml.getElementsByTagName('parsererror').length) throw new Error('RSS XML parse error');
+  const rootName = xmlLocalName(documentXml.documentElement);
+  if (rootName !== 'rss' && rootName !== 'rdf' && rootName !== 'feed') throw new Error('Unsupported podcast feed');
+  const channel = xmlDirectChild(documentXml.documentElement, 'channel') ||
+    Array.from(documentXml.getElementsByTagName('*')).find(node => xmlLocalName(node) === 'channel');
+  if (!channel) throw new Error('RSS channel not found');
+
+  const title = xmlDirectText(channel, 'title') || 'Страшилки';
+  const description = plainFeedText(xmlDirectText(channel, ['description', 'subtitle', 'summary']));
+  const channelCover = xmlImageAbsoluteUrl(xmlDirectImageUrl(channel), baseUrl);
+  const items = Array.from(documentXml.getElementsByTagName('*')).filter(node => xmlLocalName(node) === 'item');
+  const episodes = [];
+
+  items.forEach((item, index) => {
+    const episodeTitle = xmlDirectText(item, 'title');
+    const audioUrl = xmlEpisodeAudioUrl(item, baseUrl);
+    if (!episodeTitle || !audioUrl) return;
+    const guid = xmlDirectText(item, 'guid') || audioUrl || (episodeTitle + '|' + xmlDirectText(item, 'pubDate'));
+    const coverUrl = xmlImageAbsoluteUrl(xmlDirectImageUrl(item), baseUrl) || channelCover;
+    const pubDate = xmlDirectText(item, ['pubDate', 'published', 'updated']);
+    const duration = parseFeedDuration(xmlDirectText(item, ['duration']));
+    episodes.push({
+      folderKey: guid,
+      folderName: episodeTitle,
+      title: episodeTitle,
+      audioUrl,
+      coverUrl,
+      dur: duration,
+      published: pubDate,
+      description: plainFeedText(xmlDirectText(item, ['description', 'summary'])),
+      feedOrder: index,
+      resolved: true
+    });
+  });
+
+  episodes.sort((a, b) => {
+    const da = Date.parse(a.published);
+    const db = Date.parse(b.published);
+    if (Number.isFinite(da) && Number.isFinite(db) && da !== db) return db - da;
+    return a.feedOrder - b.feedOrder;
+  });
+
+  return { title, description, coverUrl: channelCover, episodes };
+}
+async function fetchPodcastFeed(){
+  const sources = [PODCAST_FEED_URL, PODCAST_FEED_PROXY + PODCAST_FEED_URL];
+  let lastError = null;
+  for (const source of sources) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 18000);
+    try {
+      const response = await fetch(source, {
+        method: 'GET',
+        cache: 'no-store',
+        credentials: 'omit',
+        signal: controller.signal
+      });
+      if (!response.ok) throw new Error('RSS HTTP ' + response.status);
+      const xmlText = await response.text();
+      if (!xmlText || !xmlText.trim()) throw new Error('RSS feed is empty');
+      const baseUrl = source === PODCAST_FEED_URL ? (response.url || PODCAST_FEED_URL) : PODCAST_FEED_URL;
+      return parsePodcastFeed(xmlText, baseUrl);
+    } catch (error) {
+      lastError = error;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+  throw lastError || new Error('RSS feed unavailable');
+}
+function applyPodcastFeedMetadata(feed){
+  podcastFeedMeta = {
+    title: feed.title || 'Страшилки',
+    description: feed.description || '',
+    coverUrl: feed.coverUrl || (feed.episodes[0] && feed.episodes[0].coverUrl) || ''
+  };
+  document.title = podcastFeedMeta.title;
+  const brand = document.querySelector('.ageBrand');
+  if (brand) brand.textContent = podcastFeedMeta.title;
+  const image = podcastFeedMeta.coverUrl;
+  if (image) {
+    const ogImage = document.getElementById('ogImage');
+    const favicon = document.getElementById('siteFavicon');
+    const shortcut = document.getElementById('siteShortcutIcon');
+    const appleIcon = document.getElementById('siteAppleIcon');
+    if (ogImage) ogImage.setAttribute('content', image);
+    if (favicon) favicon.href = image;
+    if (shortcut) shortcut.href = image;
+    if (appleIcon) appleIcon.href = image;
+  }
+  const infoParts = [podcastFeedMeta.title, podcastFeedMeta.description].filter(Boolean);
+  podcastFeedInfoText = infoParts.join('\n\n');
+  if (!podcastInfoText || podcastInfoText === podcastFeedInfoText) podcastInfoText = podcastFeedInfoText;
+  if (podcastInfoLoaded) renderInfoPanel();
 }
 
-function looseNorm(s){
-  return String(s).normalize('NFC').toLowerCase()
-    .replace(/ё/g, 'е')
-    .replace(/[^a-zа-я0-9]/gi, '');
-}
 function levenshtein(a, b){
   const m = a.length, n = b.length;
   if (!m) return n;
@@ -1392,164 +1484,6 @@ function levenshtein(a, b){
     }
   }
   return d[m][n];
-}
-
-function buildEpisodeFileIndex(tree){
-  const filesByFolder = new Map();
-  for (const item of tree) {
-    if (!item || item.type !== 'blob' || !item.path || !item.path.startsWith('Episodes/')) continue;
-    const relative = item.path.slice(9);
-    const split = relative.indexOf('/');
-    if (split <= 0) continue;
-    const folder = relative.slice(0, split);
-    const file = relative.slice(split + 1);
-    if (!file || file.includes('/')) continue;
-    let files = filesByFolder.get(folder);
-    if (!files) {
-      files = [];
-      filesByFolder.set(folder, files);
-    }
-    files.push(file);
-  }
-  const folders = Array.from(filesByFolder.keys());
-  const exact = new Map();
-  const normalized = new Map();
-  for (const folder of folders) {
-    exact.set(folder.toLowerCase(), folder);
-    const norm = looseNorm(folder);
-    if (norm && !normalized.has(norm)) normalized.set(norm, folder);
-  }
-  return { folders, filesByFolder, exact, normalized };
-}
-
-function findEpisodeFolder(index, candidates){
-  for (const candidate of candidates) {
-    if (!candidate) continue;
-    const found = index.exact.get(String(candidate).toLowerCase());
-    if (found) return found;
-  }
-  for (const candidate of candidates) {
-    if (!candidate) continue;
-    const found = index.normalized.get(looseNorm(candidate));
-    if (found) return found;
-  }
-  let best = null;
-  let bestScore = 0;
-  for (const folder of index.folders) {
-    const normalizedFolder = looseNorm(folder);
-    if (!normalizedFolder) continue;
-    for (const candidate of candidates) {
-      if (!candidate) continue;
-      const normalizedCandidate = looseNorm(candidate);
-      if (!normalizedCandidate) continue;
-      const maxLength = Math.max(normalizedFolder.length, normalizedCandidate.length);
-      if (maxLength === 0 || Math.abs(normalizedFolder.length - normalizedCandidate.length) / maxLength > 0.2) continue;
-      const score = 1 - levenshtein(normalizedFolder, normalizedCandidate) / maxLength;
-      if (score > bestScore) {
-        bestScore = score;
-        best = folder;
-      }
-    }
-  }
-  return bestScore >= 0.85 ? best : null;
-}
-
-function findDataTracks(tree){
-  const tracks = [];
-  for (const f of tree) {
-    if (!f || f.type !== 'blob' || !f.path) continue;
-    if (!f.path.startsWith('DATA/')) continue;
-    const rel = f.path.slice(5);
-    if (rel.includes('/')) continue;
-    const m = rel.match(/^(\d+)\.mp3$/i);
-    if (m) tracks.push(parseInt(m[1], 10));
-  }
-  return tracks.sort((a, b) => a - b);
-}
-
-async function probeDataFile(num){
-  const url = 'DATA/' + num + '.mp3';
-  try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 3000);
-    const res = await fetch(url, { method: 'HEAD', cache: 'no-store', signal: controller.signal });
-    clearTimeout(timer);
-    if (!res.ok) return false;
-    const ct = (res.headers.get('content-type') || '').toLowerCase();
-    if (ct.includes('audio') || ct.includes('octet-stream') || ct.includes('mpeg')) return true;
-    if (ct.includes('html') || ct.includes('text') || ct.includes('json')) return false;
-    const cl = parseInt(res.headers.get('content-length') || '0', 10);
-    if (cl > 30000) return true;
-    return false;
-  } catch (e) { return false; }
-}
-
-async function fetchText(url){
-  try {
-    const res = await fetch(url, { cache: 'default' });
-    if (!res.ok) return null;
-    const ct = (res.headers.get('content-type') || '').toLowerCase();
-    if (ct.includes('html')) return null;
-    const txt = await res.text();
-    const trimmed = txt.trim();
-    if (!trimmed || trimmed.length > 500) return null;
-    if (/<!doctype|<html/i.test(trimmed)) return null;
-    return trimmed;
-  } catch (e) { return null; }
-}
-
-function parseJsonEntry(key, val){
-  const out = { folderKey: key, folderName: key, title: key };
-  if (typeof val === 'string') {
-    out.folderName = val || key;
-    out.title = val || key;
-  } else if (val && typeof val === 'object') {
-    if (val.folder) out.folderName = val.folder;
-    else if (val.name) out.folderName = val.name;
-    if (val.title) out.title = val.title;
-    else if (val.name) out.title = val.name;
-    else if (val.folder) out.title = val.folder;
-  }
-  return out;
-}
-
-function extractNumber(str){
-  const m = String(str).match(/(\d+)/);
-  return m ? parseInt(m[1], 10) : -1;
-}
-
-function resolveOneEpisode(key, val){
-  const parsed = parseJsonEntry(key, val);
-  const folder = String(parsed.folderName || parsed.title || key).trim();
-  if (!folder) return null;
-  const encodedFolder = ['Episodes', folder];
-  return {
-    folderKey: key,
-    folderName: folder,
-    title: parsed.title || folder,
-    audioUrl: buildUrl([...encodedFolder, folder + '.mp3']),
-    coverUrl: buildUrl([...encodedFolder, 'Cover.jpg']),
-    nameUrl: buildUrl([...encodedFolder, 'name.txt']),
-    actualFolder: folder,
-    dur: 0,
-    resolved: true
-  };
-}
-
-async function loadEpisodeNamesInBackground(){
-  let cursor = 0;
-  const workers = Math.min(8, EPISODES.length);
-  const runWorker = async () => {
-    while (cursor < EPISODES.length) {
-      const index = cursor++;
-      const ep = EPISODES[index];
-      if (!ep || !ep.nameUrl) continue;
-      const title = await fetchText(ep.nameUrl);
-      if (!title || title === ep.title) continue;
-      updateEpisodeTitle(index, title);
-    }
-  };
-  await Promise.all(Array.from({ length: workers }, runWorker));
 }
 
 function computePageSizes(total){
@@ -1852,28 +1786,28 @@ async function buildSky(){
   const initialStarCount = isMobile ? 220 : 460;
   sky.innerHTML = '<div class="page" style="top:0;height:' + Math.max(1, innerHeight) + 'px"><div class="page-sky">' + makeSkySVG(initialStarCount) + '</div></div>';
 
-  let data;
+  let feed;
   try {
-    const res = await fetch('Track_Instruction.json', { cache: 'default' });
-    if (!res.ok) return;
-    data = await res.json();
-  } catch (e) { return; }
+    feed = await fetchPodcastFeed();
+  } catch (error) {
+    podcastFeedError = 'Не удалось загрузить выпуски подкаста';
+    return;
+  }
 
-  const map = (data && data.Episodes) || {};
-  const entries = Object.entries(map);
-  entries.sort((a, b) => {
-    const na = extractNumber(a[0]);
-    const nb = extractNumber(b[0]);
-    if (na >= 0 && nb >= 0 && na !== nb) return nb - na;
-    return 0;
+  applyPodcastFeedMetadata(feed);
+  EPISODES = Array.isArray(feed.episodes) ? feed.episodes : [];
+  if (!EPISODES.length) {
+    podcastFeedError = 'В RSS-ленте пока нет доступных выпусков';
+    return;
+  }
+  const defaultCover = podcastFeedMeta.coverUrl || EPISODES[0].coverUrl || '';
+  EPISODES.forEach(episode => {
+    if (!episode.coverUrl) episode.coverUrl = defaultCover;
+    delete episode.feedOrder;
   });
 
-  if (!entries.length) return;
-
-  EPISODES = entries.map(([key, val]) => resolveOneEpisode(key, val)).filter(Boolean);
   rebuildEpisodeSearchIndex();
   starEls = [];
-  if (!EPISODES.length) return;
   detectNewEpisodeRelease();
 
   computePageSizes(EPISODES.length);
@@ -1935,7 +1869,6 @@ async function buildSky(){
   preloadPageCovers(0);
   restoreLastPlayed();
   updatePageMap();
-  setTimeout(() => loadEpisodeNamesInBackground().catch(() => {}), 1400);
   maybeStartTutorial();
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => refreshStarRingLayout()).catch(() => {});
 }
@@ -1953,249 +1886,6 @@ function restoreLastPlayed(){
   miniPlayer.classList.add('show');
   preloadEpisodeDuration(idx);
 }
-
-let ambientActive = false;
-let ambientAudio = null;
-let releaseSoundAudio = null;
-let releaseSoundActive = false;
-let releaseSoundPreloadPromise = null;
-let releaseSoundObjectUrl = null;
-const RELEASE_SOUND_CACHE = 'strashilki-audio-v1';
-const RELEASE_SOUND_PATH = 'DATA/Falling.mp3';
-let ambientGen = 0;
-let ambientQueue = [];
-let ambientQueuePos = 0;
-let ambientTracksLoaded = false;
-let lastAmbientNum = -1;
-let ambientMuted = (function(){
-  try { return localStorage.getItem('ambientMuted') === '1'; } catch(e){ return false; }
-})();
-
-function shuffleArray(arr){
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
-
-function fadeVolume(audio, target, dur, onDone){
-  if (!audio) return;
-  audio._fadeToken = (audio._fadeToken || 0) + 1;
-  const token = audio._fadeToken;
-  const start = isFinite(audio.volume) ? audio.volume : 0;
-  const t0 = performance.now();
-  const step = (now) => {
-    if (audio._fadeToken !== token) return;
-    const p = Math.min(1, (now - t0) / Math.max(1, dur));
-    const v = start + (target - start) * p;
-    try { audio.volume = Math.max(0, Math.min(1, v)); } catch(e){ return; }
-    if (p < 1) requestAnimationFrame(step);
-    else if (onDone) onDone();
-  };
-  requestAnimationFrame(step);
-}
-
-function updateMuteIcon(){
-  if (!muteBtn) return;
-  muteMenuLabel.textContent = ambientMuted ? 'Включить звук фона' : 'Отключить звук фона';
-  muteBtn.setAttribute('aria-label', ambientMuted ? 'Включить фоновый звук' : 'Отключить фоновый звук');
-  muteBtn.classList.toggle('muted', ambientMuted);
-}
-
-function ambientShouldPlay(){
-  return ambientActive && !ambientMuted && !playing && !releaseSoundActive;
-}
-
-function preloadNewReleaseSound(){
-  if (releaseSoundPreloadPromise) return releaseSoundPreloadPromise;
-  releaseSoundPreloadPromise = (async () => {
-    const soundUrl = new URL(RELEASE_SOUND_PATH, document.baseURI).href;
-    let response = null;
-    try {
-      if ('caches' in window) {
-        const cache = await caches.open(RELEASE_SOUND_CACHE);
-        response = await cache.match(soundUrl);
-        if (!response) {
-          const networkResponse = await fetch(soundUrl, { cache:'no-cache' });
-          if (!networkResponse.ok) throw new Error('Falling.mp3 unavailable');
-          try { await cache.put(soundUrl, networkResponse.clone()); } catch(e) {}
-          response = networkResponse;
-        }
-      } else {
-        const networkResponse = await fetch(soundUrl, { cache:'force-cache' });
-        if (!networkResponse.ok) throw new Error('Falling.mp3 unavailable');
-        response = networkResponse;
-      }
-      const blob = await response.blob();
-      if (!blob || !blob.size) throw new Error('Falling.mp3 is empty');
-      if (releaseSoundObjectUrl) URL.revokeObjectURL(releaseSoundObjectUrl);
-      releaseSoundObjectUrl = URL.createObjectURL(blob);
-      if (!releaseSoundAudio) {
-        releaseSoundAudio = new Audio();
-        releaseSoundAudio.preload = 'auto';
-      }
-      releaseSoundAudio.src = releaseSoundObjectUrl;
-      releaseSoundAudio.load();
-      return true;
-    } catch(e) {
-      if (!releaseSoundAudio) {
-        releaseSoundAudio = new Audio(soundUrl);
-        releaseSoundAudio.preload = 'auto';
-      }
-      return false;
-    }
-  })();
-  return releaseSoundPreloadPromise;
-}
-
-async function playNewReleaseSound(){
-  releaseSoundActive = true;
-  if (ambientAudio) {
-    ambientAudio._fadeToken = (ambientAudio._fadeToken || 0) + 1;
-    try { ambientAudio.volume = 0; ambientAudio.pause(); } catch(e){}
-  }
-  try { await preloadNewReleaseSound(); } catch(e) {}
-  if (!releaseSoundAudio) releaseSoundAudio = new Audio(RELEASE_SOUND_PATH);
-  const sound = releaseSoundAudio;
-  const finish = () => {
-    if (sound !== releaseSoundAudio || !releaseSoundActive) return;
-    releaseSoundActive = false;
-    applyAmbientState();
-  };
-  sound.onended = finish;
-  sound.onerror = finish;
-  try {
-    sound.pause();
-    sound.currentTime = 0;
-    sound.volume = 1;
-    const result = sound.play();
-    if (result && typeof result.catch === 'function') result.catch(finish);
-  } catch(e) {
-    finish();
-  }
-}
-
-function applyAmbientState(){
-  const a = ambientAudio;
-  if (!a) return;
-  if (ambientShouldPlay()) {
-    if (a.paused) {
-      a.volume = 0;
-      a.play().then(() => {
-        if (a !== ambientAudio) { try { a.pause(); } catch(e){} return; }
-        if (!ambientShouldPlay()) { try { a.pause(); } catch(e){} return; }
-        fadeVolume(a, 0.12, 500);
-      }).catch(() => {});
-    } else {
-      fadeVolume(a, 0.12, 300);
-    }
-  } else {
-    if (!a.paused) {
-      fadeVolume(a, 0, 300, () => {
-        if (a !== ambientAudio) return;
-        if (ambientShouldPlay()) return;
-        try { a.pause(); } catch(e){}
-      });
-    }
-  }
-}
-
-function playAmbientTrack(num){
-  const myGen = ++ambientGen;
-  const audio = new Audio();
-  audio.preload = 'auto';
-  audio.src = 'DATA/' + num + '.mp3';
-  audio.volume = 0;
-
-  let failed = false;
-  const onFail = () => {
-    if (failed) return;
-    failed = true;
-    if (myGen !== ambientGen) return;
-    if (!ambientActive) return;
-    if (ambientAudio === audio) ambientAudio = null;
-    try { audio.pause(); } catch(e){}
-    const idx = ambientQueue.indexOf(num);
-    if (idx >= 0) {
-      ambientQueue.splice(idx, 1);
-      if (ambientQueuePos > idx) ambientQueuePos--;
-    }
-    playAmbientFromQueue();
-  };
-
-  audio.onerror = onFail;
-  audio.onended = () => {
-    if (myGen !== ambientGen) return;
-    if (ambientAudio !== audio) return;
-    if (!ambientActive) return;
-    playAmbientFromQueue();
-  };
-
-  audio.play().then(() => {
-    if (failed) { try { audio.pause(); } catch(e){} return; }
-    if (myGen !== ambientGen) { try { audio.pause(); } catch(e){} return; }
-    ambientAudio = audio;
-    if (ambientShouldPlay()) fadeVolume(audio, 0.12, 1200);
-    else try { audio.pause(); } catch(e){}
-  }).catch(onFail);
-}
-
-function playAmbientFromQueue(){
-  if (!ambientActive) return;
-  if (!ambientQueue.length) { ambientActive = false; return; }
-
-  if (ambientQueuePos >= ambientQueue.length) {
-    shuffleArray(ambientQueue);
-    if (ambientQueue.length > 1 && ambientQueue[0] === lastAmbientNum) {
-      const swap = 1 + Math.floor(Math.random() * (ambientQueue.length - 1));
-      [ambientQueue[0], ambientQueue[swap]] = [ambientQueue[swap], ambientQueue[0]];
-    }
-    ambientQueuePos = 0;
-  }
-
-  const num = ambientQueue[ambientQueuePos++];
-  lastAmbientNum = num;
-  playAmbientTrack(num);
-}
-
-async function getDataTracks(){
-  const checks = await Promise.all(Array.from({ length: 10 }, (_, i) => probeDataFile(i + 1)));
-  return checks.map((ok, i) => ok ? i + 1 : 0).filter(Boolean);
-}
-
-async function startAmbient(){
-  if (ambientActive) return;
-  ambientActive = true;
-
-  if (!ambientTracksLoaded) {
-    ambientTracksLoaded = true;
-    const tracks = await getDataTracks();
-    if (tracks.length) {
-      ambientQueue = shuffleArray(tracks.slice());
-      ambientQueuePos = 0;
-    }
-  }
-
-  if (!ambientActive) return;
-  if (!ambientQueue.length) { ambientActive = false; return; }
-  playAmbientFromQueue();
-}
-
-function toggleMute(){
-  ambientMuted = !ambientMuted;
-  if (!storageResetPending) {
-    try { localStorage.setItem('ambientMuted', ambientMuted ? '1' : '0'); } catch(e){}
-  }
-  updateMuteIcon();
-  applyAmbientState();
-}
-
-muteBtn.addEventListener('click', () => {
-  if (tutorialIsActive() && tutorialStage !== 'pages') return;
-  toggleMute();
-  closeQuickMenu();
-});
 
 function showToast(text, duration){
   if (!text) return;
@@ -2247,18 +1937,19 @@ function showToast(text, duration){
 
 document.getElementById('ageEnterBtn').addEventListener('click', () => {
   applySavedFullscreenOnEnter();
-  startAmbient();
   const g = document.getElementById('ageGate');
   g.classList.add('hide');
   tutorialStartRequested = shouldShowSkyHint();
   setTimeout(() => {
     g.remove();
     ageGateActive = false;
+    if (podcastFeedError) showToast(podcastFeedError, 4500);
     maybeStartTutorial();
   }, 600);
 });
 
 let podcastInfoText = '';
+let podcastFeedInfoText = '';
 let podcastInfoLoaded = false;
 let pendingExternalUrl = '';
 
@@ -2318,6 +2009,7 @@ async function loadPodcastInfo(){
       if (trimmed && !/<!doctype|<html/i.test(trimmed)) podcastInfoText = trimmed;
     }
   } catch (e) {}
+  if (!podcastInfoText) podcastInfoText = podcastFeedInfoText;
   renderInfoPanel();
 }
 
@@ -3080,7 +2772,6 @@ function attachEpisodeAudioEvents(index, audio){
     wantsToPlay = false;
     setLoading(false);
     updateIcons();
-    applyAmbientState();
     showToast('ошибка воспроизведения', 2500);
   });
   audio.addEventListener('playing', () => {
@@ -3347,8 +3038,7 @@ function switchToEpisode(index, autoPlay){
     else {
       preloadEpisodeDuration(index);
       updateIcons();
-      applyAmbientState();
-    }
+      }
   });
 }
 
@@ -3362,7 +3052,6 @@ async function play(){
   playing = true;
   setLoading(true);
   updateIcons();
-  applyAmbientState();
   markPlayed(ep.folderKey);
   saveLastPlayed(ep.folderKey);
 
@@ -3372,7 +3061,6 @@ async function play(){
     wantsToPlay = false;
     setLoading(false);
     updateIcons();
-    applyAmbientState();
     return;
   }
 
@@ -3408,15 +3096,13 @@ async function play(){
     playing = true;
     setLoading(false);
     updateIcons();
-    applyAmbientState();
   } catch(e) {
     if (current === index && episodeAudio === audio && playToken === resolveToken) {
       playing = false;
       wantsToPlay = false;
       setLoading(false);
       updateIcons();
-      applyAmbientState();
-    }
+      }
   }
 }
 
@@ -3428,7 +3114,6 @@ function pause(){
   savePositionForCurrent();
   playing = false;
   updateIcons();
-  applyAmbientState();
 }
 
 function finish(){
@@ -3440,7 +3125,6 @@ function finish(){
   elapsed = 0;
   updateProgress();
   updateIcons();
-  applyAmbientState();
 }
 
 function buildShuffleOrder(startIndex){
@@ -3647,44 +3331,6 @@ function setCoverTo(container, ep, index){
     image.className = 'coverDecoded';
     container.replaceChildren(image);
   });
-}
-
-function updateEpisodeTitle(index, title){
-  const ep = EPISODES[index];
-  if (!ep || !title) return;
-  ep.title = title;
-  if (normalizedEpisodeSearchIndex[index]) {
-    const normalized = normalizeSearch(title);
-    normalizedEpisodeSearchIndex[index] = { index, title, normalized, tokens: normalized.split(' ').filter(Boolean), compact: normalized.replace(/\s/g, '') };
-  }
-  if (index === 0 && pendingNewRelease && pendingNewRelease.key === ep.folderKey) pendingNewRelease.title = title;
-  const star = starEls[index];
-  if (star) {
-    star.setAttribute('aria-label', title);
-    const small = innerWidth <= 640;
-    const ring = star.querySelector('.star-ring');
-    const path = ring && ring.querySelector('defs path');
-    const text = ring && ring.querySelector('.ring-text');
-    const textPath = ring && ring.querySelector('.ring-text textPath');
-    const ringSize = small ? 108 : 132;
-    const radius = small ? 42 : 52;
-    const fontSize = small ? 8 : 9;
-    const letterSpacing = small ? .5 : .7;
-    const center = ringSize / 2;
-    if (ring && path && text && textPath) {
-      ring.setAttribute('viewBox', '0 0 ' + ringSize + ' ' + ringSize);
-      ring.style.width = ringSize + 'px';
-      ring.style.height = ringSize + 'px';
-      path.setAttribute('d', 'M ' + center + ' ' + (center + radius) + ' a ' + radius + ' ' + radius + ' 0 1 1 0 -' + (radius * 2) + ' a ' + radius + ' ' + radius + ' 0 1 1 0 ' + (radius * 2));
-      text.setAttribute('font-size', String(fontSize));
-      text.setAttribute('letter-spacing', String(letterSpacing));
-      textPath.textContent = fitRingTitle(title, radius, fontSize, letterSpacing);
-    }
-  }
-  if (current === index) {
-    applyMarquee(pTitle, title);
-    if (miniPlayer.classList.contains('show')) applyMarquee(miniTitle, title);
-  }
 }
 
 function applyMarquee(el, text){
@@ -4909,7 +4555,6 @@ function removeMissingAppServiceWorker(){
 
 async function init(){
   resize();
-  updateMuteIcon();
   updateIcons();
   updateRepeatIcon();
   updateShuffleIcon();
@@ -4917,7 +4562,6 @@ async function init(){
   updatePageMap();
   loadPositions();
   syncUIPerformanceState();
-  preloadNewReleaseSound();
   removeMissingAppServiceWorker();
   loadPodcastInfo();
   buildSky();
