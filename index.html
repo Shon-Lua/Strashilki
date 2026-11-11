@@ -9,12 +9,12 @@
 <meta property="og:site_name" content="Страшилки">
 <meta property="og:title" content="Страшилки">
 <meta property="og:description" content="Эти истории вас немного напугают или заинтригуют.">
-<meta property="og:image" content="./Logo.png">
+<meta property="og:image" content="./DATA/Logo.png">
 <title>Страшилки</title>
-<link rel="icon" type="image/png" href="./Logo.png">
-<link rel="shortcut icon" type="image/png" href="./Logo.png">
-<link rel="apple-touch-icon" href="./Logo.png">
-<link rel="preload" as="image" href="./Logo.png">
+<link rel="icon" type="image/png" href="./DATA/Logo.png">
+<link rel="shortcut icon" type="image/png" href="./DATA/Logo.png">
+<link rel="apple-touch-icon" href="./DATA/Logo.png">
+<link rel="preload" as="image" href="./DATA/Logo.png">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Special+Elite&display=swap');
   *{margin:0;padding:0;box-sizing:border-box}
@@ -141,6 +141,7 @@
   .quickMenuItem{display:flex;align-items:center;gap:11px;width:100%;min-height:42px;padding:9px 11px;border:0;border-radius:6px;background:transparent;color:#d0d2df;text-align:left;font-family:'IM Fell English',Georgia,serif;font-size:14px;letter-spacing:.035em;cursor:pointer;transition:background .18s ease,color .18s ease}
   .quickMenuItem:hover,.quickMenuItem:focus-visible{background:rgba(255,255,255,.08);color:#fff;outline:none}
   .quickMenuItem + .quickMenuItem{border-top:1px solid rgba(255,255,255,.045)}
+  #muteBtn.muted .quickMenuIcon{opacity:.45}
   .quickMenuIcon{width:17px;min-width:17px;height:18px;display:grid;place-items:center;color:rgba(190,199,225,.72);font-family:Georgia,serif;font-size:17px}
   @media (min-width:1200px){
   }
@@ -411,6 +412,7 @@
   <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.65" fill="currentColor"/><circle cx="12" cy="12" r="1.65" fill="currentColor"/><circle cx="12" cy="19" r="1.65" fill="currentColor"/></svg>
 </button>
 <div id="quickMenu" aria-hidden="true">
+  <button class="quickMenuItem" id="muteBtn" type="button" aria-label="Отключить фоновый звук"><span class="quickMenuIcon" aria-hidden="true">♫</span><span id="muteMenuLabel">Отключить звук фона</span></button>
   <button class="quickMenuItem" id="menuInfoBtn" type="button"><span class="quickMenuIcon" aria-hidden="true">i</span><span>Информация</span></button>
   <button class="quickMenuItem" id="markAllPlayedBtn" type="button"><span class="quickMenuIcon" aria-hidden="true">✓</span><span>Отметить все прослушанным</span></button>
   <button class="quickMenuItem" id="fullscreenBtn" type="button" aria-label="На весь экран"><span class="quickMenuIcon" aria-hidden="true">⛶</span><span id="fullscreenMenuLabel">На весь экран</span></button>
@@ -576,6 +578,8 @@ const miniPlayIcon = document.getElementById('miniPlayIcon');
 const infoPanel = document.getElementById('infoPanel');
 const infoContent = document.getElementById('infoContent');
 const quickMenu = document.getElementById('quickMenu');
+const muteBtn = document.getElementById('muteBtn');
+const muteMenuLabel = document.getElementById('muteMenuLabel');
 const fullscreenBtn = document.getElementById('fullscreenBtn');
 const fullscreenMenuLabel = document.getElementById('fullscreenMenuLabel');
 const externalWarning = document.getElementById('externalWarning');
@@ -1094,6 +1098,7 @@ async function maybeStartNewReleaseIntro(){
   newReleaseIntro.classList.add('show');
   newReleaseIntro.setAttribute('aria-hidden', 'false');
   newReleaseStar.style.opacity = '1';
+  playNewReleaseSound();
 
   const firstAnimation = newReleaseStar.animate([
     { transform:'translate(-50%,-50%) perspective(900px) rotateY(78deg) rotateZ(-28deg) scale(.025)', opacity:0, filter:'brightness(2.2) blur(12px)' },
@@ -1455,7 +1460,7 @@ function applyPodcastFeedMetadata(feed){
   if (brand) brand.textContent = podcastFeedMeta.title;
   const infoParts = [podcastFeedMeta.title, podcastFeedMeta.description].filter(Boolean);
   podcastFeedInfoText = infoParts.join('\n\n');
-  if (!podcastInfoText || podcastInfoText === podcastFeedInfoText) podcastInfoText = podcastFeedInfoText;
+  podcastInfoText = podcastFeedInfoText;
   if (podcastInfoLoaded) renderInfoPanel();
 }
 
@@ -2028,6 +2033,7 @@ function showToast(text, duration){
 
 document.getElementById('ageEnterBtn').addEventListener('click', () => {
   applySavedFullscreenOnEnter();
+  startAmbient();
   const g = document.getElementById('ageGate');
   g.classList.add('hide');
   tutorialStartRequested = shouldShowSkyHint();
@@ -2037,6 +2043,239 @@ document.getElementById('ageEnterBtn').addEventListener('click', () => {
     if (podcastFeedError) showToast(podcastFeedError, 4500);
     maybeStartTutorial();
   }, 600);
+});
+
+let ambientActive = false;
+let ambientAudio = null;
+let releaseSoundAudio = null;
+let releaseSoundActive = false;
+let releaseSoundPreloadPromise = null;
+let releaseSoundObjectUrl = null;
+const RELEASE_SOUND_CACHE = 'strashilki-audio-v1';
+const RELEASE_SOUND_PATH = 'DATA/Falling.mp3';
+let ambientGeneration = 0;
+let ambientQueue = [];
+let ambientQueuePosition = 0;
+let ambientFailedTracks = new Set();
+let lastAmbientTrack = -1;
+let ambientMuted = (function(){
+  try { return localStorage.getItem('ambientMuted') === '1'; }
+  catch(e) { return false; }
+})();
+
+function shuffleArray(items){
+  const result = items.slice();
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+function fadeVolume(audio, target, duration, onDone){
+  if (!audio) return;
+  audio._fadeToken = (audio._fadeToken || 0) + 1;
+  const token = audio._fadeToken;
+  const start = Number.isFinite(audio.volume) ? audio.volume : 0;
+  const startedAt = performance.now();
+  const step = now => {
+    if (audio._fadeToken !== token) return;
+    const progress = Math.min(1, (now - startedAt) / Math.max(1, duration));
+    try { audio.volume = Math.max(0, Math.min(1, start + (target - start) * progress)); }
+    catch(e) { return; }
+    if (progress < 1) requestAnimationFrame(step);
+    else if (onDone) onDone();
+  };
+  requestAnimationFrame(step);
+}
+
+function updateMuteIcon(){
+  if (!muteBtn || !muteMenuLabel) return;
+  muteMenuLabel.textContent = ambientMuted ? 'Включить звук фона' : 'Отключить звук фона';
+  muteBtn.setAttribute('aria-label', ambientMuted ? 'Включить фоновый звук' : 'Отключить фоновый звук');
+  muteBtn.classList.toggle('muted', ambientMuted);
+}
+
+function ambientShouldPlay(){
+  return ambientActive && !ambientMuted && !playing && !releaseSoundActive;
+}
+
+function preloadNewReleaseSound(){
+  if (releaseSoundPreloadPromise) return releaseSoundPreloadPromise;
+  releaseSoundPreloadPromise = (async () => {
+    const soundUrl = new URL(RELEASE_SOUND_PATH, document.baseURI).href;
+    try {
+      let response = null;
+      if ('caches' in window) {
+        const cache = await caches.open(RELEASE_SOUND_CACHE);
+        response = await cache.match(soundUrl);
+        if (!response) {
+          const networkResponse = await fetch(soundUrl, { cache: 'no-cache' });
+          if (!networkResponse.ok) throw new Error('Falling.mp3 unavailable');
+          try { await cache.put(soundUrl, networkResponse.clone()); } catch(e) {}
+          response = networkResponse;
+        }
+      } else {
+        const networkResponse = await fetch(soundUrl, { cache: 'force-cache' });
+        if (!networkResponse.ok) throw new Error('Falling.mp3 unavailable');
+        response = networkResponse;
+      }
+      const blob = await response.blob();
+      if (!blob || !blob.size) throw new Error('Falling.mp3 is empty');
+      if (releaseSoundObjectUrl) URL.revokeObjectURL(releaseSoundObjectUrl);
+      releaseSoundObjectUrl = URL.createObjectURL(blob);
+      if (!releaseSoundAudio) {
+        releaseSoundAudio = new Audio();
+        releaseSoundAudio.preload = 'auto';
+      }
+      releaseSoundAudio.src = releaseSoundObjectUrl;
+      releaseSoundAudio.load();
+      return true;
+    } catch(e) {
+      if (!releaseSoundAudio) {
+        releaseSoundAudio = new Audio(soundUrl);
+        releaseSoundAudio.preload = 'auto';
+      }
+      return false;
+    }
+  })();
+  return releaseSoundPreloadPromise;
+}
+
+async function playNewReleaseSound(){
+  releaseSoundActive = true;
+  if (ambientAudio) {
+    ambientAudio._fadeToken = (ambientAudio._fadeToken || 0) + 1;
+    try { ambientAudio.volume = 0; ambientAudio.pause(); } catch(e) {}
+  }
+  try { await preloadNewReleaseSound(); } catch(e) {}
+  if (!releaseSoundAudio) releaseSoundAudio = new Audio(RELEASE_SOUND_PATH);
+  const sound = releaseSoundAudio;
+  const finish = () => {
+    if (sound !== releaseSoundAudio || !releaseSoundActive) return;
+    releaseSoundActive = false;
+    applyAmbientState();
+  };
+  sound.onended = finish;
+  sound.onerror = finish;
+  try {
+    sound.pause();
+    sound.currentTime = 0;
+    sound.volume = 1;
+    const result = sound.play();
+    if (result && typeof result.catch === 'function') result.catch(finish);
+  } catch(e) {
+    finish();
+  }
+}
+
+function applyAmbientState(){
+  const audio = ambientAudio;
+  if (!audio) return;
+  if (ambientShouldPlay()) {
+    if (audio.paused) {
+      audio.volume = 0;
+      audio.play().then(() => {
+        if (audio !== ambientAudio) { try { audio.pause(); } catch(e) {} return; }
+        if (!ambientShouldPlay()) { try { audio.pause(); } catch(e) {} return; }
+        fadeVolume(audio, 0.12, 650);
+      }).catch(() => {});
+    } else {
+      fadeVolume(audio, 0.12, 350);
+    }
+  } else if (!audio.paused) {
+    fadeVolume(audio, 0, 350, () => {
+      if (audio !== ambientAudio || ambientShouldPlay()) return;
+      try { audio.pause(); } catch(e) {}
+    });
+  }
+}
+
+function getNextAmbientTrack(){
+  if (ambientQueuePosition >= ambientQueue.length) {
+    const available = [];
+    for (let track = 1; track <= 10; track++) {
+      if (!ambientFailedTracks.has(track)) available.push(track);
+    }
+    if (!available.length) return -1;
+    ambientQueue = shuffleArray(available);
+    if (ambientQueue.length > 1 && ambientQueue[0] === lastAmbientTrack) {
+      const swap = 1 + Math.floor(Math.random() * (ambientQueue.length - 1));
+      [ambientQueue[0], ambientQueue[swap]] = [ambientQueue[swap], ambientQueue[0]];
+    }
+    ambientQueuePosition = 0;
+  }
+  return ambientQueue[ambientQueuePosition++];
+}
+
+function playAmbientTrack(trackNumber){
+  if (!ambientActive) return;
+  const generation = ++ambientGeneration;
+  const audio = new Audio();
+  audio.preload = 'auto';
+  audio.src = 'DATA/' + trackNumber + '.mp3';
+  audio.volume = 0;
+  let failed = false;
+  const fail = () => {
+    if (failed || generation !== ambientGeneration) return;
+    failed = true;
+    ambientFailedTracks.add(trackNumber);
+    if (ambientAudio === audio) ambientAudio = null;
+    try { audio.pause(); audio.removeAttribute('src'); audio.load(); } catch(e) {}
+    playAmbientFromQueue();
+  };
+  audio.onerror = fail;
+  audio.onended = () => {
+    if (generation !== ambientGeneration || ambientAudio !== audio || !ambientActive) return;
+    ambientAudio = null;
+    playAmbientFromQueue();
+  };
+  audio.play().then(() => {
+    if (failed || generation !== ambientGeneration || !ambientActive) {
+      try { audio.pause(); } catch(e) {}
+      return;
+    }
+    ambientAudio = audio;
+    lastAmbientTrack = trackNumber;
+    if (ambientShouldPlay()) fadeVolume(audio, 0.12, 900);
+    else try { audio.pause(); } catch(e) {}
+  }).catch(fail);
+}
+
+function playAmbientFromQueue(){
+  if (!ambientActive) return;
+  const nextTrack = getNextAmbientTrack();
+  if (nextTrack < 0) {
+    ambientActive = false;
+    ambientAudio = null;
+    return;
+  }
+  playAmbientTrack(nextTrack);
+}
+
+function startAmbient(){
+  if (ambientActive) {
+    applyAmbientState();
+    return;
+  }
+  ambientActive = true;
+  ambientFailedTracks.clear();
+  ambientQueue = shuffleArray(Array.from({length:10}, (_, index) => index + 1));
+  ambientQueuePosition = 0;
+  playAmbientFromQueue();
+}
+
+function toggleMute(){
+  ambientMuted = !ambientMuted;
+  try { localStorage.setItem('ambientMuted', ambientMuted ? '1' : '0'); } catch(e) {}
+  updateMuteIcon();
+  applyAmbientState();
+}
+
+muteBtn.addEventListener('click', () => {
+  if (tutorialIsActive() && tutorialStage !== 'pages') return;
+  toggleMute();
+  closeQuickMenu();
 });
 
 let podcastInfoText = '';
@@ -2092,15 +2331,7 @@ function renderInfoPanel(){
 
 async function loadPodcastInfo(){
   podcastInfoLoaded = true;
-  try {
-    const res = await fetch('Podcast_Info.txt', { cache: 'no-store' });
-    if (res.ok) {
-      const txt = await res.text();
-      const trimmed = txt.trim();
-      if (trimmed && !/<!doctype|<html/i.test(trimmed)) podcastInfoText = trimmed;
-    }
-  } catch (e) {}
-  if (!podcastInfoText) podcastInfoText = podcastFeedInfoText;
+  podcastInfoText = podcastFeedInfoText || [podcastFeedMeta.title, podcastFeedMeta.description].filter(Boolean).join('\n\n');
   renderInfoPanel();
 }
 
@@ -2863,6 +3094,7 @@ function attachEpisodeAudioEvents(index, audio){
     wantsToPlay = false;
     setLoading(false);
     updateIcons();
+    applyAmbientState();
     showToast('ошибка воспроизведения', 2500);
   });
   audio.addEventListener('playing', () => {
@@ -2870,6 +3102,7 @@ function attachEpisodeAudioEvents(index, audio){
       playing = true;
       setLoading(false);
       updateIcons();
+      applyAmbientState();
       if (audio._neighborWarmStartedFor !== index) {
         audio._neighborWarmStartedFor = index;
         refreshAudioPreloadPool(true);
@@ -3143,6 +3376,7 @@ async function play(){
   playing = true;
   setLoading(true);
   updateIcons();
+  applyAmbientState();
   markPlayed(ep.folderKey);
   saveLastPlayed(ep.folderKey);
 
@@ -3152,6 +3386,7 @@ async function play(){
     wantsToPlay = false;
     setLoading(false);
     updateIcons();
+    applyAmbientState();
     return;
   }
 
@@ -3161,6 +3396,7 @@ async function play(){
     wantsToPlay = false;
     setLoading(false);
     updateIcons();
+    applyAmbientState();
     return;
   }
   if (audio.error) {
@@ -3187,13 +3423,15 @@ async function play(){
     playing = true;
     setLoading(false);
     updateIcons();
+    applyAmbientState();
   } catch(e) {
     if (current === index && episodeAudio === audio && playToken === resolveToken) {
       playing = false;
       wantsToPlay = false;
       setLoading(false);
       updateIcons();
-      }
+      applyAmbientState();
+    }
   }
 }
 
@@ -3205,6 +3443,7 @@ function pause(){
   savePositionForCurrent();
   playing = false;
   updateIcons();
+  applyAmbientState();
 }
 
 function finish(){
@@ -3216,6 +3455,7 @@ function finish(){
   elapsed = 0;
   updateProgress();
   updateIcons();
+  applyAmbientState();
 }
 
 function buildShuffleOrder(startIndex){
@@ -4648,6 +4888,8 @@ function removeMissingAppServiceWorker(){
 
 async function init(){
   resize();
+  updateMuteIcon();
+  preloadNewReleaseSound();
   updateIcons();
   updateRepeatIcon();
   updateShuffleIcon();
