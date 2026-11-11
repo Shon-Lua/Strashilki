@@ -144,47 +144,11 @@
   .quickMenuItem + .quickMenuItem{border-top:1px solid rgba(255,255,255,.045)}
   .quickMenuIcon{width:17px;min-width:17px;height:18px;display:grid;place-items:center;color:rgba(190,199,225,.72);font-family:Georgia,serif;font-size:17px}
   #muteBtn.muted .quickMenuIcon{opacity:.45}
-  #artsPanel{position:fixed;inset:0;z-index:84;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 50% 34%,rgba(70,4,15,.98),rgba(24,0,5,.99) 58%,#000 100%);opacity:0;pointer-events:none;visibility:hidden;transition:opacity .3s ease,visibility .3s ease;overflow-y:auto;-webkit-overflow-scrolling:touch}
-  #artsPanel.show{opacity:1;pointer-events:auto;visibility:visible}
-  .artsClose{position:fixed;top:max(14px,env(safe-area-inset-top,0px));right:max(14px,env(safe-area-inset-right,0px));z-index:2;width:44px;height:44px;padding:0;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(8,8,10,.85);color:#fff;cursor:pointer;display:grid;place-items:center;transition:background .2s ease,border-color .2s ease,transform .15s ease;-webkit-tap-highlight-color:transparent}
-  .artsClose:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.35)}
-  .artsClose:active{transform:scale(.94)}
-  .artsClose svg{width:20px;height:20px;display:block}
-  .artsCard{width:min(920px,100%);max-height:min(82vh,760px);overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:rgba(145,157,190,.5) rgba(5,7,15,.4);padding:28px;border:1px solid rgba(130,40,52,.32);background:rgba(5,1,3,.78);box-shadow:0 24px 70px rgba(0,0,0,.75)}
-  .artsGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
-  .artsItem{position:relative;min-width:0;margin:0;padding:0;border:0;background:transparent;overflow:hidden}
-  .artsItem img{display:block;width:100%;aspect-ratio:1;object-fit:contain;background:transparent;cursor:zoom-in;opacity:1;transition:opacity .22s ease}
-  .artsItem.is-loading img{opacity:0}
-  .artsItem.is-loading::after,.artsEmpty.is-loading::after{content:'';position:absolute;left:50%;top:50%;width:27px;height:27px;margin:-14px 0 0 -14px;border:1px solid rgba(225,218,235,.24);border-top-color:rgba(255,255,255,.95);border-right-color:rgba(220,215,235,.64);border-radius:50%;animation:artLoaderSpin .8s linear infinite;pointer-events:none}
-  @keyframes artLoaderSpin{to{transform:rotate(360deg)}}
-  .artsEmpty{position:relative;padding:35px 10px;text-align:center;color:rgba(220,190,195,.55);font:italic 14px 'IM Fell English',Georgia,serif}
-  .artsEmpty.is-loading{min-height:180px;color:transparent}
-  #artsTopBtn{position:fixed;right:max(22px,env(safe-area-inset-right,0px) + 16px);bottom:max(22px,env(safe-area-inset-bottom,0px) + 16px);z-index:5;width:44px;height:44px;padding:0;display:grid;place-items:center;border:1px solid rgba(220,215,235,.18);border-radius:50%;background:rgba(8,8,10,.88);color:#fff;box-shadow:0 8px 28px rgba(0,0,0,.48);opacity:0;visibility:hidden;pointer-events:none;transform:translateY(8px);transition:opacity .2s ease,visibility .2s ease,transform .2s ease;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
-  #artsTopBtn.visible{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0)}
-  #artsTopBtn svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-  #artViewer.is-loading::before{content:'';position:absolute;left:50%;top:50%;width:34px;height:34px;margin:-17px 0 0 -17px;border:1px solid rgba(225,218,235,.2);border-top-color:#fff;border-right-color:rgba(220,215,235,.65);border-radius:50%;animation:artLoaderSpin .8s linear infinite;pointer-events:none;z-index:1}
   @media (min-width:1200px){
-    .artsCard{width:min(1120px,100%);max-height:min(86vh,900px);padding:32px}
-    .artsGrid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px}
   }
   @media (min-width:1600px){
-    .artsCard{width:min(1320px,100%);max-height:min(88vh,1100px);padding:36px}
-    .artsGrid{grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px}
   }
   body.panel-hides-mini #miniPlayer{opacity:0!important;visibility:hidden!important;pointer-events:none!important;transform:translate(-50%,200%)!important}
-  #artViewer{position:fixed;inset:0;z-index:360;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:max(14px,env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-right,0px)) max(14px,env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px));background:rgba(0,0,0,.975);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .25s ease,visibility .25s ease;overscroll-behavior:contain}
-  #artViewer.show{opacity:1;visibility:visible;pointer-events:auto}
-  .artViewerBottom{width:100%;display:flex;align-items:center;justify-content:center;flex-shrink:0;z-index:2;padding-top:12px}
-  .artViewerCounter{color:rgba(232,218,223,.72);font:12px 'Special Elite','Courier New',monospace;letter-spacing:.18em;font-variant-numeric:tabular-nums;text-align:center}
-  .artViewerStage{position:relative;flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center;touch-action:pan-y}
-  .artViewerFigure{display:flex;align-items:center;justify-content:center;width:100%;height:100%;min-height:0;margin:0;pointer-events:none}
-  #artViewerImage{display:block;width:auto;height:auto;max-width:min(calc(100vw - 136px),1280px);max-height:calc(100vh - 105px);max-height:calc(100dvh - 105px);object-fit:contain;pointer-events:auto;user-select:none;-webkit-user-drag:none;box-shadow:0 18px 80px rgba(0,0,0,.72)}
-  .artViewerNav{position:absolute;top:50%;z-index:2;transform:translateY(-50%);width:46px;height:54px;padding:0;border:0;border-radius:0;background:transparent;color:#fff;display:grid;place-items:center;cursor:pointer;transition:opacity .2s ease}
-  .artViewerNav svg{width:24px;height:24px;fill:none;stroke:#fff;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-  .artViewerNav:hover{background:transparent;opacity:.72}
-  .artViewerNav:disabled{opacity:.15;cursor:default}
-  #artViewerPrev{left:max(8px,calc(50% - 680px))}
-  #artViewerNext{right:max(8px,calc(50% - 680px))}
   #toastContainer{position:fixed;top:calc(env(safe-area-inset-top, 0px) + 16px);left:50%;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;align-items:center;gap:8px;width:min(420px, calc(100% - 24px));pointer-events:none}
   .toast{position:relative;pointer-events:auto;max-width:100%;padding:12px 22px;background:rgba(8,5,7,.94);border:1px solid rgba(255,255,255,.1);border-radius:3px;font-family:'IM Fell English', Georgia, serif;font-weight:400;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:#ded9ea;text-align:center;box-shadow:0 10px 34px rgba(0,0,0,.85), 0 0 22px rgba(255,255,255,.03);transform:translate3d(0,-140%,0);opacity:0;transition:transform .45s cubic-bezier(.2,.9,.3,1.15), opacity .32s ease;will-change:transform,opacity;touch-action:none;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .toast.show{transform:translate3d(0,0,0);opacity:1}
@@ -355,19 +319,6 @@
     #infoBtn{top:16px;left:12px;width:32px;height:32px;padding:5px}
     #infoBtn svg{width:18px;height:18px}
     #quickMenu{top:15px;left:52px;width:194px}
-    #artsPanel{padding:0;place-items:stretch;background:#000;overflow:hidden}
-    .artsClose{top:0;right:max(10px, env(safe-area-inset-right, 0px));width:46px;height:46px}
-    .artsCard{width:100%;max-width:100%;max-height:100vh;max-height:100dvh;padding:0 max(env(safe-area-inset-right,0px),10px) max(env(safe-area-inset-bottom,0px),12px) max(env(safe-area-inset-left,0px),10px);border:none;border-radius:0;background:#000;box-shadow:none}
-    .artsGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-    .artsItem img{object-fit:cover;border-radius:5px}
-    #artsTopBtn{right:max(14px,env(safe-area-inset-right,0px) + 8px);bottom:max(14px,env(safe-area-inset-bottom,0px) + 8px);width:42px;height:42px}
-    .artsEmpty:not([hidden]){min-height:60vh;display:flex;align-items:center;justify-content:center;padding:40px 20px;text-align:center;font-size:14px;line-height:1.7}
-    #artViewer{padding:10px}
-    #artViewerImage{max-width:calc(100vw - 68px);max-height:calc(100vh - 145px);max-height:calc(100dvh - 145px)}
-    .artViewerNav{width:36px;height:46px;background:transparent}
-    .artViewerNav svg{width:19px;height:19px}
-    #artViewerPrev{left:2px}
-    #artViewerNext{right:2px}
     .pageNav{font-size:12px;letter-spacing:.26em;gap:6px;margin-left:4px}
     #topBar button.pageNav{width:auto;height:auto;min-width:58px;padding:4px 6px}
     #pageMapPanel{top:54px;right:12px;width:min(430px,calc(100vw - 24px));padding:9px}
@@ -465,7 +416,6 @@
   <button class="quickMenuItem" id="muteBtn" type="button" aria-label="Отключить фоновый звук"><span class="quickMenuIcon" aria-hidden="true">♫</span><span id="muteMenuLabel">Отключить звук фона</span></button>
   <button class="quickMenuItem" id="menuInfoBtn" type="button"><span class="quickMenuIcon" aria-hidden="true">i</span><span>Информация</span></button>
   <button class="quickMenuItem" id="markAllPlayedBtn" type="button"><span class="quickMenuIcon" aria-hidden="true">✓</span><span>Отметить все прослушанным</span></button>
-  <button class="quickMenuItem" id="menuArtsBtn" type="button"><span class="quickMenuIcon" aria-hidden="true">✧</span><span>Арты</span></button>
   <button class="quickMenuItem" id="fullscreenBtn" type="button" aria-label="На весь экран"><span class="quickMenuIcon" aria-hidden="true">⛶</span><span id="fullscreenMenuLabel">На весь экран</span></button>
 </div>
 <div id="toastContainer" aria-live="polite"></div>
@@ -516,31 +466,6 @@
 </div>
 <div id="infoPanel">
   <div class="infoCard"><div id="infoContent"></div></div>
-</div>
-<div id="artsPanel" aria-hidden="true">
-  <button class="artsClose" id="artsCloseBtn" type="button" aria-label="Закрыть галерею">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
-  </button>
-  <div class="artsCard"><div class="artsGrid" id="artsGrid"></div><div class="artsEmpty" id="artsEmpty" hidden></div></div>
-  <button id="artsTopBtn" type="button" aria-label="В начало списка артов" title="В начало списка">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 14l7-7 7 7M12 7v12"/></svg>
-  </button>
-</div>
-<div id="artViewer" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Просмотр артов">
-  <div class="artViewerStage" id="artViewerStage">
-    <button class="artViewerNav" id="artViewerPrev" type="button" aria-label="Предыдущий арт">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4L7 12l8 8"/></svg>
-    </button>
-    <figure class="artViewerFigure">
-      <img id="artViewerImage" alt="">
-    </figure>
-    <button class="artViewerNav" id="artViewerNext" type="button" aria-label="Следующий арт">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4l8 8-8 8"/></svg>
-    </button>
-  </div>
-  <div class="artViewerBottom">
-    <div class="artViewerCounter" id="artViewerCounter">0 / 0</div>
-  </div>
 </div>
 <div id="externalWarning">
   <div class="extCard">
@@ -657,22 +582,6 @@ const quickMenu = document.getElementById('quickMenu');
 const muteMenuLabel = document.getElementById('muteMenuLabel');
 const fullscreenBtn = document.getElementById('fullscreenBtn');
 const fullscreenMenuLabel = document.getElementById('fullscreenMenuLabel');
-const artsPanel = document.getElementById('artsPanel');
-const artsCard = artsPanel.querySelector('.artsCard');
-const artsGrid = document.getElementById('artsGrid');
-const artsEmpty = document.getElementById('artsEmpty');
-const artsCloseBtn = document.getElementById('artsCloseBtn');
-const artsTopBtn = document.getElementById('artsTopBtn');
-const artViewer = document.getElementById('artViewer');
-const artViewerImage = document.getElementById('artViewerImage');
-const artViewerCounter = document.getElementById('artViewerCounter');
-const artViewerStage = document.getElementById('artViewerStage');
-const artViewerPrev = document.getElementById('artViewerPrev');
-const artViewerNext = document.getElementById('artViewerNext');
-let artsFiles = [];
-let activeArtIndex = -1;
-let artViewerReturnFocus = null;
-let artSwipeStart = null;
 const externalWarning = document.getElementById('externalWarning');
 const extUrl = document.getElementById('extUrl');
 const searchBox = document.getElementById('searchBox');
@@ -1177,7 +1086,6 @@ async function maybeStartNewReleaseIntro(){
   closeQuickMenu();
   closePageMap();
   closeInfoPanel();
-  closeArtsPanel();
   closeSearch();
   overlay.classList.remove('show');
   if (current >= 0) {
@@ -1830,7 +1738,6 @@ function generateChaoticPositions(count){
     }
   }
 
-  // Farthest-point sampling spreads a small set of stars over the full usable sky.
   while (positions.length < count && candidates.length) {
     let bestIndex = 0;
     let bestDistance = -1;
@@ -1860,8 +1767,6 @@ function generateChaoticPositions(count){
     positions.push(chosen);
   }
 
-  // Very narrow viewports may leave too few valid samples around the controls.
-  // Fill any remaining positions evenly rather than stacking them near the center.
   if (positions.length < count) {
     const cols = Math.max(1, Math.ceil(Math.sqrt(count * (vw / vh))));
     const rows = Math.max(1, Math.ceil(count / cols));
@@ -2540,7 +2445,7 @@ function closeInfoPanel(){
 }
 function syncPanelMiniPlayer(){
   document.body.classList.toggle('panel-hides-mini',
-    infoPanel.classList.contains('show') || artsPanel.classList.contains('show'));
+    infoPanel.classList.contains('show'));
 }
 
 infoBtn.addEventListener('click', toggleQuickMenu);
@@ -2564,236 +2469,6 @@ document.addEventListener('pointerdown', e => {
   if (!quickMenu.contains(e.target) && e.target !== infoBtn && !infoBtn.contains(e.target)) closeQuickMenu();
 });
 infoPanel.addEventListener('click', (e) => { if (e.target === infoPanel) closeInfoPanel(); });
-
-async function getRootArtsImages(){
-  const imagePattern = /\.(?:png|jpe?g|webp|gif|avif)$/i;
-  const gh = detectGitHubRepo();
-  if (gh) {
-    for (const branch of ['main', 'master', 'gh-pages']) {
-      try {
-        const url = 'https://api.github.com/repos/' + gh.user + '/' + gh.repo + '/contents/ARTS?ref=' + encodeURIComponent(branch);
-        const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 8000);
-        let res;
-        try {
-          res = await fetch(url, { cache: 'no-store', signal: controller.signal });
-        } finally {
-          clearTimeout(timer);
-        }
-        if (res.status === 404) continue;
-        if (!res.ok) break;
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          return data
-            .filter(item => item && item.type === 'file' && item.name && imagePattern.test(item.name))
-            .map(item => ({ path: 'ARTS/' + item.name }));
-        }
-      } catch (e) {}
-    }
-  }
-  const tree = await getFullTree();
-  if (!Array.isArray(tree)) return null;
-  return tree.filter(item => item && item.type === 'blob' && typeof item.path === 'string' && /^ARTS\/[^/]+$/i.test(item.path) && imagePattern.test(item.path));
-}
-
-async function openArtsPanel(){
-  closeQuickMenu(true);
-  closeSearch(true);
-  closeArtViewer();
-  artsPanel.classList.add('show');
-  artsPanel.setAttribute('aria-hidden','false');
-  syncPanelMiniPlayer();
-  syncUIPerformanceState();
-  artsCard.scrollTo({top:0,behavior:'auto'});
-  artsTopBtn.classList.remove('visible');
-  artsGrid.replaceChildren();
-  artsFiles = [];
-  artsEmpty.hidden = false;
-  artsEmpty.classList.add('is-loading');
-  artsEmpty.textContent = '';
-  try {
-    const files = await getRootArtsImages();
-    if (files === null) {
-      artsEmpty.classList.remove('is-loading');
-      artsEmpty.hidden = false;
-      artsEmpty.textContent = 'не удалось загрузить список артов';
-      return;
-    }
-    files.sort((a,b) => a.path.localeCompare(b.path, 'ru'));
-    artsFiles = files.map(item => {
-      const fileName = item.path.split('/').pop();
-      return {
-        path: item.path,
-        fileName,
-        url: buildUrl(item.path.split('/')),
-        failed: false
-      };
-    });
-    artsEmpty.classList.remove('is-loading');
-    artsEmpty.hidden = artsFiles.length > 0;
-    artsEmpty.textContent = artsFiles.length ? '' : 'в папке ARTS пока нет изображений';
-    for (const art of artsFiles) {
-      const figure = document.createElement('figure');
-      figure.className = 'artsItem is-loading';
-      const img = document.createElement('img');
-      img.loading = 'lazy';
-      img.decoding = 'async';
-      img.alt = art.fileName;
-      img.tabIndex = 0;
-      img.setAttribute('role','button');
-      img.setAttribute('aria-label','Открыть арт ' + art.fileName);
-      img.addEventListener('load', () => figure.classList.remove('is-loading'), {once:true});
-      img.addEventListener('click', () => {
-        const index = artsFiles.indexOf(art);
-        if (index >= 0) openArtViewer(index, img);
-      });
-      img.addEventListener('keydown', event => {
-        if (event.key !== 'Enter' && event.key !== ' ') return;
-        event.preventDefault();
-        const index = artsFiles.indexOf(art);
-        if (index >= 0) openArtViewer(index, img);
-      });
-      img.addEventListener('error', () => {
-        art.failed = true;
-        figure.remove();
-        if (!artsFiles.some(item => !item.failed)) {
-          artsEmpty.hidden = false;
-          artsEmpty.textContent = 'не удалось загрузить арты';
-        }
-      }, {once:true});
-      figure.append(img);
-      artsGrid.appendChild(figure);
-      img.src = art.url;
-      if (img.complete && img.naturalWidth) figure.classList.remove('is-loading');
-    }
-  } catch (e) {
-    artsEmpty.classList.remove('is-loading');
-    artsEmpty.hidden = false;
-    artsEmpty.textContent = 'не удалось загрузить арты';
-  }
-}
-
-function getAvailableArts(){
-  return artsFiles.filter(art => !art.failed);
-}
-
-function findAvailableArtIndex(start, direction){
-  const count = artsFiles.length;
-  if (!count) return -1;
-  for (let step = 0; step < count; step++) {
-    const index = ((start + direction * step) % count + count) % count;
-    if (!artsFiles[index].failed) return index;
-  }
-  return -1;
-}
-
-function renderArtViewer(){
-  const art = artsFiles[activeArtIndex];
-  if (!art || art.failed) return;
-  const available = getAvailableArts();
-  const position = available.indexOf(art);
-  artViewerImage.onerror = () => {
-    if (artsFiles[activeArtIndex] !== art) return;
-    artViewer.classList.remove('is-loading');
-    art.failed = true;
-    const next = findAvailableArtIndex(activeArtIndex + 1, 1);
-    if (next >= 0 && next !== activeArtIndex) {
-      activeArtIndex = next;
-      renderArtViewer();
-    } else {
-      artViewerCounter.textContent = '— / —';
-    }
-  };
-  artViewer.classList.add('is-loading');
-  artViewerImage.onload = () => {
-    if (artsFiles[activeArtIndex] === art) artViewer.classList.remove('is-loading');
-  };
-  artViewerImage.src = art.url;
-  artViewerImage.alt = art.fileName;
-  if (artViewerImage.complete && artViewerImage.naturalWidth) artViewer.classList.remove('is-loading');
-  artViewerCounter.textContent = (position + 1) + ' / ' + available.length;
-  const disabled = available.length <= 1;
-  artViewerPrev.disabled = disabled;
-  artViewerNext.disabled = disabled;
-}
-
-function openArtViewer(index, sourceElement){
-  const art = artsFiles[index];
-  if (!art || art.failed) return;
-  activeArtIndex = index;
-  artViewerReturnFocus = sourceElement || document.activeElement;
-  renderArtViewer();
-  artViewer.classList.add('show');
-  artViewer.setAttribute('aria-hidden','false');
-}
-
-function closeArtViewer(){
-  if (!artViewer.classList.contains('show')) return;
-  artViewer.classList.remove('show','is-loading');
-  artViewer.setAttribute('aria-hidden','true');
-  artViewerImage.onerror = null;
-  artViewerImage.onload = null;
-  activeArtIndex = -1;
-  if (artViewerReturnFocus && artViewerReturnFocus.isConnected) {
-    try { artViewerReturnFocus.focus({preventScroll:true}); } catch (e) {}
-  }
-  artViewerReturnFocus = null;
-}
-
-function stepArtViewer(direction){
-  if (activeArtIndex < 0) return;
-  const next = findAvailableArtIndex(activeArtIndex + direction, direction);
-  if (next < 0 || next === activeArtIndex) return;
-  activeArtIndex = next;
-  renderArtViewer();
-}
-
-function closeArtsPanel(){
-  closeArtViewer();
-  artsPanel.classList.remove('show');
-  artsPanel.setAttribute('aria-hidden','true');
-  syncPanelMiniPlayer();
-  syncUIPerformanceState();
-}
-
-artViewerPrev.addEventListener('click', () => stepArtViewer(-1));
-artViewerNext.addEventListener('click', () => stepArtViewer(1));
-artViewer.addEventListener('click', event => {
-  if (event.target instanceof Element && event.target.closest('.artViewerNav')) return;
-  if (event.target === artViewerImage) return;
-  closeArtViewer();
-});
-artViewerStage.addEventListener('pointerdown', event => {
-  if (event.target.closest && event.target.closest('button')) return;
-  artSwipeStart = {x:event.clientX,y:event.clientY};
-});
-artViewerStage.addEventListener('pointerup', event => {
-  if (!artSwipeStart) return;
-  const dx = event.clientX - artSwipeStart.x;
-  const dy = event.clientY - artSwipeStart.y;
-  artSwipeStart = null;
-  if (Math.abs(dx) > 42 && Math.abs(dx) > Math.abs(dy) * 1.25) {
-    stepArtViewer(dx < 0 ? 1 : -1);
-  }
-});
-artViewerStage.addEventListener('pointercancel', () => { artSwipeStart = null; });
-
-document.getElementById('menuArtsBtn').addEventListener('click', () => {
-  if (tutorialIsActive() && tutorialStage !== 'pages') return;
-  openArtsPanel();
-});
-artsPanel.addEventListener('click', e => { if (e.target === artsPanel) closeArtsPanel(); });
-artsCard.addEventListener('scroll', () => {
-  artsTopBtn.classList.toggle('visible', artsCard.scrollTop > 260);
-}, {passive:true});
-artsTopBtn.addEventListener('click', event => {
-  event.stopPropagation();
-  artsCard.scrollTo({top:0,behavior:'smooth'});
-});
-artsCloseBtn.addEventListener('click', (e) => {
-  e.stopPropagation();
-  closeArtsPanel();
-});
 
 function openExternalWarning(url){
   pendingExternalUrl = url;
@@ -3277,8 +2952,7 @@ function startBgLoop(){
 }
 function syncUIPerformanceState(){
   const busy = quickMenu.classList.contains('show') || pageMapPanel.classList.contains('show') ||
-    searchOpen || infoPanel.classList.contains('show') || artsPanel.classList.contains('show') ||
-    artViewer.classList.contains('show') || overlay.classList.contains('show') ||
+    searchOpen || infoPanel.classList.contains('show') || overlay.classList.contains('show') ||
     externalWarning.classList.contains('show') || newReleaseIntro.classList.contains('show') ||
     sky.classList.contains('sky-moving');
   document.body.classList.toggle('ui-panel-open', busy);
@@ -4972,21 +4646,14 @@ miniPlayBtn.addEventListener('click', (e) => {
 document.addEventListener('keydown', (e) => {
   if (ageGateActive) return;
   if (e.key === 'Escape') {
-    if (artViewer.classList.contains('show')) { closeArtViewer(); return; }
     if (quickMenu.classList.contains('show')) { closeQuickMenu(); return; }
-    if (artsPanel.classList.contains('show')) { closeArtsPanel(); return; }
     if (pageMapPanel.classList.contains('show')) { closePageMap(); return; }
     if (externalWarning.classList.contains('show')) { closeExternalWarning(); return; }
     if (infoPanel.classList.contains('show')) { closeInfoPanel(); return; }
     if (overlay.classList.contains('show')) { closeOverlay(); return; }
     if (searchOpen) { closeSearch(); return; }
   }
-  if (artViewer.classList.contains('show')) {
-    if (e.key === 'ArrowLeft') { e.preventDefault(); stepArtViewer(-1); }
-    else if (e.key === 'ArrowRight') { e.preventDefault(); stepArtViewer(1); }
-    return;
-  }
-  if (artsPanel.classList.contains('show') || pageMapPanel.classList.contains('show')) return;
+  if (pageMapPanel.classList.contains('show')) return;
   if (overlay.classList.contains('show') || infoPanel.classList.contains('show') ||
       externalWarning.classList.contains('show') || searchOpen) return;
   if (dragState) return;
@@ -5004,7 +4671,7 @@ const WHEEL_IDLE_RESET = 190;
 window.addEventListener('wheel', (e) => {
   if (tutorialIsActive() && tutorialStage !== 'swipe') return;
   if (ageGateActive || overlay.classList.contains('show') ||
-      infoPanel.classList.contains('show') || artsPanel.classList.contains('show') || externalWarning.classList.contains('show') ||
+      infoPanel.classList.contains('show') || externalWarning.classList.contains('show') ||
       searchOpen || pageMapPanel.classList.contains('show') || dragState || e.ctrlKey) return;
 
   let delta = e.deltaY;
@@ -5056,7 +4723,7 @@ window.addEventListener('touchstart', (e) => {
   }
   if (pageMapPanel.classList.contains('show')) return;
   if (ageGateActive || overlay.classList.contains('show') ||
-      infoPanel.classList.contains('show') || artsPanel.classList.contains('show') || externalWarning.classList.contains('show') ||
+      infoPanel.classList.contains('show') || externalWarning.classList.contains('show') ||
       searchOpen || dragState) return;
   if (miniPlayer.contains(e.target) || pageMapPanel.contains(e.target) || pageNavBtn.contains(e.target) ||
       document.getElementById('topBar').contains(e.target) ||
@@ -5149,8 +4816,6 @@ window.addEventListener('touchend', (e) => {
   const minimumDistance = Math.max(34, Math.min(58, innerHeight * 0.045));
   if (distance < minimumDistance && !quickFlick) return;
 
-  // One completed gesture always advances exactly one page. The page itself
-  // remains stationary while the finger is down; CSS animates after release.
   const direction = dy > 0 ? 1 : -1;
   const targetPage = Math.max(0, Math.min(totalPages - 1, currentPage + direction));
   if (targetPage !== currentPage) goToPage(targetPage, false, true);
