@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="./DATA/Logo.png">
 <link rel="shortcut icon" type="image/png" href="./DATA/Logo.png">
 <link rel="apple-touch-icon" href="./DATA/Logo.png">
-<link rel="preload" as="image" href="./DATA/Logo.png">
+
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Special+Elite&display=swap');
   *{margin:0;padding:0;box-sizing:border-box}
@@ -247,6 +247,47 @@
   .info-empty{font-family:'IM Fell English', Georgia, serif;font-weight:400;font-size:14px;letter-spacing:.04em;color:#a49aa8;text-align:center;font-style:italic;line-height:1.7}
   .info-link{color:#fff;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;text-decoration-color:rgba(255,255,255,.48);cursor:pointer;transition:text-decoration-color .2s ease,text-shadow .2s ease,color .2s ease;margin:0 2px;overflow-wrap:anywhere;word-break:break-word}
   .info-link:focus-visible{color:#fff;text-decoration-color:#fff;outline:2px solid rgba(255,255,255,.5);outline-offset:3px}
+  #infoPanel .info-line,
+  #infoPanel .info-line:hover,
+  #infoPanel .info-line:focus-within,
+  #infoPanel .info-line:active,
+  #infoPanel .info-link,
+  #infoPanel .info-link:hover,
+  #infoPanel .info-link:active,
+  #infoPanel .info-link:visited{
+    transform:none!important;
+    translate:none!important;
+    scale:1!important;
+    transition:none!important;
+    animation:none!important;
+    letter-spacing:inherit!important;
+    font-size:inherit;
+  }
+  #infoPanel .info-line:hover,
+  #infoPanel .info-line:focus-within,
+  #infoPanel .info-line:active{
+    margin-left:-9px!important;
+    margin-right:-9px!important;
+    padding-left:9px!important;
+    padding-right:9px!important;
+    background:transparent!important;
+    color:#d0c6cf!important;
+  }
+  #infoPanel .info-link:hover,
+  #infoPanel .info-link:active,
+  #infoPanel .info-link:visited{
+    margin-left:2px!important;
+    margin-right:2px!important;
+    padding:0!important;
+    color:#fff!important;
+    text-shadow:none!important;
+    text-decoration-thickness:1px!important;
+    text-decoration-color:rgba(255,255,255,.48)!important;
+  }
+  #infoPanel .info-link:focus-visible{
+    outline:2px solid rgba(255,255,255,.5)!important;
+    outline-offset:3px!important;
+  }
   @media (prefers-reduced-motion:reduce){.infoCard,#infoPanel,.info-line,.info-link{transition:none!important}}
 
   #externalWarning{position:fixed;inset:0;z-index:90;display:grid;place-items:center;background:rgba(0,0,0,.94);opacity:0;pointer-events:none;transition:opacity .35s ease;padding:24px}
@@ -1469,7 +1510,7 @@ function parsePodcastFeed(xmlText, baseUrl){
   return { title, description, coverUrl: channelCover, episodes };
 }
 async function fetchPodcastFeed(){
-  const sources = [PODCAST_FEED_URL, PODCAST_FEED_PROXY + PODCAST_FEED_URL];
+  const sources = [PODCAST_FEED_PROXY + PODCAST_FEED_URL];
   let lastError = null;
   for (const source of sources) {
     const controller = new AbortController();
