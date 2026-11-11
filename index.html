@@ -239,7 +239,6 @@
   .infoCard::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;border-radius:inherit;background:radial-gradient(ellipse at 12% 8%,rgba(130,76,92,.12),transparent 38%),radial-gradient(ellipse at 88% 84%,rgba(165,148,180,.08),transparent 42%)}
   #infoContent{position:relative;z-index:1;min-width:0}
   .infoClose{position:absolute;top:10px;right:12px;width:36px;height:36px;border:none;background:none;color:rgba(255,255,255,.4);font-size:26px;line-height:1;cursor:pointer;transition:color .3s ease;font-family:'Special Elite', 'Courier New', monospace;display:grid;place-items:center}
-  .infoClose:hover{color:#fff}
   .infoHeading{font-family:'Special Elite', 'Courier New', monospace;font-weight:400;font-size:16px;letter-spacing:.14em;color:#f0eaf2;margin:0 0 18px;padding:0 0 16px;border-bottom:1px solid rgba(220,215,235,.12);line-height:1.5;text-transform:uppercase;overflow-wrap:anywhere;word-break:normal}
   .infoHeading strong{color:#fff;font-weight:600}
   .info-line{font-family:'IM Fell English', Georgia, serif;font-weight:400;font-size:15px;line-height:1.75;color:#d0c6cf;margin:0 -9px;padding:5px 9px;border-radius:7px;white-space:normal;overflow-wrap:anywhere;word-break:normal;hyphens:auto;transition:background .2s ease,color .2s ease,transform .2s ease}
@@ -247,8 +246,7 @@
   .info-gap{height:12px}
   .info-empty{font-family:'IM Fell English', Georgia, serif;font-weight:400;font-size:14px;letter-spacing:.04em;color:#a49aa8;text-align:center;font-style:italic;line-height:1.7}
   .info-link{color:#fff;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;text-decoration-color:rgba(255,255,255,.48);cursor:pointer;transition:text-decoration-color .2s ease,text-shadow .2s ease,color .2s ease;margin:0 2px;overflow-wrap:anywhere;word-break:break-word}
-  .info-link:hover,.info-link:focus-visible{color:#fff;text-decoration-color:#fff;text-shadow:0 0 12px rgba(255,255,255,.42);outline:none}
-  @media (hover:hover) and (pointer:fine){.info-line:hover{background:rgba(255,255,255,.045);color:#f0eaf2;transform:translateX(2px)}}
+  .info-link:focus-visible{color:#fff;text-decoration-color:#fff;outline:2px solid rgba(255,255,255,.5);outline-offset:3px}
   @media (prefers-reduced-motion:reduce){.infoCard,#infoPanel,.info-line,.info-link{transition:none!important}}
 
   #externalWarning{position:fixed;inset:0;z-index:90;display:grid;place-items:center;background:rgba(0,0,0,.94);opacity:0;pointer-events:none;transition:opacity .35s ease;padding:24px}
@@ -2193,6 +2191,7 @@ async function playNewReleaseSound(){
   releaseSoundActive = true;
   if (ambientAudio) {
     ambientAudio._fadeToken = (ambientAudio._fadeToken || 0) + 1;
+    ambientAudio._ambientFadingOut = false;
     try { ambientAudio.volume = 0; ambientAudio.pause(); } catch(e) {}
   }
   try { await preloadNewReleaseSound(); } catch(e) {}
@@ -2219,22 +2218,57 @@ async function playNewReleaseSound(){
 function applyAmbientState(){
   const audio = ambientAudio;
   if (!audio) return;
-  if (ambientShouldPlay()) {
+  const shouldPlay = ambientShouldPlay();
+  if (!shouldPlay) {
+    if (audio._ambientPlayPending) return;
     if (audio.paused) {
-      audio.volume = 0;
-      audio.play().then(() => {
-        if (audio !== ambientAudio) { try { audio.pause(); } catch(e) {} return; }
-        if (!ambientShouldPlay()) { try { audio.pause(); } catch(e) {} return; }
-        fadeVolume(audio, 0.12, 650);
-      }).catch(() => {});
-    } else {
-      fadeVolume(audio, 0.12, 350);
+      audio._ambientFadingOut = false;
+      try { audio.volume = 0; } catch(e) {}
+      return;
     }
-  } else if (!audio.paused) {
-    fadeVolume(audio, 0, 350, () => {
-      if (audio !== ambientAudio || ambientShouldPlay()) return;
-      try { audio.pause(); } catch(e) {}
+    if (audio._ambientFadingOut) return;
+    audio._ambientFadingOut = true;
+    fadeVolume(audio, 0, 450, () => {
+      audio._ambientFadingOut = false;
+      if (audio !== ambientAudio) return;
+      try {
+        audio.pause();
+        audio.volume = 0;
+      } catch(e) {}
+      if (ambientShouldPlay()) applyAmbientState();
     });
+    return;
+  }
+  if (audio._ambientFadingOut) return;
+  if (audio.paused) {
+    if (audio._ambientPlayPending) return;
+    audio._ambientPlayPending = true;
+    try { audio.volume = 0; } catch(e) {}
+    let playResult;
+    try { playResult = audio.play(); }
+    catch(e) {
+      audio._ambientPlayPending = false;
+      return;
+    }
+    Promise.resolve(playResult).then(() => {
+      audio._ambientPlayPending = false;
+      if (audio !== ambientAudio) {
+        try { audio.pause(); } catch(e) {}
+        return;
+      }
+      if (!ambientShouldPlay()) {
+        applyAmbientState();
+        return;
+      }
+      fadeVolume(audio, 0.12, 900);
+    }).catch(error => {
+      audio._ambientPlayPending = false;
+      if (error && error.name === 'AbortError' && audio === ambientAudio && ambientShouldPlay()) {
+        applyAmbientState();
+      }
+    });
+  } else {
+    fadeVolume(audio, 0.12, 900);
   }
 }
 
@@ -2277,16 +2311,25 @@ function playAmbientTrack(trackNumber){
     ambientAudio = null;
     playAmbientFromQueue();
   };
-  audio.play().then(() => {
-    if (failed || generation !== ambientGeneration || !ambientActive) {
+  ambientAudio = audio;
+  let playResult;
+  try { playResult = audio.play(); }
+  catch(e) { fail(); return; }
+  Promise.resolve(playResult).then(() => {
+    if (failed || generation !== ambientGeneration || ambientAudio !== audio || !ambientActive) {
       try { audio.pause(); } catch(e) {}
       return;
     }
-    ambientAudio = audio;
     lastAmbientTrack = trackNumber;
-    if (ambientShouldPlay()) fadeVolume(audio, 0.12, 900);
-    else try { audio.pause(); } catch(e) {}
-  }).catch(fail);
+    applyAmbientState();
+  }).catch(error => {
+    if (generation !== ambientGeneration || ambientAudio !== audio) return;
+    if (error && error.name === 'AbortError') {
+      if (ambientShouldPlay()) applyAmbientState();
+      return;
+    }
+    fail();
+  });
 }
 
 function playAmbientFromQueue(){
