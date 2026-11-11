@@ -3340,9 +3340,11 @@ async function warmAudioPrefix(index, generation){
   const controller = new AbortController();
   audioWarmControllers.add(controller);
   try {
-    const response = await fetch(ep.audioUrl, {
+    const response = await fetch(PODCAST_FEED_PROXY + ep.audioUrl, {
+      method: 'GET',
       headers: { Range: 'bytes=0-' + (AUDIO_WARM_BYTES - 1) },
-      cache: 'force-cache',
+      cache: 'no-store',
+      credentials: 'omit',
       signal: controller.signal
     });
     const contentRange = response.headers.get('content-range') || '';
