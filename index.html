@@ -18,7 +18,9 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Special+Elite&display=swap');
   *{margin:0;padding:0;box-sizing:border-box}
-  html,body{height:100%}
+  :root{--app-width:100vw;--app-height:100vh;--app-offset-top:0px}
+  @supports (height:100dvh){:root{--app-height:100dvh}}
+  html,body{width:100%;height:100%;min-height:0}
   body{
     background:#000;color:#c8c8d2;
     font-family:'IM Fell English', Georgia, 'Times New Roman', serif;font-weight:400;
@@ -34,12 +36,12 @@
     background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>");
   }
   .vignette{position:fixed;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 36%, rgba(0,0,0,.62) 78%, rgba(0,0,0,.97) 100%)}
-  #skyWrap{position:fixed;inset:0;z-index:4;overflow:hidden;background:#000;isolation:isolate}
+  #skyWrap{position:fixed;left:0;right:0;top:var(--app-offset-top,0px);height:var(--app-height,100dvh);z-index:4;overflow:hidden;background:#000;isolation:isolate}
   #sky{position:absolute;top:0;left:0;width:100%;height:100%;transform:translate3d(0,0,0);transform-origin:0 0;backface-visibility:hidden;background:#000;transition:transform .52s cubic-bezier(.18,.78,.22,1)}
   #sky.sky-moving{will-change:transform}
   #sky.sky-moving .star-core,#sky.sky-moving .star-flare,#sky.sky-moving .star.unplayed::before,#sky.sky-moving .star.searched::after{animation-play-state:paused!important}
   body.sky-page-moving .grain{animation-play-state:paused!important}
-  .page{position:absolute;left:0;width:100%;height:100vh;overflow:hidden;background:#000;contain:layout paint style;backface-visibility:hidden}
+  .page{position:absolute;left:0;width:100%;height:var(--app-height,100dvh);overflow:hidden;background:#000;contain:layout paint style;backface-visibility:hidden}
   .page-sky{position:absolute;inset:0;pointer-events:none}
   .page:not(.page-active) .star-core,.page:not(.page-active) .star-flare{animation-play-state:paused!important}
   .page:not(.page-active) .star.unplayed::before,.page:not(.page-active) .star.searched::after{animation-play-state:paused!important}
@@ -168,9 +170,9 @@
   @keyframes dropzonePulse{0%{transform:scale(.82);opacity:.85}100%{transform:scale(1.42);opacity:0}}
   .dropzone-label{font-family:'IM Fell English', Georgia, serif;font-weight:400;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.45);text-align:center;line-height:1.7;pointer-events:none;transition:color .25s ease}
   .dropzone.hover .dropzone-label{color:#fff}
-  #playerOverlay{position:fixed;inset:0;z-index:40;display:grid;place-items:center;background:radial-gradient(circle at 50% 42%, rgba(18,18,22,.65) 0%, rgba(0,0,0,.98) 72%);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);opacity:0;pointer-events:none;transition:opacity .4s ease}
+  #playerOverlay{position:fixed;left:0;right:0;top:var(--app-offset-top,0px);height:var(--app-height,100dvh);z-index:40;display:grid;place-items:center;overflow-y:auto;overscroll-behavior:contain;padding:max(12px,env(safe-area-inset-top)) 16px max(12px,env(safe-area-inset-bottom));background:radial-gradient(circle at 50% 42%, rgba(18,18,22,.65) 0%, rgba(0,0,0,.98) 72%);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);opacity:0;pointer-events:none;transition:opacity .4s ease}
   #playerOverlay.show{opacity:1;pointer-events:auto}
-  .playerCard{position:relative;width:min(440px, 88vw);display:flex;flex-direction:column;align-items:center;gap:22px;padding:0 4px;transform-origin:50% 100%;transform:translateY(35vh) scale(.35);opacity:0;transition:transform .65s cubic-bezier(.2,.9,.3,1.25), opacity .4s ease;will-change:transform,opacity}
+  .playerCard{position:relative;width:min(440px, 88vw);max-height:calc(var(--app-height,100dvh) - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 24px);display:flex;flex-direction:column;align-items:center;gap:22px;padding:0 4px;transform-origin:50% 100%;transform:translateY(35vh) scale(.35);opacity:0;transition:transform .65s cubic-bezier(.2,.9,.3,1.25), opacity .4s ease;will-change:transform,opacity}
   #playerOverlay.show .playerCard{transform:translateY(0) scale(1);opacity:1}
   .cover{width:100%;aspect-ratio:1/1;border-radius:14px;overflow:hidden;position:relative;isolation:isolate;contain:paint;box-shadow:0 30px 80px -20px rgba(0,0,0,.95), 0 0 0 1px rgba(255,255,255,.06), 0 0 70px -10px rgba(255,255,255,.08);background:#050505;touch-action:pan-y;cursor:grab}
   .cover:active{cursor:grabbing}
@@ -232,10 +234,11 @@
   .suggestion:hover,.suggestion:focus-visible{background:rgba(255,255,255,.08);color:#fff;outline:none}
   .suggestion.no-results{cursor:default;font-style:italic;color:rgba(190,199,225,.42);text-align:center}
   .suggestion.no-results:hover{background:none;color:rgba(190,199,225,.42)}
-  #infoPanel{position:fixed;inset:0;z-index:80;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 36%,rgba(48,8,18,.78) 0%,rgba(13,5,10,.91) 52%,rgba(0,0,0,.97) 100%);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);opacity:0;pointer-events:none;transition:opacity .32s ease;padding:24px;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+  #infoPanel{position:fixed;left:0;right:0;top:var(--app-offset-top,0px);height:var(--app-height,100dvh);z-index:80;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 36%,rgba(48,8,18,.78) 0%,rgba(13,5,10,.91) 52%,rgba(0,0,0,.97) 100%);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);opacity:0;pointer-events:none;transition:opacity .36s ease;padding:max(18px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) max(18px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
   #infoPanel.show{opacity:1;pointer-events:auto}
-  .infoCard{position:relative;isolation:isolate;width:min(560px,100%);max-height:min(84vh,820px);overflow-y:auto;overscroll-behavior:contain;padding:42px 34px 34px;border:1px solid rgba(220,215,235,.16);border-radius:13px;background:linear-gradient(145deg,rgba(13,10,14,.96),rgba(4,4,7,.96));backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 22px 70px rgba(0,0,0,.76),0 0 0 1px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.035);text-align:left;margin:auto;opacity:0;transform:translate3d(0,16px,0) scale(.985);transition:opacity .3s ease,transform .42s cubic-bezier(.2,.8,.2,1);scrollbar-width:thin;scrollbar-color:rgba(190,180,198,.42) transparent}
-  #infoPanel.show .infoCard{opacity:1;transform:translate3d(0,0,0) scale(1)}
+  .infoCard{position:relative;isolation:isolate;width:min(560px,100%);max-height:min(820px,calc(var(--app-height,100dvh) - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 40px));overflow-y:auto;overscroll-behavior:contain;padding:42px 34px 34px;border:1px solid rgba(220,215,235,.16);border-radius:13px;background:linear-gradient(145deg,rgba(13,10,14,.96),rgba(4,4,7,.96));backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 22px 70px rgba(0,0,0,.76),0 0 0 1px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.035);text-align:left;margin:auto;opacity:0;transform:translate3d(0,24px,0) scale(.965);transition:opacity .28s ease,transform .28s ease;scrollbar-width:thin;scrollbar-color:rgba(190,180,198,.42) transparent}
+  @keyframes infoCardEnter{0%{opacity:0;transform:translate3d(0,28px,0) scale(.94);filter:blur(5px)}72%{opacity:1;transform:translate3d(0,-2px,0) scale(1.008);filter:blur(0)}100%{opacity:1;transform:translate3d(0,0,0) scale(1);filter:blur(0)}}
+  #infoPanel.show .infoCard{opacity:1;transform:translate3d(0,0,0) scale(1);animation:infoCardEnter .46s cubic-bezier(.18,.82,.22,1) both}
   .infoCard::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;border-radius:inherit;background:radial-gradient(ellipse at 12% 8%,rgba(130,76,92,.12),transparent 38%),radial-gradient(ellipse at 88% 84%,rgba(165,148,180,.08),transparent 42%)}
   #infoContent{position:relative;z-index:1;min-width:0}
   .infoClose{position:absolute;top:10px;right:12px;width:36px;height:36px;border:none;background:none;color:rgba(255,255,255,.4);font-size:26px;line-height:1;cursor:pointer;transition:color .3s ease;font-family:'Special Elite', 'Courier New', monospace;display:grid;place-items:center}
@@ -288,7 +291,8 @@
     outline:2px solid rgba(255,255,255,.5)!important;
     outline-offset:3px!important;
   }
-  @media (prefers-reduced-motion:reduce){.infoCard,#infoPanel,.info-line,.info-link{transition:none!important}}
+  @media (prefers-reduced-motion:reduce){.info-line,.info-link{transition:none!important}}
+
 
   #externalWarning{position:fixed;inset:0;z-index:90;display:grid;place-items:center;background:rgba(0,0,0,.94);opacity:0;pointer-events:none;transition:opacity .35s ease;padding:24px}
   #externalWarning.show{opacity:1;pointer-events:auto}
@@ -412,6 +416,26 @@
     .star.launching .star-flare{animation:none!important;opacity:.85}
     .star.drag-proxy.absorbing .star-core,.star.drag-proxy.absorbing .star-ring{animation:none!important}
     .dropzone.visible.hover::before{animation:none!important;opacity:0}
+  }
+
+  @media (max-height:700px){
+    #playerOverlay{padding-top:max(8px,env(safe-area-inset-top));padding-bottom:max(8px,env(safe-area-inset-bottom))}
+    .playerCard{gap:clamp(8px,1.8vh,16px);max-height:calc(var(--app-height,100dvh) - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 16px)}
+    .cover{width:min(100%,calc(var(--app-height,100dvh) - 190px))}
+  }
+  @media (max-height:560px){
+    .playerCard{width:min(440px,calc(100vw - 28px));gap:7px}
+    .cover{width:min(100%,190px,calc(var(--app-height,100dvh) - 165px));border-radius:10px}
+    .titleBlock h2{font-size:clamp(14px,3.4vw,18px);line-height:1.2}
+    .controls{gap:6px}
+    .ctrlBtn{width:38px;height:38px}
+    .ctrlBtn svg{width:15px;height:15px}
+    .ctrlBtn.main{width:46px;height:46px}
+    .ctrlBtn.main svg{width:19px;height:19px}
+    .ctrlBtn.minor{width:30px;height:30px}
+    .ctrlBtn.minor svg{width:15px;height:15px}
+    #repeatBtn{margin-right:0}
+    #shuffleBtn{margin-left:0}
   }
 
   #quickMenu,#pageMapPanel,#searchBox{will-change:transform,opacity}
@@ -573,12 +597,26 @@ function fitRingTitle(text, radius, fontSize, letterSpacing){
   return clipped + '…';
 }
 
-const isMobile = innerWidth < 700;
+let appViewportWidth = Math.max(1, Math.round(window.innerWidth || document.documentElement.clientWidth));
+let appViewportHeight = Math.max(1, Math.round(window.innerHeight || document.documentElement.clientHeight));
+function updateAppViewportMetrics(){
+  const vv = window.visualViewport;
+  const activeInput = document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+  const useVisualViewport = !!(vv && vv.height > 0 && vv.scale <= 1.01 && !activeInput);
+  appViewportWidth = Math.max(1, Math.round(window.innerWidth || document.documentElement.clientWidth));
+  appViewportHeight = Math.max(1, Math.round(useVisualViewport ? vv.height : (window.innerHeight || document.documentElement.clientHeight)));
+  const offsetTop = useVisualViewport ? Math.max(0, Math.round(vv.offsetTop || 0)) : 0;
+  document.documentElement.style.setProperty('--app-width', appViewportWidth + 'px');
+  document.documentElement.style.setProperty('--app-height', appViewportHeight + 'px');
+  document.documentElement.style.setProperty('--app-offset-top', offsetTop + 'px');
+  return { width:appViewportWidth, height:appViewportHeight };
+}
+let isMobile = appViewportWidth < 700;
 const reducedMotionQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
 const lowPowerDevice = isMobile && ((navigator.hardwareConcurrency || 4) <= 4 || !!(navigator.connection && navigator.connection.saveData));
 const bgFrameInterval = 0;
 function getCanvasScale(maxScale, pixelBudget){
-  const area = Math.max(1, innerWidth * innerHeight);
+  const area = Math.max(1, appViewportWidth * appViewportHeight);
   return Math.min(window.devicePixelRatio || 1, maxScale, Math.sqrt(pixelBudget / area));
 }
 let dpr = getCanvasScale(isMobile ? 1.0 : 1.25, isMobile ? 650000 : 1250000);
@@ -1234,21 +1272,21 @@ let dragTrailTrackedAnimation = null;
 function resizeDragTrail(){
   if (!dragTrailCanvas || !dragTrailCtx) return;
   const nextDpr = getCanvasScale(isMobile ? .82 : 1.0, isMobile ? 420000 : 850000);
-  const nextWidth = Math.max(1, Math.floor(innerWidth * nextDpr));
-  const nextHeight = Math.max(1, Math.floor(innerHeight * nextDpr));
+  const nextWidth = Math.max(1, Math.floor(appViewportWidth * nextDpr));
+  const nextHeight = Math.max(1, Math.floor(appViewportHeight * nextDpr));
   if (dragTrailCanvas.width === nextWidth && dragTrailCanvas.height === nextHeight && dragTrailDpr === nextDpr) return;
   dragTrailDpr = nextDpr;
   dragTrailCanvas.width = nextWidth;
   dragTrailCanvas.height = nextHeight;
-  dragTrailCanvas.style.width = innerWidth + 'px';
-  dragTrailCanvas.style.height = innerHeight + 'px';
+  dragTrailCanvas.style.width = appViewportWidth + 'px';
+  dragTrailCanvas.style.height = appViewportHeight + 'px';
   dragTrailCtx.setTransform(dragTrailDpr, 0, 0, dragTrailDpr, 0, 0);
-  dragTrailCtx.clearRect(0, 0, innerWidth, innerHeight);
+  dragTrailCtx.clearRect(0, 0, appViewportWidth, appViewportHeight);
 }
 function resize(){
   const nextDpr = getCanvasScale(isMobile ? 1.0 : 1.25, isMobile ? 650000 : 1250000);
-  const nextW = canvas ? Math.max(1, Math.floor(innerWidth * nextDpr)) : 0;
-  const nextH = canvas ? Math.max(1, Math.floor(innerHeight * nextDpr)) : 0;
+  const nextW = canvas ? Math.max(1, Math.floor(appViewportWidth * nextDpr)) : 0;
+  const nextH = canvas ? Math.max(1, Math.floor(appViewportHeight * nextDpr)) : 0;
   const changed = nextW !== W || nextH !== H || nextDpr !== dpr;
   dpr = nextDpr;
   W = nextW;
@@ -1256,8 +1294,8 @@ function resize(){
   if (canvas && changed) {
     canvas.width = W;
     canvas.height = H;
-    canvas.style.width = innerWidth + 'px';
-    canvas.style.height = innerHeight + 'px';
+    canvas.style.width = appViewportWidth + 'px';
+    canvas.style.height = appViewportHeight + 'px';
   }
   resizeDragTrail();
   if (changed && ctx && !bgContextLost) drawBg(performance.now());
@@ -2035,7 +2073,7 @@ function installPodcastFeed(feed, options){
 }
 async function buildSky(){
   const initialStarCount = isMobile ? 115 : 190;
-  sky.innerHTML = '<div class="page page-active" style="top:0;height:' + Math.max(1, innerHeight) + 'px"><div class="page-sky">' + makeSkySVG(initialStarCount) + '</div></div>';
+  sky.innerHTML = '<div class="page page-active" style="top:0;height:' + Math.max(1, appViewportHeight) + 'px"><div class="page-sky">' + makeSkySVG(initialStarCount) + '</div></div>';
   const cachedFeed = readPodcastFeedCache();
   if (cachedFeed) {
     installPodcastFeed(cachedFeed, { restorePlayback:true, startTutorial:true });
@@ -5016,12 +5054,14 @@ window.addEventListener('pageshow', (event) => {
 
 let viewportRefreshTimer = 0;
 let viewportRefreshFrame = 0;
-let lastViewportLayoutWidth = innerWidth;
+let lastViewportLayoutWidth = appViewportWidth;
 function runViewportLayoutRefresh(){
   viewportRefreshFrame = 0;
-  const widthChanged = Math.abs(innerWidth - lastViewportLayoutWidth) > 2;
+  updateAppViewportMetrics();
+  isMobile = appViewportWidth < 700;
+  const widthChanged = Math.abs(appViewportWidth - lastViewportLayoutWidth) > 2;
   if (searchOpen && document.activeElement === searchInput && !widthChanged) return;
-  lastViewportLayoutWidth = innerWidth;
+  lastViewportLayoutWidth = appViewportWidth;
   resize();
   updateSkyPageGeometry();
   refreshStarRingLayout();
@@ -5036,7 +5076,7 @@ function runViewportLayoutRefresh(){
   }
 }
 function scheduleViewportLayoutRefresh(delay){
-  const widthChanged = Math.abs(innerWidth - lastViewportLayoutWidth) > 2;
+  const widthChanged = Math.abs(appViewportWidth - lastViewportLayoutWidth) > 2;
   if (searchOpen && document.activeElement === searchInput && !widthChanged) return;
   if (viewportRefreshTimer) clearTimeout(viewportRefreshTimer);
   viewportRefreshTimer = setTimeout(() => {
@@ -5045,9 +5085,13 @@ function scheduleViewportLayoutRefresh(delay){
     viewportRefreshFrame = requestAnimationFrame(runViewportLayoutRefresh);
   }, delay);
 }
-window.addEventListener('resize', () => scheduleViewportLayoutRefresh(90), { passive:true });
+window.addEventListener('resize', () => scheduleViewportLayoutRefresh(120), { passive:true });
+window.addEventListener('orientationchange', () => scheduleViewportLayoutRefresh(260), { passive:true });
+if (screen.orientation && screen.orientation.addEventListener) {
+  screen.orientation.addEventListener('change', () => scheduleViewportLayoutRefresh(260));
+}
 if (window.visualViewport) {
-  window.visualViewport.addEventListener('resize', () => scheduleViewportLayoutRefresh(140), { passive:true });
+  window.visualViewport.addEventListener('resize', () => scheduleViewportLayoutRefresh(160), { passive:true });
 }
 
 function removeMissingAppServiceWorker(){
@@ -5069,6 +5113,7 @@ function removeMissingAppServiceWorker(){
 }
 
 async function init(){
+  updateAppViewportMetrics();
   resize();
   updateMuteIcon();
   preloadNewReleaseSound();
