@@ -1510,30 +1510,40 @@ function parsePodcastFeed(xmlText, baseUrl){
   return { title, description, coverUrl: channelCover, episodes };
 }
 async function fetchPodcastFeed(){
-  const sources = [PODCAST_FEED_PROXY + PODCAST_FEED_URL];
-  let lastError = null;
-  for (const source of sources) {
+  const sources = [
+    PODCAST_FEED_PROXY + PODCAST_FEED_URL,
+    PODCAST_FEED_PROXY + '?url=' + encodeURIComponent(PODCAST_FEED_URL)
+  ];
+  const errors = [];
+  for (let attempt = 0; attempt < sources.length; attempt++) {
+    const source = sources[attempt];
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 18000);
+    const timer = setTimeout(() => controller.abort(), 35000);
     try {
       const response = await fetch(source, {
         method: 'GET',
         cache: 'no-store',
         credentials: 'omit',
+        headers: { 'Accept': 'application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.8' },
         signal: controller.signal
       });
-      if (!response.ok) throw new Error('RSS HTTP ' + response.status);
+      if (!response.ok) {
+        const proxyCode = response.headers.get('X-Cors-Error');
+        throw new Error('RSS HTTP ' + response.status + (proxyCode ? ' (' + proxyCode + ')' : ''));
+      }
       const xmlText = await response.text();
       if (!xmlText || !xmlText.trim()) throw new Error('RSS feed is empty');
-      const baseUrl = source === PODCAST_FEED_URL ? (response.url || PODCAST_FEED_URL) : PODCAST_FEED_URL;
-      return parsePodcastFeed(xmlText, baseUrl);
+      const feed = parsePodcastFeed(xmlText, PODCAST_FEED_URL);
+      if (!feed.episodes.length) throw new Error('RSS feed contains no playable episodes');
+      return feed;
     } catch (error) {
-      lastError = error;
+      errors.push(error && error.name === 'AbortError' ? 'RSS request timeout' : String(error && error.message || error));
     } finally {
       clearTimeout(timer);
     }
+    if (attempt + 1 < sources.length) await new Promise(resolve => setTimeout(resolve, 700));
   }
-  throw lastError || new Error('RSS feed unavailable');
+  throw new Error(errors.join('; ') || 'RSS feed unavailable');
 }
 function applyPodcastFeedMetadata(feed){
   podcastFeedMeta = {
@@ -2052,6 +2062,7 @@ async function buildSky(){
     schedulePodcastFeedCache(feed);
   } catch (error) {
     podcastFeedError = 'Не удалось загрузить выпуски подкаста';
+    showToast('Не удалось загрузить выпуски. Проверьте подключение и обновите страницу.', 5200);
   }
 }
 function restoreLastPlayed(){
