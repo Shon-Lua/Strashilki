@@ -61,7 +61,24 @@ jobs:
             --header 'Accept: application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.8' \
             --output "$TEMP_FILE" \
             'https://podster.fm/rss.xml?pid=100576'
+          python - "$TEMP_FILE" <<'PY'
+          import re
+          import sys
+          from pathlib import Path
 
+          path = Path(sys.argv[1])
+          xml = path.read_text(encoding="utf-8-sig")
+
+          xml = re.sub(
+              r'<\?xml-stylesheet\b.*?\?>\s*',
+              '',
+              xml,
+              count=1,
+              flags=re.IGNORECASE | re.DOTALL
+          )
+
+          path.write_text(xml, encoding="utf-8")
+          PY
           python - "$TEMP_FILE" <<'PY'
           import sys
           import xml.etree.ElementTree as ET
