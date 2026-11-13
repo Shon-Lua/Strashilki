@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -31,6 +31,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
@@ -42,7 +44,7 @@ jobs:
 
           mkdir -p DATA
 
-          TEMP_FILE="$(mktemp DATA/.podcast-feed.XXXXXX.tmp)"
+          TEMP_FILE="$(mktemp "$RUNNER_TEMP/podster-rss.XXXXXX")"
 
           trap 'rm -f "$TEMP_FILE"' EXIT
 
@@ -65,8 +67,8 @@ jobs:
           python - "$TEMP_FILE" <<'PY'
           import re
           import sys
-          from pathlib import Path
           import xml.etree.ElementTree as ET
+          from pathlib import Path
 
           path = Path(sys.argv[1])
 
@@ -80,12 +82,12 @@ jobs:
               flags=re.IGNORECASE | re.DOTALL
           )
 
-          root = ET.fromstring(xml)
+          root = ET.fromstring(xml.encode("utf-8"))
 
           def local_name(tag):
               return tag.rsplit("}", 1)[-1].split(":")[-1].lower()
 
-          if local_name(root.tag) not in ("rss", "rdf", "feed"):
+          if local_name(root.tag) not in ("rss", "rdf"):
               raise SystemExit("Unsupported RSS document")
 
           items = [
@@ -136,17 +138,28 @@ jobs:
           path.write_text(xml, encoding="utf-8")
 
           print(f"RSS validated: {playable} playable episodes")
-          print("XML stylesheet removed")
           PY
-
-          if [ ! -s "$TEMP_FILE" ]; then
-            echo "::error::RSS file is empty"
-            exit 1
-          fi
 
           mv "$TEMP_FILE" DATA/podcast-feed.xml
 
           echo "RSS successfully downloaded"
+
+      - name: Commit RSS Snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add DATA/podcast-feed.xml
+
+          if git diff --cached --quiet; then
+            echo "RSS has not changed"
+          else
+            git commit -m "Update Podster RSS [skip ci]"
+            git push origin HEAD:main
+          fi
 
       - name: Verify RSS File
         shell: bash
@@ -163,7 +176,7 @@ jobs:
             exit 1
           fi
 
-          echo "RSS file verified successfully"
+          echo "RSS file verified"
 
           ls -lh DATA/podcast-feed.xml
 
@@ -180,30 +193,37 @@ jobs:
           fi
 
           rm -rf _site
-
           mkdir -p _site
 
-          rsync -a \
-            --exclude='.git/' \
-            --exclude='.github/' \
-            --exclude='_site/' \
-            ./ _site/
+          shopt -s dotglob nullglob
+
+          for item in *; do
+            case "$item" in
+              .git|.github|_site)
+                continue
+                ;;
+            esac
+
+            cp -a "$item" _site/
+          done
 
           touch _site/.nojekyll
 
           if [ ! -s _site/index.html ]; then
-            echo "::error::Website index.html is missing from deployment directory"
+            echo "::error::Website index.html is missing"
             exit 1
           fi
 
           if [ ! -s _site/DATA/podcast-feed.xml ]; then
-            echo "::error::RSS file is missing from deployment directory"
+            echo "::error::RSS is missing from deployment directory"
             exit 1
           fi
 
+          cmp DATA/podcast-feed.xml _site/DATA/podcast-feed.xml
+
           echo "Website deployment directory verified"
 
-          find _site/DATA -maxdepth 1 -type f -printf '%f (%s bytes)\n'
+          ls -lh _site/DATA/podcast-feed.xml
 
           sha256sum _site/DATA/podcast-feed.xml
 
@@ -215,3 +235,64 @@ jobs:
       - name: Deploy Website
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Verify Published RSS
+        shell: bash
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          set -euo pipefail
+
+          CHECK_FILE="$RUNNER_TEMP/published-rss.xml"
+
+          RSS_URL="${PAGE_URL%/}/DATA/podcast-feed.xml?verify=${GITHUB_RUN_ID}"
+
+          for attempt in $(seq 1 12); do
+            STATUS="$(
+              curl \
+                --location \
+                --silent \
+                --show-error \
+                --output "$CHECK_FILE" \
+                --write-out '%{http_code}' \
+                "$RSS_URL" || true
+            )"
+
+            if [ "$STATUS" = "200" ] && [ -s "$CHECK_FILE" ]; then
+
+              if python - "$CHECK_FILE" <<'PY'
+          import sys
+          import xml.etree.ElementTree as ET
+
+          try:
+              root = ET.parse(sys.argv[1]).getroot()
+
+              name = root.tag.rsplit("}", 1)[-1].lower()
+
+              items = [
+                  node for node in root.iter()
+                  if node.tag.rsplit("}", 1)[-1].lower() == "item"
+              ]
+
+              if name not in ("rss", "rdf") or not items:
+                  raise ValueError("Invalid published RSS")
+
+              print(f"Published RSS verified: {len(items)} episodes")
+
+          except Exception as error:
+              print(error, file=sys.stderr)
+              sys.exit(1)
+          PY
+              then
+                echo "Published RSS is accessible"
+                exit 0
+              fi
+            fi
+
+            echo "RSS verification attempt $attempt failed: HTTP $STATUS"
+
+            sleep 5
+          done
+
+          echo "::error::Published RSS is unavailable: $RSS_URL"
+          exit 1
