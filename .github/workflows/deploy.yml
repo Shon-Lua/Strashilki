@@ -42,7 +42,7 @@ jobs:
 
           mkdir -p DATA
 
-          TEMP_FILE="$(mktemp "$RUNNER_TEMP/podster-rss.XXXXXX")"
+          TEMP_FILE="$(mktemp DATA/.podcast-feed.XXXXXX.tmp)"
 
           trap 'rm -f "$TEMP_FILE"' EXIT
 
@@ -61,12 +61,15 @@ jobs:
             --header 'Accept: application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.8' \
             --output "$TEMP_FILE" \
             'https://podster.fm/rss.xml?pid=100576'
+
           python - "$TEMP_FILE" <<'PY'
           import re
           import sys
           from pathlib import Path
+          import xml.etree.ElementTree as ET
 
           path = Path(sys.argv[1])
+
           xml = path.read_text(encoding="utf-8-sig")
 
           xml = re.sub(
@@ -77,74 +80,69 @@ jobs:
               flags=re.IGNORECASE | re.DOTALL
           )
 
-          path.write_text(xml, encoding="utf-8")
-          PY
-          python - "$TEMP_FILE" <<'PY'
-          import sys
-          import xml.etree.ElementTree as ET
+          root = ET.fromstring(xml)
 
           def local_name(tag):
               return tag.rsplit("}", 1)[-1].split(":")[-1].lower()
 
-          try:
-              root = ET.parse(sys.argv[1]).getroot()
+          if local_name(root.tag) not in ("rss", "rdf", "feed"):
+              raise SystemExit("Unsupported RSS document")
 
-              root_name = local_name(root.tag)
+          items = [
+              node for node in root.iter()
+              if local_name(node.tag) == "item"
+          ]
 
-              if root_name not in ("rss", "rdf"):
-                  raise ValueError("Unsupported RSS document")
+          playable = 0
 
-              items = [
-                  node for node in root.iter()
-                  if local_name(node.tag) == "item"
-              ]
+          for item in items:
+              children = list(item)
 
-              playable = 0
+              has_title = any(
+                  local_name(child.tag) == "title"
+                  and (child.text or "").strip()
+                  for child in children
+              )
 
-              for item in items:
-                  children = list(item)
+              has_audio = False
 
-                  title = any(
-                      local_name(child.tag) == "title"
-                      and (child.text or "").strip()
-                      for child in children
-                  )
+              for child in children:
+                  name = local_name(child.tag)
 
-                  audio = False
+                  if name == "enclosure" and child.get("url"):
+                      has_audio = True
 
-                  for child in children:
-                      name = local_name(child.tag)
+                  elif name == "content" and (
+                      child.get("url") or child.get("href")
+                  ):
+                      has_audio = True
 
-                      if name == "enclosure" and child.get("url"):
-                          audio = True
+                  elif name == "link" and (
+                      (child.get("rel") or "").lower() == "enclosure"
+                  ) and (
+                      child.get("href") or (child.text or "").strip()
+                  ):
+                      has_audio = True
 
-                      elif name == "content" and (
-                          child.get("url") or child.get("href")
-                      ):
-                          audio = True
+              if has_title and has_audio:
+                  playable += 1
 
-                      elif name == "link" and (
-                          (child.get("rel") or "").lower() == "enclosure"
-                      ) and (
-                          child.get("href") or (child.text or "").strip()
-                      ):
-                          audio = True
+          if not items:
+              raise SystemExit("RSS contains no episodes")
 
-                  if title and audio:
-                      playable += 1
+          if not playable:
+              raise SystemExit("RSS contains no playable episodes")
 
-              if not items:
-                  raise ValueError("RSS contains no episodes")
+          path.write_text(xml, encoding="utf-8")
 
-              if not playable:
-                  raise ValueError("RSS contains no playable episodes")
-
-              print(f"RSS validated: {playable} playable episodes")
-
-          except Exception as error:
-              print(f"RSS validation failed: {error}", file=sys.stderr)
-              sys.exit(1)
+          print(f"RSS validated: {playable} playable episodes")
+          print("XML stylesheet removed")
           PY
+
+          if [ ! -s "$TEMP_FILE" ]; then
+            echo "::error::RSS file is empty"
+            exit 1
+          fi
 
           mv "$TEMP_FILE" DATA/podcast-feed.xml
 
@@ -156,20 +154,63 @@ jobs:
           set -euo pipefail
 
           if [ ! -s DATA/podcast-feed.xml ]; then
-            echo "::error::RSS file does not exist or is empty"
+            echo "::error::RSS file is missing"
+            exit 1
+          fi
+
+          if grep -Eiq '<\?xml-stylesheet' DATA/podcast-feed.xml; then
+            echo "::error::XML stylesheet was not removed"
             exit 1
           fi
 
           echo "RSS file verified successfully"
 
-          stat -c '%n (%s bytes)' DATA/podcast-feed.xml
+          ls -lh DATA/podcast-feed.xml
 
           sha256sum DATA/podcast-feed.xml
+
+      - name: Prepare Website
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ ! -s index.html ]; then
+            echo "::error::index.html is missing"
+            exit 1
+          fi
+
+          rm -rf _site
+
+          mkdir -p _site
+
+          rsync -a \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='_site/' \
+            ./ _site/
+
+          touch _site/.nojekyll
+
+          if [ ! -s _site/index.html ]; then
+            echo "::error::Website index.html is missing from deployment directory"
+            exit 1
+          fi
+
+          if [ ! -s _site/DATA/podcast-feed.xml ]; then
+            echo "::error::RSS file is missing from deployment directory"
+            exit 1
+          fi
+
+          echo "Website deployment directory verified"
+
+          find _site/DATA -maxdepth 1 -type f -printf '%f (%s bytes)\n'
+
+          sha256sum _site/DATA/podcast-feed.xml
 
       - name: Upload Website
         uses: actions/upload-pages-artifact@v4
         with:
-          path: .
+          path: _site
 
       - name: Deploy Website
         id: deployment
