@@ -1388,9 +1388,12 @@ function clearDragTrail(){
 }
 
 const PODCAST_FEED_URL = 'https://podster.fm/rss.xml?pid=100576';
-const PODCAST_FEED_PROXY = 'https://proxy.cors.dev/';
+const PODCAST_FEED_LOCAL_URL = new URL('./DATA/podcast-feed.xml', document.baseURI).href;
+const PODCAST_FEED_CHECK_INTERVAL = 5 * 60 * 1000;
 let podcastFeedMeta = { title: 'Страшилки', description: '', coverUrl: '' };
 let podcastFeedError = '';
+let podcastFeedCheckTimer = 0;
+let podcastFeedCheckInProgress = false;
 
 function xmlLocalName(node){
   return String(node && (node.localName || node.nodeName) || '').split(':').pop().toLowerCase();
@@ -1552,41 +1555,127 @@ function parsePodcastFeed(xmlText, baseUrl){
   return { title, description, coverUrl: channelCover, episodes };
 }
 async function fetchPodcastFeed(){
-  const sources = [
-    PODCAST_FEED_PROXY + PODCAST_FEED_URL,
-    PODCAST_FEED_PROXY + '?url=' + encodeURIComponent(PODCAST_FEED_URL)
-  ];
   const errors = [];
-  for (let attempt = 0; attempt < sources.length; attempt++) {
-    const source = sources[attempt];
+
+  for (let attempt = 0; attempt < 2; attempt++) {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 35000);
+    const timer = setTimeout(() => controller.abort(), 20000);
+
     try {
+      const separator = PODCAST_FEED_LOCAL_URL.includes('?') ? '&' : '?';
+      const source = PODCAST_FEED_LOCAL_URL + separator + 'v=' + Date.now();
       const response = await fetch(source, {
         method: 'GET',
         cache: 'no-store',
-        credentials: 'omit',
-        headers: { 'Accept': 'application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.8' },
+        credentials: 'same-origin',
+        headers: {
+          'Accept': 'application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.8'
+        },
         signal: controller.signal
       });
-      if (!response.ok) {
-        const proxyCode = response.headers.get('X-Cors-Error');
-        throw new Error('RSS HTTP ' + response.status + (proxyCode ? ' (' + proxyCode + ')' : ''));
-      }
+
+      if (!response.ok) throw new Error('RSS HTTP ' + response.status);
+
       const xmlText = await response.text();
       if (!xmlText || !xmlText.trim()) throw new Error('RSS feed is empty');
+
       const feed = parsePodcastFeed(xmlText, PODCAST_FEED_URL);
       if (!feed.episodes.length) throw new Error('RSS feed contains no playable episodes');
+
       return feed;
     } catch (error) {
-      errors.push(error && error.name === 'AbortError' ? 'RSS request timeout' : String(error && error.message || error));
+      errors.push(
+        error && error.name === 'AbortError'
+          ? 'RSS request timeout'
+          : String(error && error.message || error)
+      );
     } finally {
       clearTimeout(timer);
     }
-    if (attempt + 1 < sources.length) await new Promise(resolve => setTimeout(resolve, 700));
+
+    if (attempt === 0) await new Promise(resolve => setTimeout(resolve, 1200));
   }
+
   throw new Error(errors.join('; ') || 'RSS feed unavailable');
 }
+
+async function refreshPodcastFeedFromSource(showInitialError){
+  if (podcastFeedCheckInProgress) return false;
+  podcastFeedCheckInProgress = true;
+
+  try {
+    const feed = await fetchPodcastFeed();
+    if (!feed || !Array.isArray(feed.episodes) || !feed.episodes.length) {
+      throw new Error('RSS feed has no episodes');
+    }
+
+    const nextSignature = getPodcastFeedSignature(feed);
+    schedulePodcastFeedCache(feed);
+
+    if (!EPISODES.length) {
+      podcastFeedSignature = nextSignature;
+      installPodcastFeed(feed, { restorePlayback:true, startTutorial:true });
+    } else if (nextSignature !== podcastFeedSignature) {
+      const previousLatestKey = EPISODES[0] && EPISODES[0].folderKey || '';
+      podcastFeedSignature = nextSignature;
+      installPodcastFeed(feed, { preserveCurrent:true });
+      const latestKey = EPISODES[0] && EPISODES[0].folderKey || '';
+      if (latestKey && latestKey !== previousLatestKey) maybeStartNewReleaseIntro();
+    } else {
+      applyPodcastFeedMetadata(feed);
+    }
+
+    maybeStartNewReleaseIntro();
+    podcastFeedError = '';
+    return true;
+  } catch (error) {
+    if (showInitialError && !EPISODES.length) {
+      podcastFeedError = 'Не удалось загрузить выпуски подкаста';
+      showToast('Не удалось загрузить выпуски. Проверьте подключение и обновите страницу.', 5200);
+    }
+    return false;
+  } finally {
+    podcastFeedCheckInProgress = false;
+  }
+}
+
+function schedulePodcastFeedCheck(delay){
+  if (podcastFeedCheckTimer) clearTimeout(podcastFeedCheckTimer);
+  podcastFeedCheckTimer = setTimeout(async () => {
+    podcastFeedCheckTimer = 0;
+    if (document.hidden) {
+      schedulePodcastFeedCheck(PODCAST_FEED_CHECK_INTERVAL);
+      return;
+    }
+    await refreshPodcastFeedFromSource(false);
+    schedulePodcastFeedCheck(PODCAST_FEED_CHECK_INTERVAL);
+  }, Math.max(0, Number(delay) || PODCAST_FEED_CHECK_INTERVAL));
+}
+
+function startPodcastFeedMonitoring(immediate){
+  if (podcastFeedCheckTimer) {
+    clearTimeout(podcastFeedCheckTimer);
+    podcastFeedCheckTimer = 0;
+  }
+
+  if (immediate) {
+    refreshPodcastFeedFromSource(false).finally(() => {
+      schedulePodcastFeedCheck(PODCAST_FEED_CHECK_INTERVAL);
+    });
+  } else {
+    schedulePodcastFeedCheck(PODCAST_FEED_CHECK_INTERVAL);
+  }
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    if (podcastFeedCheckTimer) clearTimeout(podcastFeedCheckTimer);
+    podcastFeedCheckTimer = 0;
+  } else if (EPISODES.length) {
+    startPodcastFeedMonitoring(true);
+  }
+});
+
 function applyPodcastFeedMetadata(feed){
   podcastFeedMeta = {
     title: feed.title || 'Страшилки',
@@ -2079,33 +2168,18 @@ async function buildSky(){
   const initialStarCount = isMobile ? 115 : 190;
   sky.innerHTML = '<div class="page page-active" style="top:0;height:' + Math.max(1, appViewportHeight) + 'px"><div class="page-sky">' + makeSkySVG(initialStarCount) + '</div></div>';
   const cachedFeed = readPodcastFeedCache();
+
   if (cachedFeed) {
-    installPodcastFeed(cachedFeed, { restorePlayback:true, startTutorial:true });
     podcastFeedSignature = getPodcastFeedSignature(cachedFeed);
-    fetchPodcastFeed().then(feed => {
-      if (!feed || !Array.isArray(feed.episodes) || !feed.episodes.length) return;
-      const nextSignature = getPodcastFeedSignature(feed);
-      schedulePodcastFeedCache(feed);
-      if (nextSignature === podcastFeedSignature) {
-        applyPodcastFeedMetadata(feed);
-        return;
-      }
-      podcastFeedSignature = nextSignature;
-      installPodcastFeed(feed, { preserveCurrent:true });
-      maybeStartNewReleaseIntro();
-    }).catch(() => {});
+    installPodcastFeed(cachedFeed, { restorePlayback:true, startTutorial:true });
+    refreshPodcastFeedFromSource(false).finally(() => {
+      startPodcastFeedMonitoring(false);
+    });
     return;
   }
-  try {
-    const feed = await fetchPodcastFeed();
-    if (!feed || !Array.isArray(feed.episodes) || !feed.episodes.length) throw new Error('RSS feed has no episodes');
-    podcastFeedSignature = getPodcastFeedSignature(feed);
-    installPodcastFeed(feed, { restorePlayback:true, startTutorial:true });
-    schedulePodcastFeedCache(feed);
-  } catch (error) {
-    podcastFeedError = 'Не удалось загрузить выпуски подкаста';
-    showToast('Не удалось загрузить выпуски. Проверьте подключение и обновите страницу.', 5200);
-  }
+
+  await refreshPodcastFeedFromSource(true);
+  startPodcastFeedMonitoring(false);
 }
 function restoreLastPlayed(){
   const key = getLastPlayed();
@@ -3227,10 +3301,6 @@ let isProgressScrubbing = false;
 const episodeAudioPool = new Map();
 let audioPreloadGeneration = 0;
 let previousPreloadTimer = null;
-let audioWarmGeneration = 0;
-const audioWarmCache = new Map();
-const audioWarmControllers = new Set();
-const AUDIO_WARM_BYTES = 262144;
 
 function clearAudio(audio){
   if (!audio) return;
@@ -3376,59 +3446,6 @@ function getAdjacentEpisodeIndices(index){
   };
 }
 
-function cancelAudioWarmups(){
-  audioWarmGeneration++;
-  for (const controller of audioWarmControllers) {
-    try { controller.abort(); } catch(e) {}
-  }
-  audioWarmControllers.clear();
-}
-
-async function warmAudioPrefix(index, generation){
-  if (index < 0 || index >= EPISODES.length || generation !== audioWarmGeneration) return;
-  const ep = EPISODES[index];
-  if (!ep || !ep.audioUrl || audioWarmCache.has(ep.audioUrl)) return;
-  const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-  if (connection && (connection.saveData || /^(slow-2g|2g)$/.test(connection.effectiveType || ''))) return;
-  const controller = new AbortController();
-  audioWarmControllers.add(controller);
-  try {
-    const response = await fetch(PODCAST_FEED_PROXY + ep.audioUrl, {
-      method: 'GET',
-      headers: { Range: 'bytes=0-' + (AUDIO_WARM_BYTES - 1) },
-      cache: 'no-store',
-      credentials: 'omit',
-      signal: controller.signal
-    });
-    const contentRange = response.headers.get('content-range') || '';
-    if (response.status !== 206 || !/^bytes\s+0-/i.test(contentRange)) {
-      if (response.body) {
-        try { await response.body.cancel(); } catch(e) {}
-      }
-      return;
-    }
-    const bytes = await response.arrayBuffer();
-    if (generation === audioWarmGeneration && bytes.byteLength > 0 && bytes.byteLength <= AUDIO_WARM_BYTES + 65536) {
-      audioWarmCache.set(ep.audioUrl, bytes.byteLength);
-      while (audioWarmCache.size > 24) audioWarmCache.delete(audioWarmCache.keys().next().value);
-    }
-  } catch(e) {
-  } finally {
-    audioWarmControllers.delete(controller);
-  }
-}
-
-async function warmAdjacentAudio(index, adjacent, generation){
-  await new Promise(resolve => setTimeout(resolve, 1100));
-  if (generation !== audioWarmGeneration || index !== current) return;
-  if (adjacent.next >= 0 && adjacent.next !== index) await warmAudioPrefix(adjacent.next, generation);
-  if (generation !== audioWarmGeneration || index !== current) return;
-  await new Promise(resolve => setTimeout(resolve, 180));
-  if (adjacent.previous >= 0 && adjacent.previous !== index && adjacent.previous !== adjacent.next) {
-    await warmAudioPrefix(adjacent.previous, generation);
-  }
-}
-
 function setEpisodePreloadMode(audio, mode){
   if (!audio || audio.preload === mode) return;
   try {
@@ -3443,8 +3460,6 @@ function refreshAudioPreloadPool(preloadNeighbors){
   if (current < 0 || current >= EPISODES.length) return;
   const generation = ++audioPreloadGeneration;
   clearTimeout(previousPreloadTimer);
-  cancelAudioWarmups();
-  const warmGeneration = audioWarmGeneration;
   const adjacent = getAdjacentEpisodeIndices(current);
   const keep = new Set([current]);
   if (adjacent.next >= 0) keep.add(adjacent.next);
@@ -3485,7 +3500,6 @@ function refreshAudioPreloadPool(preloadNeighbors){
   }
 
   preloadAdjacentCovers(current, adjacent.next, adjacent.previous);
-  if (preloadNeighbors) warmAdjacentAudio(current, adjacent, warmGeneration);
 }
 
 function preloadEpisodeDuration(index){
