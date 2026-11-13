@@ -22,6 +22,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     environment:
       name: github-pages
@@ -41,7 +42,7 @@ jobs:
 
           mkdir -p DATA
 
-          TEMP_FILE="$(mktemp)"
+          TEMP_FILE="$(mktemp "$RUNNER_TEMP/podster-rss.XXXXXX")"
 
           trap 'rm -f "$TEMP_FILE"' EXIT
 
@@ -56,24 +57,97 @@ jobs:
             --retry-delay 4 \
             --connect-timeout 20 \
             --max-time 90 \
-            -H 'Accept: application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.8' \
-            -H 'User-Agent: StrashilkiSiteRSS/1.0' \
-            'https://podster.fm/rss.xml?pid=100576' \
-            --output "$TEMP_FILE"
+            --user-agent 'StrashilkiSiteRSS/1.0' \
+            --header 'Accept: application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.8' \
+            --output "$TEMP_FILE" \
+            'https://podster.fm/rss.xml?pid=100576'
 
-          if ! grep -Eiq '<(rss|rdf:RDF)([[:space:]>])' "$TEMP_FILE"; then
-            echo "::error::Podster returned an invalid RSS document"
-            exit 1
-          fi
+          python - "$TEMP_FILE" <<'PY'
+          import sys
+          import xml.etree.ElementTree as ET
 
-          if ! grep -Eiq '<item([[:space:]>])' "$TEMP_FILE"; then
-            echo "::error::RSS contains no episodes"
-            exit 1
-          fi
+          def local_name(tag):
+              return tag.rsplit("}", 1)[-1].split(":")[-1].lower()
+
+          try:
+              root = ET.parse(sys.argv[1]).getroot()
+
+              root_name = local_name(root.tag)
+
+              if root_name not in ("rss", "rdf"):
+                  raise ValueError("Unsupported RSS document")
+
+              items = [
+                  node for node in root.iter()
+                  if local_name(node.tag) == "item"
+              ]
+
+              playable = 0
+
+              for item in items:
+                  children = list(item)
+
+                  title = any(
+                      local_name(child.tag) == "title"
+                      and (child.text or "").strip()
+                      for child in children
+                  )
+
+                  audio = False
+
+                  for child in children:
+                      name = local_name(child.tag)
+
+                      if name == "enclosure" and child.get("url"):
+                          audio = True
+
+                      elif name == "content" and (
+                          child.get("url") or child.get("href")
+                      ):
+                          audio = True
+
+                      elif name == "link" and (
+                          (child.get("rel") or "").lower() == "enclosure"
+                      ) and (
+                          child.get("href") or (child.text or "").strip()
+                      ):
+                          audio = True
+
+                  if title and audio:
+                      playable += 1
+
+              if not items:
+                  raise ValueError("RSS contains no episodes")
+
+              if not playable:
+                  raise ValueError("RSS contains no playable episodes")
+
+              print(f"RSS validated: {playable} playable episodes")
+
+          except Exception as error:
+              print(f"RSS validation failed: {error}", file=sys.stderr)
+              sys.exit(1)
+          PY
 
           mv "$TEMP_FILE" DATA/podcast-feed.xml
 
           echo "RSS successfully downloaded"
+
+      - name: Verify RSS File
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ ! -s DATA/podcast-feed.xml ]; then
+            echo "::error::RSS file does not exist or is empty"
+            exit 1
+          fi
+
+          echo "RSS file verified successfully"
+
+          stat -c '%n (%s bytes)' DATA/podcast-feed.xml
+
+          sha256sum DATA/podcast-feed.xml
 
       - name: Upload Website
         uses: actions/upload-pages-artifact@v4
