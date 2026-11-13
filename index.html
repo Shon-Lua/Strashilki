@@ -33,56 +33,45 @@
     -webkit-tap-highlight-color:transparent;overscroll-behavior:none;
   }
   button, input{font-family:inherit;font-weight:inherit}
-  canvas#bg{position:fixed;inset:0;z-index:0;display:block;background:radial-gradient(ellipse at 50% 55%,rgba(80,80,80,.045),transparent 68%),#000;pointer-events:none}
+  canvas#bg{position:fixed;inset:0;z-index:0;display:block;background:#030303;pointer-events:none}
   #dragTrail{position:fixed;inset:0;z-index:201;display:block;width:100%;height:100%;pointer-events:none}
-  .grain{
-    position:fixed;inset:0;z-index:2;pointer-events:none;opacity:.014;
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>");
-  }
-  .vignette{position:fixed;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 36%, rgba(0,0,0,.62) 78%, rgba(0,0,0,.97) 100%)}
+  .grain{display:none}
+  .vignette{position:fixed;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse at 50% 48%,transparent 42%,rgba(0,0,0,.48) 82%,rgba(0,0,0,.88) 100%)}
   #skyWrap{position:fixed;left:0;right:0;top:var(--app-offset-top,0px);height:var(--app-height,100dvh);z-index:4;overflow:hidden;background:#030303;isolation:isolate}
-  #skyAtmosphere{position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none;isolation:isolate;--haunt-x:50%;--haunt-y:50%}
-  #skyAtmosphere .sky-fog{position:absolute;left:-18%;width:136%;height:52%;border-radius:50%;pointer-events:none;will-change:transform,opacity;background:radial-gradient(ellipse at 26% 52%,rgba(190,190,190,.15),transparent 62%),radial-gradient(ellipse at 73% 47%,rgba(112,112,112,.12),transparent 66%);filter:blur(46px);opacity:.72;z-index:1;animation-play-state:paused}
-  #skyAtmosphere .sky-fog.far{top:3%;height:58%;transform:translate3d(-2%,0,0) scale(1.04);animation:skyFogDriftFar 76s ease-in-out infinite alternate}
-  #skyAtmosphere .sky-fog.near{top:49%;height:43%;transform:translate3d(2%,0,0) scale(1.02);animation:skyFogDriftNear 91s ease-in-out infinite alternate;opacity:.62}
-  #skyAtmosphere .sky-nebula{position:absolute;pointer-events:none;will-change:transform,opacity;transform-origin:center;mix-blend-mode:screen;animation-play-state:paused}
-  #skyAtmosphere .sky-nebula.distant{left:-28%;top:8%;width:156%;height:64%;opacity:.34;filter:blur(58px);background:radial-gradient(ellipse at 17% 57%,rgba(218,218,218,.19) 0%,rgba(160,160,160,.09) 23%,transparent 58%),radial-gradient(ellipse at 55% 34%,rgba(190,190,190,.13) 0%,rgba(125,125,125,.055) 29%,transparent 60%),radial-gradient(ellipse at 84% 65%,rgba(205,205,205,.12) 0%,transparent 48%);-webkit-mask-image:radial-gradient(ellipse at 50% 50%,#000 24%,rgba(0,0,0,.86) 53%,transparent 82%);mask-image:radial-gradient(ellipse at 50% 50%,#000 24%,rgba(0,0,0,.86) 53%,transparent 82%);animation:nebulaDriftA 88s ease-in-out infinite alternate}
-  #skyAtmosphere .sky-nebula.moving{left:-20%;top:30%;width:145%;height:58%;opacity:.28;filter:blur(43px);background:radial-gradient(ellipse at 28% 42%,rgba(175,175,175,.14) 0%,transparent 49%),radial-gradient(ellipse at 67% 63%,rgba(205,205,205,.15) 0%,rgba(120,120,120,.05) 32%,transparent 62%),radial-gradient(ellipse at 90% 20%,rgba(150,150,150,.09) 0%,transparent 44%);-webkit-mask-image:radial-gradient(ellipse at 50% 50%,#000 19%,rgba(0,0,0,.8) 55%,transparent 82%);mask-image:radial-gradient(ellipse at 50% 50%,#000 19%,rgba(0,0,0,.8) 55%,transparent 82%);animation:nebulaDriftB 113s ease-in-out infinite alternate}
-  #skyAtmosphere .sky-nebula.wisp{left:-15%;top:42%;width:130%;height:30%;opacity:.2;filter:blur(24px);background:linear-gradient(112deg,transparent 4%,rgba(185,185,185,.05) 24%,rgba(225,225,225,.1) 39%,rgba(150,150,150,.045) 56%,transparent 78%),radial-gradient(ellipse at 44% 50%,rgba(200,200,200,.1),transparent 65%);-webkit-mask-image:radial-gradient(ellipse at 50% 50%,#000 16%,rgba(0,0,0,.78) 53%,transparent 84%);mask-image:radial-gradient(ellipse at 50% 50%,#000 16%,rgba(0,0,0,.78) 53%,transparent 84%);animation:nebulaWisp 69s ease-in-out infinite alternate}
-  #skyAtmosphere .sky-veil{position:absolute;inset:-25%;opacity:.22;pointer-events:none;will-change:transform,opacity;background:radial-gradient(ellipse at 22% 48%,rgba(0,0,0,.0) 0%,rgba(0,0,0,.22) 31%,transparent 59%),radial-gradient(ellipse at 76% 55%,rgba(0,0,0,.0) 0%,rgba(0,0,0,.34) 35%,transparent 66%);animation:skyVeilDrift 97s ease-in-out infinite alternate;animation-play-state:paused}
-  #skyAtmosphere.sky-atmosphere-ready .sky-fog,#skyAtmosphere.sky-atmosphere-ready .sky-nebula,#skyAtmosphere.sky-atmosphere-ready .sky-veil{animation-play-state:running}
-  @keyframes skyFogDriftFar{0%{transform:translate3d(-3%,1%,0) scale(1.02);opacity:.48}50%{opacity:.78}100%{transform:translate3d(4%,-3%,0) scale(1.12);opacity:.62}}
-  @keyframes skyFogDriftNear{0%{transform:translate3d(3%,0,0) scale(1.01);opacity:.36}50%{opacity:.66}100%{transform:translate3d(-4%,-3%,0) scale(1.1);opacity:.48}}
-  @keyframes nebulaDriftA{0%{transform:translate3d(-4%,2%,0) scale(.96) rotate(-3deg);opacity:.22}48%{opacity:.39}100%{transform:translate3d(5%,-4%,0) scale(1.12) rotate(2deg);opacity:.31}}
-  @keyframes nebulaDriftB{0%{transform:translate3d(4%,-3%,0) scale(1.08) rotate(2deg);opacity:.18}52%{opacity:.34}100%{transform:translate3d(-5%,3%,0) scale(.94) rotate(-4deg);opacity:.26}}
-  @keyframes nebulaWisp{0%{transform:translate3d(-7%,5%,0) scaleX(.92) rotate(-2deg);opacity:.1}50%{opacity:.25}100%{transform:translate3d(8%,-4%,0) scaleX(1.12) rotate(2deg);opacity:.19}}
-  @keyframes skyVeilDrift{0%{transform:translate3d(-3%,1%,0) scale(1)}100%{transform:translate3d(4%,-2%,0) scale(1.08)}}
-  body.ui-panel-open #skyAtmosphere .sky-fog,body.ui-panel-open #skyAtmosphere .sky-nebula,body.ui-panel-open #skyAtmosphere .sky-veil,body.sky-page-moving #skyAtmosphere .sky-fog,body.sky-page-moving #skyAtmosphere .sky-nebula,body.sky-page-moving #skyAtmosphere .sky-veil{animation-play-state:paused!important}
+  #skyBackdrop{position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none;background:#030303}
   #sky{position:absolute;top:0;left:0;width:100%;height:100%;z-index:2;transform:translate3d(0,0,0);transform-origin:0 0;backface-visibility:hidden;background:transparent;transition:transform .52s cubic-bezier(.18,.78,.22,1)}
   #sky.sky-moving{will-change:transform}
-  #sky.sky-moving .star-core,#sky.sky-moving .star.unplayed::before{animation-play-state:paused!important}
+  #sky.sky-moving .star-core,#sky.sky-moving .star-signal{animation-play-state:paused!important}
   body.sky-page-moving .grain{animation-play-state:paused!important}
   .page{position:absolute;left:0;width:100%;height:var(--app-height,100dvh);overflow:hidden;background:transparent;contain:layout paint style;backface-visibility:hidden}
-  .page-sky{position:absolute;inset:0;pointer-events:none}
-  .page:not(.page-active) .star-core{animation-play-state:paused!important}
-  .page:not(.page-active) .star.unplayed::before{animation-play-state:paused!important}
   .page-sky{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+  .page:not(.page-active) .star-core,.page:not(.page-active) .star-signal{animation-play-state:paused!important}
   .page-sky svg{display:block;width:100%;height:100%;overflow:visible}
-  .star-core{position:absolute;top:50%;left:50%;width:var(--core-size,6px);height:var(--core-size,6px);border-radius:50%;background:#fff;transform:translate(-50%,-50%);box-shadow:0 0 8px 2px rgba(255,255,255,.72),0 0 22px 7px rgba(255,255,255,.19);animation:twinkle var(--pulse-dur,5s) ease-in-out infinite;animation-delay:var(--pulse-delay,0s);transition:transform .28s ease,box-shadow .28s ease;z-index:2}
-  .star-core::before{content:'';position:absolute;left:50%;top:50%;width:34px;height:34px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.19) 0%,rgba(255,255,255,.075) 28%,rgba(255,255,255,0) 72%);pointer-events:none;z-index:-1}
-  @keyframes twinkle{0%,100%{opacity:.66}50%{opacity:1}}
-  .star:hover .star-core{transform:translate(-50%,-50%) scale(1.42);box-shadow:0 0 10px 3px rgba(255,255,255,.86),0 0 28px 9px rgba(255,255,255,.24)}
-  .star:active .star-core{transform:translate(-50%,-50%) scale(1.55);box-shadow:0 0 12px 4px rgba(255,255,255,.92),0 0 34px 11px rgba(255,255,255,.28)}
-  .star-ring{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;overflow:visible;opacity:.82;transition:opacity .28s ease;z-index:3;filter:drop-shadow(0 0 3px rgba(0,0,0,.95))}
-  .ring-text{font-family:'IM Fell English',Georgia,serif;font-weight:400;fill:#f0f0f0;text-transform:uppercase;transition:fill .28s ease}
+  .star-core{position:absolute;top:50%;left:50%;width:var(--core-size,8px);height:var(--core-size,8px);border-radius:50%;background:radial-gradient(circle at 38% 35%,#fff 0 30%,#e6e6e6 58%,#bdbdbd 100%);transform:translate(-50%,-50%);box-shadow:0 0 5px 2px rgba(255,255,255,.68),0 0 16px 5px rgba(255,255,255,.16);animation:twinkle var(--pulse-dur,7s) ease-in-out infinite;animation-delay:var(--pulse-delay,0s);transition:transform .22s ease,box-shadow .22s ease;z-index:2}
+  .star-signal{position:absolute;left:50%;top:50%;width:var(--signal-size,34px);height:var(--signal-size,34px);transform:translate(-50%,-50%) scale(.9);clip-path:polygon(50% 0%,54% 44%,83% 50%,54% 56%,50% 100%,46% 56%,17% 50%,46% 44%);background:rgba(246,246,246,.68);opacity:.64;pointer-events:none;z-index:1;animation:episodeSignalPulse 6.4s ease-in-out infinite;animation-delay:var(--pulse-delay,0s);will-change:opacity,transform}
+  @keyframes episodeSignalPulse{0%,100%{opacity:.48;transform:translate(-50%,-50%) scale(.84)}50%{opacity:.82;transform:translate(-50%,-50%) scale(1)}}
+  .star:hover .star-signal{opacity:.9}
+  .star.active .star-signal{opacity:.86}
+  .star.unplayed .star-signal{background:rgba(255,255,255,.82);animation-duration:5.2s}
+  .star.searched .star-signal{opacity:1;transform:translate(-50%,-50%) scale(1.12)}
+  .star.drag-proxy .star-signal{animation:none!important;opacity:.78;transform:translate(-50%,-50%) scale(1)}
+  .star.launching .star-signal{animation:none!important;opacity:.9;transform:translate(-50%,-50%) scale(1.05)}
+  .sky-static-mode .star-signal{animation:none!important;transition:none!important;opacity:.72;transform:translate(-50%,-50%) scale(.92)}
+  .star-core::before{content:'';position:absolute;left:50%;top:50%;width:30px;height:30px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.12) 0%,rgba(255,255,255,.035) 35%,transparent 72%);pointer-events:none;z-index:-1}
+  @keyframes twinkle{0%,100%{opacity:.78}50%{opacity:1}}
+  .sky-static-mode .star-core{animation:none!important}
+  .sky-static-mode .star-core{transition:none!important}
+  .star:hover .star-core{transform:translate(-50%,-50%) scale(1.22);box-shadow:0 0 7px 2px rgba(255,255,255,.78),0 0 21px 6px rgba(255,255,255,.2)}
+  .star:active .star-core{transform:translate(-50%,-50%) scale(1.3)}
+  .star-ring{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;overflow:visible;opacity:.9;transition:opacity .22s ease;z-index:3}
+  .ring-text{font-family:'IM Fell English',Georgia,serif;font-weight:400;fill:#f4f4f4;text-transform:uppercase;transition:fill .22s ease}
   .star:hover .star-ring{opacity:1}
   .star:hover .ring-text{fill:#fff}
-  .star.active .star-ring{opacity:.9}
-  .star.active .ring-text{fill:#f0f0f0}
-  .star.active .star-core{background:#fff;box-shadow:0 0 8px 2px rgba(255,255,255,.85),0 0 20px 5px rgba(255,255,255,.2);animation-duration:2s!important;animation-delay:0s!important}
-  .star.unplayed::before{content:'';position:absolute;top:50%;left:50%;width:25px;height:25px;border-radius:50%;border:1px solid rgba(255,255,255,.28);transform:translate(-50%,-50%);pointer-events:none;z-index:0}
-  .star.unplayed .star-core{box-shadow:0 0 9px 3px rgba(255,255,255,.76),0 0 24px 7px rgba(255,255,255,.22)}
-  .star.searched .star-core{background:#fff!important;box-shadow:0 0 8px 2px rgba(255,255,255,.82),0 0 18px 4px rgba(255,255,255,.17)!important;transform:translate(-50%,-50%) scale(1.18)!important}
+  .star.active .star-ring{opacity:1}
+  .star.active .ring-text{fill:#fff}
+  .star.active .star-core{background:#fff;box-shadow:0 0 7px 2px rgba(255,255,255,.8),0 0 19px 5px rgba(255,255,255,.2);animation-duration:3.2s!important;animation-delay:0s!important}
+  .star.unplayed .star-core{box-shadow:0 0 6px 2px rgba(255,255,255,.72),0 0 19px 6px rgba(255,255,255,.2)}
+  .star.searched .star-core{background:#fff!important;box-shadow:0 0 8px 2px rgba(255,255,255,.86),0 0 22px 7px rgba(255,255,255,.22)!important;transform:translate(-50%,-50%) scale(1.28)!important}
   .star{position:absolute;width:78px;height:78px;transform:translate(-50%,-50%);background:none;border:none;padding:0;cursor:grab;display:grid;place-items:center;-webkit-tap-highlight-color:transparent;touch-action:none;z-index:5}
   .star.revealing{pointer-events:none}
   .star.dragging{opacity:0.08 !important;pointer-events:none}
@@ -165,7 +154,7 @@
   #playerOverlay{position:fixed;left:0;right:0;top:var(--app-offset-top,0px);height:var(--app-height,100dvh);z-index:40;display:grid;place-items:center;overflow:hidden;overscroll-behavior:none;scrollbar-width:none;-ms-overflow-style:none;padding:max(12px,env(safe-area-inset-top)) 16px max(12px,env(safe-area-inset-bottom));background:radial-gradient(circle at 50% 42%, rgba(18,18,22,.65) 0%, rgba(0,0,0,.98) 72%);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);opacity:0;pointer-events:none;transition:opacity .4s ease}
   #playerOverlay::-webkit-scrollbar{display:none;width:0;height:0}
   #playerOverlay.show{opacity:1;pointer-events:auto}
-  .playerCard{position:relative;width:min(440px, 88vw);max-height:calc(var(--app-height,100dvh) - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 24px);min-height:0;display:flex;flex-direction:column;align-items:center;gap:22px;padding:0 4px;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;-ms-overflow-style:none;transform-origin:50% 100%;transform:translateY(35vh) scale(.35);opacity:0;transition:transform .65s cubic-bezier(.2,.9,.3,1.25), opacity .4s ease;will-change:transform,opacity}
+  .playerCard{position:relative;width:min(440px, 88vw);max-height:calc(var(--app-height,100dvh) - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 24px);min-height:0;display:flex;flex-direction:column;align-items:center;gap:22px;padding:0 4px 26px;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;-ms-overflow-style:none;scroll-padding-bottom:26px;transform-origin:50% 100%;transform:translateY(35vh) scale(.35);opacity:0;transition:transform .65s cubic-bezier(.2,.9,.3,1.25), opacity .4s ease;will-change:transform,opacity}
   .playerCard::-webkit-scrollbar{display:none;width:0;height:0}
   #playerOverlay.show .playerCard{transform:translateY(0) scale(1);opacity:1}
   .cover{width:100%;aspect-ratio:1/1;border-radius:14px;overflow:hidden;position:relative;isolation:isolate;contain:paint;box-shadow:0 30px 80px -20px rgba(0,0,0,.95), 0 0 0 1px rgba(255,255,255,.06), 0 0 70px -10px rgba(255,255,255,.08);background:#050505;touch-action:pan-y;cursor:grab}
@@ -182,7 +171,7 @@
   .progressFill{position:absolute;left:6px;top:50%;height:3px;margin-top:-1.5px;width:0;background:#fff;border-radius:3px;filter:drop-shadow(0 0 5px rgba(255,255,255,.9));transition:width .12s linear;will-change:width}
   .progressKnob{position:absolute;top:50%;left:6px;width:11px;height:11px;border-radius:50%;background:#fff;transform:translate(-50%,-50%);box-shadow:0 0 12px rgba(255,255,255,.9);pointer-events:none;transition:left .12s linear}
   .progressBar.scrubbing .progressFill,.progressBar.scrubbing .progressKnob{transition:none!important}
-  .controls{width:100%;display:flex;align-items:center;justify-content:center;gap:12px}
+  .controls{width:100%;display:flex;align-items:center;justify-content:center;gap:12px;flex-shrink:0;overflow:visible}
   .ctrlBtn{width:48px;height:48px;border-radius:50%;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.03);color:rgba(255,255,255,.75);cursor:pointer;display:grid;place-items:center;transition:color .25s ease, border-color .25s ease, box-shadow .25s ease, background .25s ease;flex-shrink:0}
   .ctrlBtn svg{width:18px;height:18px;fill:currentColor}
   .ctrlBtn:hover{color:#fff;border-color:rgba(255,255,255,.4);box-shadow:0 0 22px -2px rgba(255,255,255,.3)}
@@ -333,12 +322,11 @@
   #tutorialHand .tutorial-dot-core{fill:#fff;stroke:#fff;stroke-width:1;filter:drop-shadow(0 0 5px rgba(255,255,255,.9))}
   .star.tutorial-target .star-core{animation:tutorialStarGuidePulse 2.2s ease-in-out infinite!important;box-shadow:0 0 7px 2px rgba(255,255,255,.78),0 0 18px 5px rgba(255,255,255,.16)!important}
   .tutorial-demo-proxy{position:fixed!important;z-index:258!important;pointer-events:none!important;opacity:1!important;transition:none!important;animation:none!important;overflow:visible!important;will-change:left,top,transform,opacity;}
-  .tutorial-demo-proxy .star-core{animation:none!important}
+  .tutorial-demo-proxy .star-core,.tutorial-demo-proxy .star-signal{animation:none!important}
   @keyframes tutorialStarGuidePulse{0%,100%{opacity:.68;transform:translate(-50%,-50%) scale(1)}50%{opacity:.96;transform:translate(-50%,-50%) scale(1.22)}}
   html.site-fullscreen-fallback,html.site-fullscreen-fallback body{width:100%;height:100%;overflow:hidden}
   html.site-fullscreen-fallback body{position:fixed;inset:0;height:100dvh}
   @media (max-width:768px){
-    .grain{animation:none}
     #playerOverlay{backdrop-filter:none;-webkit-backdrop-filter:none;background:radial-gradient(circle at 50% 42%, rgba(16,16,20,.94) 0%, rgba(0,0,0,.985) 72%)}
     #miniPlayer{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(8,8,10,.97)}
     #pageMapPanel{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(8,8,10,.97)}
@@ -347,10 +335,10 @@
     #searchSuggestions{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(8,8,10,.97)}
     .toast{backdrop-filter:none;-webkit-backdrop-filter:none}
     #sky{transition:transform .78s cubic-bezier(.22,.72,.2,1)}
-    .star-core{box-shadow:0 0 8px 2px rgba(255,255,255,.9), 0 0 20px 6px rgba(255,255,255,.22)}
-    .star:hover .star-core{box-shadow:0 0 12px 3px rgba(255,255,255,.95), 0 0 32px 10px rgba(255,255,255,.3)}
-    .star-ring{filter:none}
-    .star.active .star-ring{filter:none}
+    .star-core{box-shadow:0 0 5px 2px rgba(255,255,255,.66),0 0 14px 4px rgba(255,255,255,.15)}
+    .star:hover .star-core{box-shadow:0 0 7px 2px rgba(255,255,255,.76),0 0 18px 5px rgba(255,255,255,.18)}
+    .star-ring{opacity:.88}
+    .star.active .star-ring{opacity:1}
   }
   @media (max-width:640px){
     #topBar{top:16px;right:12px;gap:0}
@@ -413,7 +401,7 @@
     .cover{width:min(100%,calc(var(--app-height,100dvh) - 190px))}
   }
   @media (max-height:560px){
-    .playerCard{width:min(440px,calc(100vw - 28px));gap:7px}
+    .playerCard{width:min(440px,calc(100vw - 28px));gap:7px;padding-bottom:22px;scroll-padding-bottom:22px}
     .cover{width:min(100%,190px,calc(var(--app-height,100dvh) - 165px));border-radius:10px}
     .titleBlock h2{font-size:clamp(14px,3.4vw,18px);line-height:1.2}
     .controls{gap:6px}
@@ -440,21 +428,15 @@
   }
   body.ui-panel-open .grain{animation-play-state:paused!important}
   @media (max-width:768px){
-    #skyAtmosphere .sky-fog{filter:blur(32px);opacity:.72}
-    #skyAtmosphere .sky-nebula.distant{filter:blur(40px);opacity:.27}
-    #skyAtmosphere .sky-nebula.moving{filter:blur(32px);opacity:.23}
-    #skyAtmosphere .sky-nebula.wisp{filter:blur(19px);opacity:.16}
-    #skyAtmosphere .sky-veil{opacity:.16}
-    .star-core{box-shadow:0 0 7px 2px rgba(255,255,255,.68),0 0 19px 6px rgba(255,255,255,.18)}
-    .star:hover .star-core{box-shadow:0 0 9px 3px rgba(255,255,255,.82),0 0 25px 8px rgba(255,255,255,.22)}
-    .star-ring{opacity:.8}
+    .star-core{box-shadow:0 0 5px 2px rgba(255,255,255,.66),0 0 14px 4px rgba(255,255,255,.15)}
+    .star:hover .star-core{box-shadow:0 0 7px 2px rgba(255,255,255,.76),0 0 18px 5px rgba(255,255,255,.18)}
+    .star-ring{opacity:.9}
   }
   .star.tutorial-target .star-core{box-shadow:0 0 7px 2px rgba(255,255,255,.78),0 0 18px 5px rgba(255,255,255,.16)!important}
   @media (prefers-reduced-motion:reduce){
-    #skyAtmosphere .sky-fog,#skyAtmosphere .sky-nebula,#skyAtmosphere .sky-veil{animation:none!important}
-    .star-core,.star.unplayed::before{animation:none!important}
+    .star-core,.star-signal{animation:none!important}
   }
-  .page.ui-paused .star-core{animation-play-state:paused!important}
+  .page.ui-paused .star-core,.page.ui-paused .star-signal{animation-play-state:paused!important}
 </style>
 </head>
 <body>
@@ -462,7 +444,7 @@
 <canvas id="dragTrail" aria-hidden="true"></canvas>
 <div class="grain"></div>
 <div class="vignette"></div>
-<div id="skyWrap"><div id="skyAtmosphere" aria-hidden="true"><div class="sky-fog far"></div><div class="sky-fog near"></div><div class="sky-nebula distant"></div><div class="sky-nebula moving"></div><div class="sky-nebula wisp"></div><div class="sky-veil"></div></div><div id="sky"></div></div>
+<div id="skyWrap"><div id="skyBackdrop" aria-hidden="true"></div><div id="sky"></div></div>
 <div id="topBar">
   <button id="searchBtn" aria-label="Поиск">
     <svg viewBox="0 0 24 24">
@@ -614,7 +596,8 @@ function updateAppViewportMetrics(){
 }
 let isMobile = appViewportWidth < 700;
 const reducedMotionQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
-const lowPowerDevice = isMobile && ((navigator.hardwareConcurrency || 4) <= 4 || !!(navigator.connection && navigator.connection.saveData));
+const lowPowerDevice = ((navigator.hardwareConcurrency || 4) <= 4) || (Number(navigator.deviceMemory || 8) <= 4) || !!(navigator.connection && navigator.connection.saveData);
+if (lowPowerDevice || reducedMotionQuery.matches) document.documentElement.classList.add('sky-static-mode');
 const bgFrameInterval = 0;
 function getCanvasScale(maxScale, pixelBudget){
   const area = Math.max(1, appViewportWidth * appViewportHeight);
@@ -1908,32 +1891,55 @@ function generateChaoticPositions(count){
 
 function makeSkySVG(count){
   const SW = 1000, SH = 1000;
-  let out = '';
-  const pointCount = Math.max(38, Math.min(92, Math.round(count * .58)));
-
+  const mobile = (document.documentElement.clientWidth || innerWidth) <= 640;
+  const lowPower = typeof lowPowerDevice !== 'undefined' && lowPowerDevice;
+  const pointCount = lowPower ? 34 : mobile ? 48 : 82;
+  const clusterCenters = [
+    [145, 250, 160, 190],
+    [710, 190, 190, 145],
+    [815, 690, 150, 190],
+    [365, 805, 185, 120]
+  ];
+  const points = [];
   for (let i = 0; i < pointCount; i++) {
-    const x = (Math.random() * SW).toFixed(1);
-    const y = (Math.random() * SH).toFixed(1);
-    const r = (Math.random() * .48 + .28).toFixed(2);
-    const opacity = (Math.random() * .22 + .10).toFixed(2);
-    out += '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" fill="#d9d9d9" opacity="' + opacity + '"/>';
+    let x, y;
+    if (i % 3 !== 0) {
+      const cluster = clusterCenters[Math.floor(Math.random() * clusterCenters.length)];
+      x = cluster[0] + (Math.random() + Math.random() - 1) * cluster[2];
+      y = cluster[1] + (Math.random() + Math.random() - 1) * cluster[3];
+    } else {
+      x = Math.random() * SW;
+      y = Math.random() * SH;
+    }
+    x = Math.max(12, Math.min(SW - 12, x));
+    y = Math.max(12, Math.min(SH - 12, y));
+    points.push([x, y]);
   }
 
-  const brighterCount = Math.max(3, Math.round(pointCount * .055));
-  for (let i = 0; i < brighterCount; i++) {
-    const x = (Math.random() * SW).toFixed(1);
-    const y = (Math.random() * SH).toFixed(1);
-    const r = (Math.random() * .55 + .65).toFixed(2);
-    const opacity = (Math.random() * .18 + .36).toFixed(2);
-    out += '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" fill="#eeeeee" opacity="' + opacity + '"/>';
+  let out = '';
+  for (let i = 0; i < points.length; i++) {
+    const [x, y] = points[i];
+    const roll = Math.random();
+    const r = roll < .7 ? .75 + Math.random() * .45 : roll < .94 ? 1.25 + Math.random() * .5 : 1.9 + Math.random() * .65;
+    const opacity = roll < .7 ? .22 + Math.random() * .14 : roll < .94 ? .34 + Math.random() * .18 : .52 + Math.random() * .2;
+    out += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + r.toFixed(2) + '" fill="#f2f2f2" opacity="' + opacity.toFixed(2) + '"/>';
   }
 
-  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + SW + ' ' + SH + '" preserveAspectRatio="xMidYMid slice">' + out + '</svg>';
+  const anchorCount = lowPower ? 2 : mobile ? 3 : 5;
+  for (let i = 0; i < anchorCount; i++) {
+    const x = 90 + Math.random() * 820;
+    const y = 90 + Math.random() * 820;
+    const r = 2.0 + Math.random() * .65;
+    out += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + (r * 4.5).toFixed(2) + '" fill="#fff" opacity=".035"/>';
+    out += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + r.toFixed(2) + '" fill="#fff" opacity=".78"/>';
+  }
+
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + SW + ' ' + SH + '" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' + out + '</svg>';
 }
 
 function createStarEl(ep, idx, pos){
   const star = document.createElement('button');
-  star.className = 'star';
+  star.className = 'star episode-star';
   star.dataset.index = idx;
   star.dataset.key = ep.folderKey;
   star.style.left = (pos[0] * 100) + '%';
@@ -1941,7 +1947,8 @@ function createStarEl(ep, idx, pos){
   star.style.setProperty('--pulse-dur', (4.5 + Math.random() * 4.5).toFixed(2) + 's');
   star.style.setProperty('--pulse-delay', (Math.random() * 5).toFixed(2) + 's');
   const small = (document.documentElement.clientWidth || innerWidth) <= 640;
-  star.style.setProperty('--core-size', (small ? 4.9 + Math.random() * 1.7 : 5.7 + Math.random() * 2.1).toFixed(1) + 'px');
+  star.style.setProperty('--core-size', (small ? 6.8 + Math.random() * 1.5 : 7.8 + Math.random() * 1.8).toFixed(1) + 'px');
+  star.style.setProperty('--signal-size', small ? '29px' : '34px');
   star.setAttribute('aria-label', ep.title);
   if (!playedSet.has(ep.folderKey)) star.classList.add('unplayed');
 
@@ -1958,6 +1965,7 @@ function createStarEl(ep, idx, pos){
                 ' a ' + radius + ' ' + radius + ' 0 1 1 0 ' + (radius * 2);
 
   star.innerHTML =
+    '<span class="star-signal"></span>' +
     '<span class="star-core"></span>' +
     '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="star-ring" viewBox="0 0 ' + ringSize + ' ' + ringSize + '" style="width:' + ringSize + 'px;height:' + ringSize + 'px" aria-hidden="true">' +
       '<defs><path id="' + pathId + '" d="' + pathD + '"/></defs>' +
@@ -2054,7 +2062,7 @@ function renderEpisodePage(pageIndex){
   const end = Math.min(EPISODES.length, start + (pageSizes[pageIndex] || 0));
   const pageLayer = document.createElement('div');
   pageLayer.className = 'page-sky';
-  const backgroundCount = isMobile ? 76 + Math.floor(Math.random() * 35) : 118 + Math.floor(Math.random() * 45);
+  const backgroundCount = isMobile ? 48 : 82;
   pageLayer.innerHTML = makeSkySVG(backgroundCount);
   page.appendChild(pageLayer);
   let missingCount = 0;
@@ -2164,7 +2172,7 @@ function installPodcastFeed(feed, options){
   return true;
 }
 async function buildSky(){
-  const initialStarCount = isMobile ? 115 : 190;
+  const initialStarCount = isMobile ? 48 : 82;
   sky.innerHTML = '<div class="page page-active" style="top:0;height:' + Math.max(1, appViewportHeight) + 'px"><div class="page-sky">' + makeSkySVG(initialStarCount) + '</div></div>';
   const cachedFeed = readPodcastFeedCache();
 
@@ -3175,61 +3183,21 @@ function performSearch(rawQuery, preferredIndex){
   setTimeout(() => { starEl.classList.remove('searched'); }, 6000);
 }
 
-const ambientStars = Array.from({length:isMobile ? 16 : 30}, () => ({
-  x: Math.random(),
-  y: Math.random(),
-  r: 0.45 + Math.random() * (isMobile ? 0.65 : 0.9),
-  phase: Math.random() * Math.PI * 2,
-  speed: 0.0007 + Math.random() * 0.0015
-}));
-const spheres = [];
-const sphereCount = isMobile ? 2 : 4;
-for (let i = 0; i < sphereCount; i++) {
-  const deep = i < 2;
-  spheres.push({
-    x: 0.1 + Math.random() * 0.8,
-    y: 0.1 + Math.random() * 0.8,
-    r: 0.32 + Math.random() * 0.28,
-    a: deep ? (0.005 + Math.random() * 0.005) : (0.006 + Math.random() * 0.008),
-    fx: 0.00006 + Math.random() * 0.0001,
-    fy: 0.00006 + Math.random() * 0.0001,
-    ph: Math.random() * Math.PI * 2,
-    color: deep ? [100, 6, 18] : [190, 190, 200]
-  });
-}
-function drawBg(t){
+const ambientStars = [];
+function drawBg(){
   if (!ctx || bgContextLost || !W || !H) return;
   ctx.globalAlpha = 1;
   ctx.globalCompositeOperation = 'source-over';
-  ctx.fillStyle = '#000';
+  ctx.fillStyle = '#010101';
   ctx.fillRect(0, 0, W, H);
-  ctx.globalCompositeOperation = 'lighter';
-  for (let i = 0; i < spheres.length; i++) {
-    const sphere = spheres[i];
-    const x = (sphere.x + Math.sin(t * sphere.fx + sphere.ph) * 0.07) * W;
-    const y = (sphere.y + Math.cos(t * sphere.fy + sphere.ph) * 0.06) * H;
-    const r = sphere.r * Math.max(W, H);
-    const gradient = ctx.createRadialGradient(x, y, 0, x, y, r);
-    const color = sphere.color;
-    gradient.addColorStop(0, 'rgba(' + color[0] + ',' + color[1] + ',' + color[2] + ',' + sphere.a + ')');
-    gradient.addColorStop(0.55, 'rgba(' + color[0] + ',' + color[1] + ',' + color[2] + ',' + (sphere.a * 0.3) + ')');
-    gradient.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = gradient;
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.globalCompositeOperation = 'lighter';
   for (const star of ambientStars) {
-    const shimmer = 0.12 + (0.5 + 0.5 * Math.sin(t * star.speed + star.phase)) * 0.34;
-    ctx.globalAlpha = shimmer;
-    ctx.fillStyle = '#e9e7f2';
+    ctx.globalAlpha = star.opacity;
+    ctx.fillStyle = '#eeeeee';
     ctx.beginPath();
     ctx.arc(star.x * W, star.y * H, star.r * dpr, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.globalAlpha = 1;
-  ctx.globalCompositeOperation = 'source-over';
 }
 
 let bgActive = false;
@@ -3282,15 +3250,6 @@ if (canvas) {
     syncUIPerformanceState();
   });
 }
-
-const skyAtmosphere = document.getElementById('skyAtmosphere');
-
-function startHauntedSky(){
-  if (!skyAtmosphere) return;
-  skyAtmosphere.classList.add('sky-atmosphere-ready');
-}
-
-function stopHauntedSky(){}
 
 let episodeAudio = null;
 let loadedIndex = -1;
@@ -5152,7 +5111,6 @@ async function init(){
   syncUIPerformanceState();
   removeMissingAppServiceWorker();
   buildSky();
-  startHauntedSky();
 }
 
 init();
