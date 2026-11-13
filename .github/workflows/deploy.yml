@@ -1,0 +1,85 @@
+name: Update RSS and Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+  schedule:
+    - cron: '13,43 * * * *'
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Download Podster RSS
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p DATA
+
+          TEMP_FILE="$(mktemp)"
+
+          trap 'rm -f "$TEMP_FILE"' EXIT
+
+          curl \
+            --fail \
+            --location \
+            --silent \
+            --show-error \
+            --compressed \
+            --retry 3 \
+            --retry-all-errors \
+            --retry-delay 4 \
+            --connect-timeout 20 \
+            --max-time 90 \
+            -H 'Accept: application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.8' \
+            -H 'User-Agent: StrashilkiSiteRSS/1.0' \
+            'https://podster.fm/rss.xml?pid=100576' \
+            --output "$TEMP_FILE"
+
+          if ! grep -Eiq '<(rss|rdf:RDF)([[:space:]>])' "$TEMP_FILE"; then
+            echo "::error::Podster returned an invalid RSS document"
+            exit 1
+          fi
+
+          if ! grep -Eiq '<item([[:space:]>])' "$TEMP_FILE"; then
+            echo "::error::RSS contains no episodes"
+            exit 1
+          fi
+
+          mv "$TEMP_FILE" DATA/podcast-feed.xml
+
+          echo "RSS successfully downloaded"
+
+      - name: Upload Website
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: .
+
+      - name: Deploy Website
+        id: deployment
+        uses: actions/deploy-pages@v4
