@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<rss xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0">
+<rss xmlns:podcast="https://podcastindex.org/namespace/1.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0">
     <channel>
         <title>Страшилки</title>
         <link>https://strashilki.podster.fm</link>
@@ -19,7 +19,8 @@
             <itunes:name>Страшилки</itunes:name>
             <itunes:email>leonova_d96@mail.ru</itunes:email>
         </itunes:owner>
-                <itunes:summary>Страшные истории и легенды 
+                                <podcast:locked owner="leonova_d96@mail.ru">yes</podcast:locked>
+                        <itunes:summary>Страшные истории и легенды 
 Ссылка на телеграм: https://t.me/strashil_kiГруппа вк: https://vk.com/club222323809
 Теперь мы есть и на Литрес!https://www.litres.ru/podcast/leo-dummer/strashilki-71234161/</itunes:summary>
         <itunes:image href="https://podster.fm/image-storage/713785/conversions/DycW4vFcnM5aO9qo-3xl.jpg" />
