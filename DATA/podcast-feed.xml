@@ -6,8 +6,7 @@
         <atom:link href="https://podster.fm/rss.xml?pid=100576" rel="self" type="application/rss+xml"/>
         
         
-        <description><![CDATA[<p>Страшные истории и легенды </p>
-<p>Ссылка на телеграм: <a href="https://t.me/strashil_ki">https://t.me/strashil_ki</a><br />Группа вк: <a href="https://vk.com/club222323809">https://vk.com/club222323809</a></p>
+        <description><![CDATA[<p>Ссылка на телеграм: <a href="https://t.me/strashil_ki">https://t.me/strashil_ki</a><br />Сайт: https://shon-lua.github.io/Strashilki<br />Группа вк: <a href="https://vk.com/club222323809">https://vk.com/club222323809</a></p>
 <p>Теперь мы есть и на Литрес!https://www.litres.ru/podcast/leo-dummer/strashilki-71234161/</p>]]></description>
         <image>
             <url>https://podster.fm/image-storage/713785/conversions/DycW4vFcnM5aO9qo-3xl.jpg</url>
@@ -20,12 +19,11 @@
             <itunes:email>leonova_d96@mail.ru</itunes:email>
         </itunes:owner>
                                 <podcast:locked owner="leonova_d96@mail.ru">yes</podcast:locked>
-                        <itunes:summary>Страшные истории и легенды 
-Ссылка на телеграм: https://t.me/strashil_kiГруппа вк: https://vk.com/club222323809
+                        <itunes:summary>Ссылка на телеграм: https://t.me/strashil_kiСайт: https://shon-lua.github.io/StrashilkiГруппа вк: https://vk.com/club222323809
 Теперь мы есть и на Литрес!https://www.litres.ru/podcast/leo-dummer/strashilki-71234161/</itunes:summary>
         <itunes:image href="https://podster.fm/image-storage/713785/conversions/DycW4vFcnM5aO9qo-3xl.jpg" />
                                     <itunes:category text="History" />
-                            <itunes:explicit>False</itunes:explicit>
+                            <itunes:explicit>True</itunes:explicit>
         <language>ru</language>
         <copyright>2026 © Страшилки. Все права защищены.</copyright>
         <generator>Podster</generator>
